@@ -1,19 +1,26 @@
 {
   "mcpServers": {
-    "cadwork": {
-      "command": "python",
+    "desktop-commander": {
+      "command": "npx",
       "args": [
-        "C:\\Users\\SSlezak\\Documents\\github\\DigiPrefabChallenge25\\mcp_server.py",
-        "mcp_server.py",
-        "--transport",
-        "http",
-        "--port",
-        "8001"
-      ],
-      "env": {
-        "CW_PORT": "53002"
-      },
-      "uri": "http://localhost:8001"
-    }
+        "-y",
+        "@wonderwhy-er/desktop-commander"
+      ]
+    },
+    "cadwork": {
+        "command": "python",
+        "args": [
+          "C:\\cadworkMCP\\mcp_server.py",
+          "mcp_server.py",
+          "--transport",
+          "http",
+          "--port",
+          "8001"
+        ],
+        "env": {
+          "CW_PORT": "53002"
+        },
+        "uri": "http://localhost:8001"
+      }
   }
 }

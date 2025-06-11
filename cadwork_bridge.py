@@ -1,6 +1,3 @@
-"""
-Cadwork MCP Bridge - Production Version
-"""
 import socket
 import json
 import threading

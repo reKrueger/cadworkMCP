@@ -39,8 +39,8 @@ cadworkMCP/
 
 ### In Cadwork (Bridge):
 ```python
-# Ersetze die alte Bridge-Datei mit:
-cadwork_bridge.py
+# setze ... in der python console um die bridge zu starten
+exec(open(r'C:\cadworkMCP\start.txt').read())
 ```
 
 ### MCP Server:

@@ -1,1 +1,1 @@
-exec(open(r'C:\DigiPrefabChallenge25\mcp_cadworks_bridge.py').read())
+exec(open(r'C:\cadworkMCP\cadwork_bridge.py').read())

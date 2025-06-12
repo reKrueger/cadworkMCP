@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PluginInfo>
+    <Version>1.0.0.0</Version>
+    <Date>2025-01-15</Date>
+    <Author>MCP Development Team</Author>
+    <n>
+        <Text language="German">MCP Bridge Control</Text>
+        <Text language="English">MCP Bridge Control</Text>
+        <Text language="French">Controle du Pont MCP</Text>
+        <Text language="Italian">Controllo Bridge MCP</Text>
+        <Text language="Spanish">Control del Puente MCP</Text>
+        <Text language="Czech">Ovladani MCP Bridge</Text>
+        <Text language="Finnish">MCP-sillan hallinta</Text>
+        <Text language="Russian">Upravlenie MCP Bridge</Text>
+        <Text language="Polish">Kontrola mostka MCP</Text>
+        <Text language="Romanian">Control punte MCP</Text>
+        <Text language="Norwegian">MCP Bridge kontroll</Text>
+        <Text language="Chinese">MCP桥控制</Text>
+        <Text language="Portuguese">Controle da ponte MCP</Text>
+        <Text language="Estonian">MCP silla kontroll</Text>
+        <Text language="Japanese">MCPブリッジ制御</Text>
+    </n>
+    <Description>
+        <Text language="German">
+            <![CDATA[
+            MCP Bridge Control Plugin
+
+            Dieses Plugin ermöglicht die Steuerung der MCP (Model Context Protocol) Bridge für Cadwork.
+            
+            Funktionen:
+            • Automatischer Start der Bridge-Verbindung
+            • GUI-Kontrolle für Bridge-Status
+            • Externe Tool-Integration
+            • AI-Assistant-Unterstützung
+            
+            Die Bridge ermöglicht es externen Tools wie Claude oder anderen AI-Assistenten, 
+            direkt mit Cadwork zu interagieren und Elemente zu erstellen oder zu modifizieren.
+            ]]>
+        </Text>
+        <Text language="English">
+            <![CDATA[
+            MCP Bridge Control Plugin
+
+            This plugin enables control of the MCP (Model Context Protocol) Bridge for Cadwork.
+            
+            Features:
+            • Automatic bridge connection startup
+            • GUI control for bridge status
+            • External tool integration
+            • AI assistant support
+            
+            The bridge allows external tools like Claude or other AI assistants to 
+            directly interact with Cadwork and create or modify elements.
+            ]]>
+        </Text>
+        <Text language="French">
+            <![CDATA[
+            Plugin de controle du pont MCP
+
+            Ce plugin permet de controler le pont MCP (Model Context Protocol) pour Cadwork.
+            
+            Fonctionnalites:
+            • Demarrage automatique de la connexion du pont
+            • Controle GUI pour le statut du pont
+            • Integration d'outils externes
+            • Support d'assistant IA
+            
+            Le pont permet aux outils externes comme Claude ou d'autres assistants IA 
+            d'interagir directement avec Cadwork et de creer ou modifier des elements.
+            ]]>
+        </Text>
+        <Text language="Italian"/>
+        <Text language="Spanish"/>
+        <Text language="Czech"/>
+        <Text language="Finnish"/>
+        <Text language="Russian"/>
+        <Text language="Polish"/>
+        <Text language="Romanian"/>
+        <Text language="Norwegian"/>
+        <Text language="Chinese"/>
+        <Text language="Portuguese"/>
+        <Text language="Estonian"/>
+        <Text language="Japanese"/>
+    </Description>
+</PluginInfo>

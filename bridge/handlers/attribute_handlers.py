@@ -118,3 +118,71 @@ def handle_list_defined_user_attributes(args: Dict[str, Any]) -> Dict[str, Any]:
         
     except Exception as e:
         return {"status": "error", "message": f"API error: {e}"}
+
+# --- ATTRIBUTE SETTERS ---
+
+def handle_set_name(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle set name command"""
+    try:
+        # Import here to avoid import-time errors
+        import attribute_controller as ac
+
+        element_ids = validate_element_ids(args.get("element_ids", []))
+        name = args.get("name", "")
+        
+        if not isinstance(name, str):
+            raise ValueError("name must be a string")
+        
+        if not element_ids:
+            return {"status": "error", "message": "No element IDs provided"}
+        
+        # Set name for all elements
+        for eid in element_ids:
+            try:
+                ac.set_name(eid, name)
+            except Exception as e:
+                return {"status": "error", "message": f"Failed to set name for element {eid}: {e}"}
+        
+        return {
+            "status": "ok", 
+            "message": f"Name '{name}' set for {len(element_ids)} elements",
+            "element_ids": element_ids
+        }
+        
+    except ValueError as e:
+        return {"status": "error", "message": f"Invalid input: {e}"}
+    except Exception as e:
+        return {"status": "error", "message": f"API error: {e}"}
+
+def handle_set_material(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle set material command"""
+    try:
+        # Import here to avoid import-time errors
+        import attribute_controller as ac
+
+        element_ids = validate_element_ids(args.get("element_ids", []))
+        material = args.get("material", "")
+        
+        if not isinstance(material, str):
+            raise ValueError("material must be a string")
+        
+        if not element_ids:
+            return {"status": "error", "message": "No element IDs provided"}
+        
+        # Set material for all elements
+        for eid in element_ids:
+            try:
+                ac.set_element_material_name(eid, material)
+            except Exception as e:
+                return {"status": "error", "message": f"Failed to set material for element {eid}: {e}"}
+        
+        return {
+            "status": "ok", 
+            "message": f"Material '{material}' set for {len(element_ids)} elements",
+            "element_ids": element_ids
+        }
+        
+    except ValueError as e:
+        return {"status": "error", "message": f"Invalid input: {e}"}
+    except Exception as e:
+        return {"status": "error", "message": f"API error: {e}"}

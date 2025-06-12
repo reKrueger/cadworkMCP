@@ -88,6 +88,50 @@ async def move_element(element_ids: list, move_vector: list) -> dict:
 async def get_user_element_ids(count: int = None) -> dict:
     return await element_ctrl.get_user_element_ids(count)
 
+# --- EXTENDED ELEMENT CREATION TOOLS ---
+
+@mcp.tool(
+    name="create_circular_beam_points",
+    description="Creates a circular beam element using points. Requires diameter, start point p1 ([x,y,z]), end point p2 ([x,y,z]), and optional orientation point p3 ([x,y,z])."
+)
+async def create_circular_beam_points(diameter: float, p1: list, p2: list, p3: list = None) -> dict:
+    return await element_ctrl.create_circular_beam_points(diameter, p1, p2, p3)
+
+@mcp.tool(
+    name="create_square_beam_points", 
+    description="Creates a square beam element using points. Requires width, start point p1 ([x,y,z]), end point p2 ([x,y,z]), and optional orientation point p3 ([x,y,z])."
+)
+async def create_square_beam_points(width: float, p1: list, p2: list, p3: list = None) -> dict:
+    return await element_ctrl.create_square_beam_points(width, p1, p2, p3)
+
+@mcp.tool(
+    name="create_standard_beam_points",
+    description="Creates a standard beam element using points from Cadwork library. Requires standard_element_name, start point p1 ([x,y,z]), end point p2 ([x,y,z]), and optional orientation point p3 ([x,y,z])."
+)
+async def create_standard_beam_points(standard_element_name: str, p1: list, p2: list, p3: list = None) -> dict:
+    return await element_ctrl.create_standard_beam_points(standard_element_name, p1, p2, p3)
+
+@mcp.tool(
+    name="create_standard_panel_points",
+    description="Creates a standard panel element using points from Cadwork library. Requires standard_element_name, start point p1 ([x,y,z]), end point p2 ([x,y,z]), and optional orientation point p3 ([x,y,z])."
+)
+async def create_standard_panel_points(standard_element_name: str, p1: list, p2: list, p3: list = None) -> dict:
+    return await element_ctrl.create_standard_panel_points(standard_element_name, p1, p2, p3)
+
+@mcp.tool(
+    name="create_drilling_points",
+    description="Creates a drilling element using points. Requires diameter and start point p1 ([x,y,z]), end point p2 ([x,y,z])."
+)
+async def create_drilling_points(diameter: float, p1: list, p2: list) -> dict:
+    return await element_ctrl.create_drilling_points(diameter, p1, p2)
+
+@mcp.tool(
+    name="create_polygon_beam",
+    description="Creates a polygon beam element. Requires polygon_vertices (list of [x,y,z] points), thickness, xl vector ([x,y,z] length direction), and zl vector ([x,y,z] height direction)."
+)
+async def create_polygon_beam(polygon_vertices: list, thickness: float, xl: list, zl: list) -> dict:
+    return await element_ctrl.create_polygon_beam(polygon_vertices, thickness, xl, zl)
+
 # --- GEOMETRY TOOLS ---
 
 @mcp.tool(
@@ -279,6 +323,22 @@ async def get_user_attributes(element_ids: list, attribute_numbers: list) -> dic
 )
 async def list_defined_user_attributes() -> dict:
     return await attribute_ctrl.list_defined_user_attributes()
+
+# --- ATTRIBUTE SETTER TOOLS ---
+
+@mcp.tool(
+    name="set_name",
+    description="Sets the name for a list of elements. Takes element IDs and the name string to set."
+)
+async def set_name(element_ids: list, name: str) -> dict:
+    return await attribute_ctrl.set_name(element_ids, name)
+
+@mcp.tool(
+    name="set_material",
+    description="Sets the material for a list of elements. Takes element IDs and the material name string to set."
+)
+async def set_material(element_ids: list, material: str) -> dict:
+    return await attribute_ctrl.set_material(element_ids, material)
 
 # --- VERSION TOOL ---
 

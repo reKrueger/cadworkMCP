@@ -104,3 +104,58 @@ class ElementController(BaseController):
             args["count"] = count
         
         return self.send_command("get_user_element_ids", args)
+    
+    # --- EXTENDED ELEMENT CREATION ---
+    
+    async def create_circular_beam_points(self, diameter: float, p1: list, p2: list, p3: list = None) -> Dict[str, Any]:
+        """Create circular beam using points. Requires diameter, start point p1, end point p2, optional orientation point p3"""
+        return self.send_command("create_circular_beam_points", {
+            "diameter": float(diameter),
+            "p1": p1,
+            "p2": p2, 
+            "p3": p3
+        })
+    
+    async def create_square_beam_points(self, width: float, p1: list, p2: list, p3: list = None) -> Dict[str, Any]:
+        """Create square beam using points. Requires width, start point p1, end point p2, optional orientation point p3"""
+        return self.send_command("create_square_beam_points", {
+            "width": float(width),
+            "p1": p1,
+            "p2": p2,
+            "p3": p3
+        })
+    
+    async def create_standard_beam_points(self, standard_element_name: str, p1: list, p2: list, p3: list = None) -> Dict[str, Any]:
+        """Create standard beam using points. Requires standard element name, start point p1, end point p2, optional orientation point p3"""
+        return self.send_command("create_standard_beam_points", {
+            "standard_element_name": str(standard_element_name),
+            "p1": p1,
+            "p2": p2,
+            "p3": p3
+        })
+    
+    async def create_standard_panel_points(self, standard_element_name: str, p1: list, p2: list, p3: list = None) -> Dict[str, Any]:
+        """Create standard panel using points. Requires standard element name, start point p1, end point p2, optional orientation point p3"""
+        return self.send_command("create_standard_panel_points", {
+            "standard_element_name": str(standard_element_name),
+            "p1": p1,
+            "p2": p2,
+            "p3": p3
+        })
+    
+    async def create_drilling_points(self, diameter: float, p1: list, p2: list) -> Dict[str, Any]:
+        """Create drilling using points. Requires diameter, start point p1, and end point p2"""
+        return self.send_command("create_drilling_points", {
+            "diameter": float(diameter),
+            "p1": p1,
+            "p2": p2
+        })
+    
+    async def create_polygon_beam(self, polygon_vertices: list, thickness: float, xl: list, zl: list) -> Dict[str, Any]:
+        """Create polygon beam. Requires polygon vertices, thickness, xl vector (length direction), and zl vector (height direction)"""
+        return self.send_command("create_polygon_beam", {
+            "polygon_vertices": polygon_vertices,
+            "thickness": float(thickness),
+            "xl": xl,
+            "zl": zl
+        })

@@ -349,3 +349,124 @@ def handle_get_element_info(args: Dict[str, Any]) -> Dict[str, Any]:
         return {"status": "error", "message": f"Invalid input: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"Element not found or API error: {e}"}
+
+# --- EXTENDED ELEMENT CREATION HANDLERS ---
+
+def handle_create_circular_beam_points(params):
+    """Handle circular beam creation with points"""
+    try:
+        import element_controller as ec
+        import cadwork
+        
+        diameter = params["diameter"]
+        p1 = to_point_3d(params["p1"])
+        p2 = to_point_3d(params["p2"])
+        p3 = to_point_3d(params["p3"]) if params.get("p3") else None
+        
+        if p3:
+            element_id = ec.create_circular_beam_points(diameter, p1, p2, p3)
+        else:
+            element_id = ec.create_circular_beam_points(diameter, p1, p2)
+            
+        return {"status": "ok", "element_id": element_id}
+        
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to create circular beam: {e}"}
+
+def handle_create_square_beam_points(params):
+    """Handle square beam creation with points"""
+    try:
+        import element_controller as ec
+        import cadwork
+        
+        width = params["width"]
+        p1 = to_point_3d(params["p1"])
+        p2 = to_point_3d(params["p2"])
+        p3 = to_point_3d(params["p3"]) if params.get("p3") else None
+        
+        if p3:
+            element_id = ec.create_square_beam_points(width, p1, p2, p3)
+        else:
+            element_id = ec.create_square_beam_points(width, p1, p2)
+            
+        return {"status": "ok", "element_id": element_id}
+        
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to create square beam: {e}"}
+
+def handle_create_standard_beam_points(params):
+    """Handle standard beam creation with points"""
+    try:
+        import element_controller as ec
+        import cadwork
+        
+        standard_element_name = params["standard_element_name"]
+        p1 = to_point_3d(params["p1"])
+        p2 = to_point_3d(params["p2"])
+        p3 = to_point_3d(params["p3"]) if params.get("p3") else None
+        
+        if p3:
+            element_id = ec.create_standard_beam_points(standard_element_name, p1, p2, p3)
+        else:
+            element_id = ec.create_standard_beam_points(standard_element_name, p1, p2)
+            
+        return {"status": "ok", "element_id": element_id}
+        
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to create standard beam: {e}"}
+
+def handle_create_standard_panel_points(params):
+    """Handle standard panel creation with points"""
+    try:
+        import element_controller as ec
+        import cadwork
+        
+        standard_element_name = params["standard_element_name"]
+        p1 = to_point_3d(params["p1"])
+        p2 = to_point_3d(params["p2"])
+        p3 = to_point_3d(params["p3"]) if params.get("p3") else None
+        
+        if p3:
+            element_id = ec.create_standard_panel_points(standard_element_name, p1, p2, p3)
+        else:
+            element_id = ec.create_standard_panel_points(standard_element_name, p1, p2)
+            
+        return {"status": "ok", "element_id": element_id}
+        
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to create standard panel: {e}"}
+
+def handle_create_drilling_points(params):
+    """Handle drilling creation with points"""
+    try:
+        import element_controller as ec
+        import cadwork
+        
+        diameter = params["diameter"]
+        p1 = to_point_3d(params["p1"])
+        p2 = to_point_3d(params["p2"])
+        
+        element_id = ec.create_drilling_points(diameter, p1, p2)
+            
+        return {"status": "ok", "element_id": element_id}
+        
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to create drilling: {e}"}
+
+def handle_create_polygon_beam(params):
+    """Handle polygon beam creation"""
+    try:
+        import element_controller as ec
+        import cadwork
+        
+        polygon_vertices = [to_point_3d(vertex) for vertex in params["polygon_vertices"]]
+        thickness = params["thickness"]
+        xl = to_point_3d(params["xl"])
+        zl = to_point_3d(params["zl"])
+        
+        element_id = ec.create_polygon_beam(polygon_vertices, thickness, xl, zl)
+            
+        return {"status": "ok", "element_id": element_id}
+        
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to create polygon beam: {e}"}

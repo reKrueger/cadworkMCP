@@ -50,11 +50,17 @@ python main.py
 
 ## ✅ IMPLEMENTIERTE FUNKTIONEN
 
-### 🏗️ **Element Controller (48 Funktionen implementiert)**
+### 🏗️ **Element Controller (54 Funktionen implementiert)**
 
 #### Element Erstellung
 - `create_beam(p1, p2, width, height, p3=None)` - Erstellt Balken mit Rechteckquerschnitt
 - `create_panel(p1, p2, width, thickness, p3=None)` - Erstellt rechteckige Plattenelemente
+- `create_circular_beam_points(diameter, p1, p2, p3=None)` - Erstellt Rundbalken mit Punkten
+- `create_square_beam_points(width, p1, p2, p3=None)` - Erstellt Quadratbalken mit Punkten
+- `create_standard_beam_points(standard_name, p1, p2, p3=None)` - Erstellt Standardbalken mit Punkten
+- `create_standard_panel_points(standard_name, p1, p2, p3=None)` - Erstellt Standardplatten mit Punkten
+- `create_drilling_points(diameter, p1, p2)` - Erstellt Bohrungen mit Punkten
+- `create_polygon_beam(vertices, thickness, xl, zl)` - Erstellt Polygon-Balken
 
 #### Element Verwaltung
 - `get_active_element_ids()` - Aktive (ausgewählte) Element-IDs
@@ -99,12 +105,14 @@ python main.py
 - `rotate_height_axis_90(element_ids)` - 90° Höhenachsen-Rotation
 - `rotate_length_axis_90(element_ids)` - 90° Längenachsen-Rotation
 
-#### 🏷️ **Attribute Controller (3 Funktionen implementiert)**
+#### 🏷️ **Attribute Controller (5 Funktionen implementiert)**
 
 #### Attribut-Management
 - `get_standard_attributes(element_ids)` - Standard-Attribute (Name, Gruppe, etc.)
 - `get_user_attributes(element_ids, attribute_numbers)` - Benutzer-definierte Attribute
 - `list_defined_user_attributes()` - Liste aller definierten Benutzer-Attribute
+- `set_name(element_ids, name)` - Name für Elemente setzen
+- `set_material(element_ids, material)` - Material für Elemente setzen
 
 #### 🔧 **System**
 - `get_cadwork_version_info()` - Versionsinformationen
@@ -262,31 +270,36 @@ validate_positive_number(val, name) → float
 
 | Controller | Implementiert | Fehlend | Fortschritt |
 |------------|--------------|---------|-------------|
-| **Element Controller** | 48 | ~175 | 22% |
+| **Element Controller** | 54 | ~169 | 24% |
 | **Geometry Controller** | 32 | ~75 | 30% |
-| **Attribute Controller** | 3 | ~100 | 3% |
+| **Attribute Controller** | 5 | ~98 | 5% |
 | **Visualization Controller** | 0 | ~25 | 0% |
 | **Utility Controller** | 0 | ~15 | 0% |
 | **Shop Drawing Controller** | 0 | ~10 | 0% |
 | **Roof Controller** | 0 | ~5 | 0% |
 | **Connector Controller** | 0 | ~15 | 0% |
 | **Machine Controller** | 0 | ~10 | 0% |
-| **GESAMT** | **83** | **~430** | **16%** |
+| **GESAMT** | **91** | **~422** | **18%** |
 
 ## 🎯 Nächste Prioritäten
 
 ### 🥇 **Prio 1: Core Element Operations**
 1. **Element Creation erweitern:**
-   - `create_circular_beam_*()` 
-   - `create_standard_beam/panel_*()` 
-   - `create_polygon_*()` 
+   - ✅ `create_circular_beam_points()` - **IMPLEMENTIERT**
+   - ✅ `create_square_beam_points()` - **IMPLEMENTIERT** 
+   - ✅ `create_standard_beam_points()` - **IMPLEMENTIERT**
+   - ✅ `create_standard_panel_points()` - **IMPLEMENTIERT**
+   - ✅ `create_drilling_points()` - **IMPLEMENTIERT**
+   - ✅ `create_polygon_beam()` - **IMPLEMENTIERT**
 
 2. **Element Selection:**
    - `filter_elements()` mit Element-Filter
    - `map_elements()` für Gruppierung
 
 3. **Basic Setters:**
-   - `set_name()`, `set_group()`, `set_material()`
+   - ✅ `set_name()` - **IMPLEMENTIERT**
+   - ✅ `set_material()` - **IMPLEMENTIERT**
+   - `set_group()`, `set_comment()`
 
 ### 🥈 **Prio 2: Visualization & Utils**
 1. **Visualization Controller komplett implementieren**
@@ -324,9 +337,41 @@ async def set_color(element_ids: list, color_id: int):
 
 **Der Server ist production-ready für die implementierten Funktionen!** 
 
-- ✅ **83 Tools** funktionsfähig
+- ✅ **91 Tools** funktionsfähig
 - ✅ **Saubere Architektur** für einfache Erweiterung  
 - ✅ **Vollständige Dokumentation** der Implementierung
-- ✅ **~430 weitere Funktionen** aus der Cadwork API verfügbar für Implementierung
+- ✅ **~422 weitere Funktionen** aus der Cadwork API verfügbar für Implementierung
 
 Die Basis-Infrastruktur steht und neue Funktionen können schnell und sauber hinzugefügt werden! 🚀
+
+## 📝 Neue Funktionen (v2.4)
+
+### Element Creation Erweiterung
+- **`create_circular_beam_points(diameter, p1, p2, p3=None)`** - Erstellt Rundbalken mit Punktdefinition
+- **`create_square_beam_points(width, p1, p2, p3=None)`** - Erstellt Quadratbalken mit Punktdefinition
+- **`create_standard_beam_points(standard_name, p1, p2, p3=None)`** - Erstellt Standardbalken aus Cadwork-Bibliothek
+- **`create_standard_panel_points(standard_name, p1, p2, p3=None)`** - Erstellt Standardplatten aus Cadwork-Bibliothek
+- **`create_drilling_points(diameter, p1, p2)`** - Erstellt Bohrungen zwischen zwei Punkten
+- **`create_polygon_beam(vertices, thickness, xl, zl)`** - Erstellt Balken mit beliebigem Polygon-Querschnitt
+
+### Attribute Management
+- **`set_name(element_ids, name)`** - Setzt Namen für Elemente
+- **`set_material(element_ids, material)`** - Setzt Material für Elemente
+
+**Beispiele:**
+```python
+# Element Creation
+create_circular_beam_points(200.0, [0,0,0], [1000,0,0])
+create_standard_beam_points("Sparren 80/200", [0,0,0], [3000,0,0])
+create_drilling_points(12.0, [100,100,0], [100,100,200])
+
+# Attribute Management
+beam_ids = [1001, 1002, 1003]
+set_name(beam_ids, "Hauptbalken")
+set_material(beam_ids, "C24")
+
+# Workflow: Element erstellen und benennen
+beam_id = create_standard_beam_points("KVH 60/120", [0,0,0], [2400,0,0])
+set_name([beam_id["element_id"]], "Stütze S1")
+set_material([beam_id["element_id"]], "BSH GL24h")
+```

@@ -27,6 +27,14 @@ def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
         "copy_elements": element_handlers.handle_copy_elements,
         "move_element": element_handlers.handle_move_element,
         
+        # Extended element creation
+        "create_circular_beam_points": element_handlers.handle_create_circular_beam_points,
+        "create_square_beam_points": element_handlers.handle_create_square_beam_points,
+        "create_standard_beam_points": element_handlers.handle_create_standard_beam_points,
+        "create_standard_panel_points": element_handlers.handle_create_standard_panel_points,
+        "create_drilling_points": element_handlers.handle_create_drilling_points,
+        "create_polygon_beam": element_handlers.handle_create_polygon_beam,
+        
         # Geometry operations
         "get_element_width": geometry_handlers.handle_get_element_width,
         "get_element_height": geometry_handlers.handle_get_element_height,
@@ -56,6 +64,8 @@ def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
         "get_standard_attributes": attribute_handlers.handle_get_standard_attributes,
         "get_user_attributes": attribute_handlers.handle_get_user_attributes,
         "list_defined_user_attributes": attribute_handlers.handle_list_defined_user_attributes,
+        "set_name": attribute_handlers.handle_set_name,
+        "set_material": attribute_handlers.handle_set_material,
     }
     if operation not in OPERATION_HANDLERS:
         return {

@@ -50,3 +50,35 @@ class AttributeController(BaseController):
     async def list_defined_user_attributes(self) -> Dict[str, Any]:
         """List all defined user attributes"""
         return self.send_command("list_defined_user_attributes")
+    
+    # --- ATTRIBUTE SETTERS ---
+    
+    async def set_name(self, element_ids: List[int], name: str) -> Dict[str, Any]:
+        """Set name for elements"""
+        if not isinstance(element_ids, list):
+            raise ValueError("element_ids must be a list")
+        if not isinstance(name, str):
+            raise ValueError("name must be a string")
+        
+        # Validate all element IDs
+        validated_ids = [self.validate_element_id(eid) for eid in element_ids]
+        
+        return self.send_command("set_name", {
+            "element_ids": validated_ids,
+            "name": str(name)
+        })
+    
+    async def set_material(self, element_ids: List[int], material: str) -> Dict[str, Any]:
+        """Set material for elements"""
+        if not isinstance(element_ids, list):
+            raise ValueError("element_ids must be a list")
+        if not isinstance(material, str):
+            raise ValueError("material must be a string")
+        
+        # Validate all element IDs
+        validated_ids = [self.validate_element_id(eid) for eid in element_ids]
+        
+        return self.send_command("set_material", {
+            "element_ids": validated_ids,
+            "material": str(material)
+        })

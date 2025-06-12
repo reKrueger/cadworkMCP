@@ -1,0 +1,11 @@
+# Cadwork MCP Server Test Requirements
+# For running the test suite
+
+# No additional dependencies needed - uses only Python standard library
+# asyncio (built-in)
+# time (built-in) 
+# sys (built-in)
+# os (built-in)
+# typing (built-in in Python 3.5+)
+
+# The tests directly import the controllers from the main project

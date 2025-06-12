@@ -1,50 +1,18 @@
-# 📋 Cadwork MCP Bridge - Manuell kopieren
+# MCP Bridge Plugin - Clean Version
 
-Hier ist das **fertige Plugin** zum manuellen Kopieren nach Cadwork.
+Simple Cadwork plugin to start/stop the MCP bridge.
 
-## 📁 Plugin-Struktur
-```
-API.x64\
-└── MCPBridge\
-    ├── MCPBridge.py          ← Hauptplugin mit GUI
-    ├── bridge_server.py      ← Eingebetteter Bridge Server
-    ├── plugin_info.xml       ← Plugin-Metadaten (mehrsprachig)
-    └── README.md             ← Installationsanleitung
-```
+## Files:
+- `MCPBridge.py` - Main plugin with GUI
+- `plugin_info.xml` - Plugin metadata
 
-## 🎯 Installation (3 Schritte)
+## Installation:
+Copy the MCPBridge folder to your Cadwork API.x64 directory.
 
-### 1. Cadwork Plugin-Verzeichnis finden:
-**Cadwork 3D → Help → Info → "Userprofile" → 3d\API.x64**
+## Usage:
+1. Start Cadwork
+2. Go to Window → Plugins → MCP Bridge
+3. Click "Start Bridge" to execute the MCP server
+4. Click "Stop Bridge" to stop it
 
-### 2. MCPBridge Ordner kopieren:
-Den kompletten **`MCPBridge`** Ordner nach **`API.x64`** kopieren
-
-### 3. Cadwork neu starten:
-**Window → Plugins → MCP Bridge** klicken
-
-## ✨ Features
-
-- **🎮 GUI-Kontrolle** - Einfache Bridge-Steuerung
-- **🔄 Auto-Start** - Bridge automatisch aktivieren  
-- **🔍 Connection Test** - Verbindung testen
-- **🌐 Mehrsprachig** - DE/EN/FR/IT/ES Support
-- **⚡ Embedded Server** - Läuft direkt im Plugin
-- **📊 Status Monitor** - Echtzeit Bridge-Status
-
-## 🚀 Nach Installation
-
-```bash
-# MCP Server starten
-cd C:\cadworkMCP
-python main.py
-```
-
-**Jetzt können externe Tools Cadwork steuern!** 🎉
-
-## 📞 Support
-
-Das Plugin ist **production-ready** und verbindet:
-- **Cadwork** ↔ **MCP Bridge** ↔ **External Tools** (Claude, etc.)
-
-**Ready to copy & use!** 📦✅
+The plugin executes: `exec(open(r'C:\cadworkMCP\start.txt').read())`

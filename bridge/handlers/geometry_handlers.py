@@ -636,3 +636,137 @@ def handle_rotate_length_axis_90(args: Dict[str, Any]) -> Dict[str, Any]:
         return {"status": "error", "message": f"Invalid input: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"Failed to rotate length axis: {e}"}
+
+def handle_get_element_type(aParams: dict) -> dict:
+    """Ruft Element-Typ ab"""
+    try:
+        import element_controller as ec
+        
+        lElementId = aParams.get("element_id")
+        
+        if lElementId is None:
+            return {"status": "error", "message": "No element ID provided"}
+        
+        # Cadwork API aufrufen
+        lElementType = ec.get_element_type(lElementId)
+        
+        # Element-Typ als String zurückgeben
+        lTypeNames = {
+            0: "none",
+            1: "beam", 
+            2: "panel",
+            3: "drilling",
+            4: "node",
+            5: "line",
+            6: "surface",
+            7: "volume",
+            8: "container",
+            9: "auxiliary",
+            10: "text_object",
+            11: "dimension",
+            12: "architectural"
+        }
+        
+        lTypeName = lTypeNames.get(lElementType, f"unknown_type_{lElementType}")
+        
+        return {
+            "status": "success",
+            "element_id": lElementId,
+            "element_type": lTypeName,
+            "type_id": lElementType
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"get_element_type failed: {e}"}
+
+def handle_calculate_total_volume(aParams: dict) -> dict:
+    """Berechnet Gesamtvolumen einer Element-Liste"""
+    try:
+        import element_controller as ec
+        
+        lElementIds = aParams.get("element_ids", [])
+        
+        if not lElementIds:
+            return {"status": "error", "message": "No element IDs provided"}
+        
+        lTotalVolumeMm3 = 0.0
+        lProcessedElements = []
+        lFailedElements = []
+        
+        # Volumen aller Elemente summieren
+        for lElementId in lElementIds:
+            try:
+                lVolume = ec.get_element_volume(lElementId)
+                if lVolume is not None and lVolume > 0:
+                    lTotalVolumeMm3 += lVolume
+                    lProcessedElements.append(lElementId)
+                else:
+                    lFailedElements.append(lElementId)
+            except Exception as e:
+                lFailedElements.append(lElementId)
+        
+        # Einheiten-Konvertierung
+        lTotalVolumeCm3 = lTotalVolumeMm3 / 1000.0  # mm³ → cm³
+        lTotalVolumeDm3 = lTotalVolumeMm3 / 1000000.0  # mm³ → dm³ (Liter)
+        lTotalVolumeM3 = lTotalVolumeMm3 / 1000000000.0  # mm³ → m³
+        
+        return {
+            "status": "success",
+            "total_volume_mm3": lTotalVolumeMm3,
+            "total_volume_cm3": lTotalVolumeCm3,
+            "total_volume_dm3": lTotalVolumeDm3,
+            "total_volume_m3": lTotalVolumeM3,
+            "processed_elements": lProcessedElements,
+            "failed_elements": lFailedElements,
+            "processed_count": len(lProcessedElements),
+            "failed_count": len(lFailedElements),
+            "total_count": len(lElementIds)
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"calculate_total_volume failed: {e}"}
+
+def handle_calculate_total_weight(aParams: dict) -> dict:
+    """Berechnet Gesamtgewicht einer Element-Liste"""
+    try:
+        import element_controller as ec
+        
+        lElementIds = aParams.get("element_ids", [])
+        
+        if not lElementIds:
+            return {"status": "error", "message": "No element IDs provided"}
+        
+        lTotalWeightKg = 0.0
+        lProcessedElements = []
+        lFailedElements = []
+        
+        # Gewicht aller Elemente summieren
+        for lElementId in lElementIds:
+            try:
+                lWeight = ec.get_element_weight(lElementId)
+                if lWeight is not None and lWeight > 0:
+                    lTotalWeightKg += lWeight
+                    lProcessedElements.append(lElementId)
+                else:
+                    lFailedElements.append(lElementId)
+            except Exception as e:
+                lFailedElements.append(lElementId)
+        
+        # Einheiten-Konvertierung
+        lTotalWeightG = lTotalWeightKg * 1000.0      # kg → g
+        lTotalWeightT = lTotalWeightKg / 1000.0      # kg → t (Tonnen)
+        
+        return {
+            "status": "success",
+            "total_weight_kg": lTotalWeightKg,
+            "total_weight_g": lTotalWeightG,
+            "total_weight_t": lTotalWeightT,
+            "processed_elements": lProcessedElements,
+            "failed_elements": lFailedElements,
+            "processed_count": len(lProcessedElements),
+            "failed_count": len(lFailedElements),
+            "total_count": len(lElementIds)
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"calculate_total_weight failed: {e}"}

@@ -82,3 +82,93 @@ class AttributeController(BaseController):
             "element_ids": validated_ids,
             "material": str(material)
         })
+    
+    async def set_group(self, aElementIds: list, aGroup: str) -> dict:
+        """
+        Setzt die Gruppe für eine Liste von Elementen
+        
+        Args:
+            aElementIds: Liste der Element-IDs
+            aGroup: Gruppen-Name (String)
+        
+        Returns:
+            dict: Status der Operation
+        """
+        try:
+            # Validierung
+            if not isinstance(aElementIds, list) or not aElementIds:
+                return {"status": "error", "message": "element_ids must be a non-empty list"}
+            
+            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            
+            if not isinstance(aGroup, str):
+                return {"status": "error", "message": "group must be a string"}
+            
+            # Command senden
+            return self.send_command("set_group", {
+                "element_ids": lValidatedIds,
+                "group": aGroup
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"set_group failed: {e}"}
+    
+    async def set_comment(self, aElementIds: list, aComment: str) -> dict:
+        """
+        Setzt den Kommentar für eine Liste von Elementen
+        
+        Args:
+            aElementIds: Liste der Element-IDs
+            aComment: Kommentar-Text (String)
+        
+        Returns:
+            dict: Status der Operation
+        """
+        try:
+            # Validierung
+            if not isinstance(aElementIds, list) or not aElementIds:
+                return {"status": "error", "message": "element_ids must be a non-empty list"}
+            
+            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            
+            if not isinstance(aComment, str):
+                return {"status": "error", "message": "comment must be a string"}
+            
+            # Command senden
+            return self.send_command("set_comment", {
+                "element_ids": lValidatedIds,
+                "comment": aComment
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"set_comment failed: {e}"}
+    
+    async def set_subgroup(self, aElementIds: list, aSubgroup: str) -> dict:
+        """
+        Setzt die Untergruppe für eine Liste von Elementen
+        
+        Args:
+            aElementIds: Liste der Element-IDs
+            aSubgroup: Untergruppen-Name (String)
+        
+        Returns:
+            dict: Status der Operation
+        """
+        try:
+            # Validierung
+            if not isinstance(aElementIds, list) or not aElementIds:
+                return {"status": "error", "message": "element_ids must be a non-empty list"}
+            
+            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            
+            if not isinstance(aSubgroup, str):
+                return {"status": "error", "message": "subgroup must be a string"}
+            
+            # Command senden
+            return self.send_command("set_subgroup", {
+                "element_ids": lValidatedIds,
+                "subgroup": aSubgroup
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"set_subgroup failed: {e}"}

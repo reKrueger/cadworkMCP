@@ -186,3 +186,88 @@ def handle_set_material(args: Dict[str, Any]) -> Dict[str, Any]:
         return {"status": "error", "message": f"Invalid input: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"API error: {e}"}
+
+
+def handle_set_group(aParams: dict) -> dict:
+    """Setzt Gruppe für Elemente"""
+    try:
+        import attribute_controller as ac
+        
+        lElementIds = aParams.get("element_ids", [])
+        lGroup = aParams.get("group")
+        
+        if not lElementIds:
+            return {"status": "error", "message": "No element IDs provided"}
+        
+        if lGroup is None:
+            return {"status": "error", "message": "No group name provided"}
+        
+        # Cadwork API aufrufen
+        for lElementId in lElementIds:
+            ac.set_element_group(lElementId, lGroup)
+        
+        return {
+            "status": "success",
+            "message": f"Group '{lGroup}' set for {len(lElementIds)} elements",
+            "element_ids": lElementIds,
+            "group": lGroup
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"set_group failed: {e}"}
+
+def handle_set_comment(aParams: dict) -> dict:
+    """Setzt Kommentar für Elemente"""
+    try:
+        import attribute_controller as ac
+        
+        lElementIds = aParams.get("element_ids", [])
+        lComment = aParams.get("comment")
+        
+        if not lElementIds:
+            return {"status": "error", "message": "No element IDs provided"}
+        
+        if lComment is None:
+            return {"status": "error", "message": "No comment text provided"}
+        
+        # Cadwork API aufrufen
+        for lElementId in lElementIds:
+            ac.set_element_comment(lElementId, lComment)
+        
+        return {
+            "status": "success",
+            "message": f"Comment '{lComment}' set for {len(lElementIds)} elements",
+            "element_ids": lElementIds,
+            "comment": lComment
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"set_comment failed: {e}"}
+
+def handle_set_subgroup(aParams: dict) -> dict:
+    """Setzt Untergruppe für Elemente"""
+    try:
+        import attribute_controller as ac
+        
+        lElementIds = aParams.get("element_ids", [])
+        lSubgroup = aParams.get("subgroup")
+        
+        if not lElementIds:
+            return {"status": "error", "message": "No element IDs provided"}
+        
+        if lSubgroup is None:
+            return {"status": "error", "message": "No subgroup name provided"}
+        
+        # Cadwork API aufrufen
+        for lElementId in lElementIds:
+            ac.set_element_subgroup(lElementId, lSubgroup)
+        
+        return {
+            "status": "success",
+            "message": f"Subgroup '{lSubgroup}' set for {len(lElementIds)} elements",
+            "element_ids": lElementIds,
+            "subgroup": lSubgroup
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"set_subgroup failed: {e}"}

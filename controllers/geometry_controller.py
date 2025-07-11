@@ -178,3 +178,75 @@ class GeometryController(BaseController):
         validated_ids = [self.validate_element_id(eid) for eid in element_ids]
         
         return self.send_command("rotate_length_axis_90", {"element_ids": validated_ids})
+    
+    async def get_element_type(self, aElementId: int) -> dict:
+        """
+        Ruft den Typ eines Cadwork-Elements ab
+        
+        Args:
+            aElementId: Element-ID
+        
+        Returns:
+            dict: Element-Typ Information (beam, panel, drilling, etc.)
+        """
+        try:
+            # Validierung
+            lValidatedId = self.validate_element_id(aElementId)
+            
+            # Command senden
+            return self.send_command("get_element_type", {
+                "element_id": lValidatedId
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"get_element_type failed: {e}"}
+    
+    async def calculate_total_volume(self, aElementIds: list) -> dict:
+        """
+        Berechnet das Gesamtvolumen einer Liste von Elementen
+        
+        Args:
+            aElementIds: Liste der Element-IDs
+        
+        Returns:
+            dict: Gesamtvolumen in mm³ und anderen Einheiten
+        """
+        try:
+            # Validierung
+            if not isinstance(aElementIds, list) or not aElementIds:
+                return {"status": "error", "message": "element_ids must be a non-empty list"}
+            
+            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            
+            # Command senden
+            return self.send_command("calculate_total_volume", {
+                "element_ids": lValidatedIds
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"calculate_total_volume failed: {e}"}
+    
+    async def calculate_total_weight(self, aElementIds: list) -> dict:
+        """
+        Berechnet das Gesamtgewicht einer Liste von Elementen
+        
+        Args:
+            aElementIds: Liste der Element-IDs
+        
+        Returns:
+            dict: Gesamtgewicht in kg und anderen Einheiten
+        """
+        try:
+            # Validierung
+            if not isinstance(aElementIds, list) or not aElementIds:
+                return {"status": "error", "message": "element_ids must be a non-empty list"}
+            
+            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            
+            # Command senden
+            return self.send_command("calculate_total_weight", {
+                "element_ids": lValidatedIds
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"calculate_total_weight failed: {e}"}

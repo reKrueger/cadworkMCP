@@ -7,6 +7,7 @@ from core.logging import get_logger
 from controllers.element_controller import ElementController
 from controllers.geometry_controller import GeometryController
 from controllers.attribute_controller import AttributeController
+from controllers.visualization_controller import CVisualizationController
 
 # Create MCP server
 mcp = create_mcp_server()
@@ -15,6 +16,7 @@ mcp = create_mcp_server()
 element_ctrl = ElementController()
 geometry_ctrl = GeometryController()
 attribute_ctrl = AttributeController()
+visualization_ctrl = CVisualizationController()
 
 # --- ELEMENT TOOLS ---
 
@@ -82,6 +84,13 @@ async def move_element(element_ids: list, move_vector: list) -> dict:
     return await element_ctrl.move_element(element_ids, move_vector)
 
 @mcp.tool(
+    name="duplicate_elements",
+    description="Duplicates elements at the same location (no offset). Takes element IDs and returns new element IDs of duplicated elements."
+)
+async def duplicate_elements(element_ids: list) -> dict:
+    return await element_ctrl.duplicate_elements(element_ids)
+
+@mcp.tool(
     name="get_user_element_ids", 
     description="Prompts user to select elements in Cadwork 3D and returns their IDs. Optional count parameter limits selection to specific number of elements."
 )
@@ -131,6 +140,50 @@ async def create_drilling_points(diameter: float, p1: list, p2: list) -> dict:
 )
 async def create_polygon_beam(polygon_vertices: list, thickness: float, xl: list, zl: list) -> dict:
     return await element_ctrl.create_polygon_beam(polygon_vertices, thickness, xl, zl)
+
+# --- ELEMENT QUERY/FILTER TOOLS ---
+
+@mcp.tool(
+    name="get_elements_by_type",
+    description="Finds all elements of a specific type in the model. Takes element_type string ('beam', 'panel', 'drilling', etc.) and returns list of matching element IDs."
+)
+async def get_elements_by_type(element_type: str) -> dict:
+    return await element_ctrl.get_elements_by_type(element_type)
+
+@mcp.tool(
+    name="filter_elements_by_material",
+    description="Filters all elements by material name. Takes material_name string and returns list of element IDs with that material."
+)
+async def filter_elements_by_material(material_name: str) -> dict:
+    return await element_ctrl.filter_elements_by_material(material_name)
+
+@mcp.tool(
+    name="get_elements_in_group",
+    description="Finds all elements in a specific group. Takes group_name string and returns list of element IDs in that group."
+)
+async def get_elements_in_group(group_name: str) -> dict:
+    return await element_ctrl.get_elements_in_group(group_name)
+
+@mcp.tool(
+    name="get_element_count_by_type",
+    description="Gets count statistics of all elements by type in the model. Returns total counts and percentages for each element type."
+)
+async def get_element_count_by_type() -> dict:
+    return await element_ctrl.get_element_count_by_type()
+
+@mcp.tool(
+    name="get_material_statistics",
+    description="Gets material usage statistics for the entire model. Returns counts and percentages for each material used."
+)
+async def get_material_statistics() -> dict:
+    return await element_ctrl.get_material_statistics()
+
+@mcp.tool(
+    name="get_group_statistics",
+    description="Gets group usage statistics for the entire model. Returns counts and percentages for each group used."
+)
+async def get_group_statistics() -> dict:
+    return await element_ctrl.get_group_statistics()
 
 # --- GEOMETRY TOOLS ---
 
@@ -301,6 +354,29 @@ async def rotate_height_axis_90(element_ids: list) -> dict:
 async def rotate_length_axis_90(element_ids: list) -> dict:
     return await geometry_ctrl.rotate_length_axis_90(element_ids)
 
+@mcp.tool(
+    name="get_element_type",
+    description="Retrieves the type of a Cadwork element (beam, panel, drilling, etc.). Takes element ID and returns type information."
+)
+async def get_element_type(element_id: int) -> dict:
+    return await geometry_ctrl.get_element_type(element_id)
+
+# --- GEOMETRY CALCULATIONS ---
+
+@mcp.tool(
+    name="calculate_total_volume",
+    description="Calculates the total volume of a list of elements. Takes element IDs and returns total volume in multiple units (mm³, cm³, dm³, m³)."
+)
+async def calculate_total_volume(element_ids: list) -> dict:
+    return await geometry_ctrl.calculate_total_volume(element_ids)
+
+@mcp.tool(
+    name="calculate_total_weight",
+    description="Calculates the total weight of a list of elements. Takes element IDs and returns total weight in multiple units (g, kg, t)."
+)
+async def calculate_total_weight(element_ids: list) -> dict:
+    return await geometry_ctrl.calculate_total_weight(element_ids)
+
 # --- ATTRIBUTE TOOLS ---
 
 @mcp.tool(
@@ -339,6 +415,100 @@ async def set_name(element_ids: list, name: str) -> dict:
 )
 async def set_material(element_ids: list, material: str) -> dict:
     return await attribute_ctrl.set_material(element_ids, material)
+
+# --- VISUALIZATION TOOLS ---
+
+@mcp.tool(
+    name="set_color",
+    description="Sets the color for a list of elements. Takes element IDs and color_id (1-255 from Cadwork color palette)."
+)
+async def set_color(element_ids: list, color_id: int) -> dict:
+    return await visualization_ctrl.set_color(element_ids, color_id)
+
+@mcp.tool(
+    name="set_visibility", 
+    description="Sets the visibility for a list of elements. Takes element IDs and visible flag (True=show, False=hide)."
+)
+async def set_visibility(element_ids: list, visible: bool) -> dict:
+    return await visualization_ctrl.set_visibility(element_ids, visible)
+
+@mcp.tool(
+    name="set_transparency",
+    description="Sets the transparency for a list of elements. Takes element IDs and transparency value (0-100, 0=opaque, 100=fully transparent)."
+)
+async def set_transparency(element_ids: list, transparency: int) -> dict:
+    return await visualization_ctrl.set_transparency(element_ids, transparency)
+
+# --- VISUALIZATION GETTERS ---
+
+@mcp.tool(
+    name="get_color",
+    description="Gets the color of an element. Takes element ID and returns color information (color_id and color_name)."
+)
+async def get_color(element_id: int) -> dict:
+    return await visualization_ctrl.get_color(element_id)
+
+@mcp.tool(
+    name="get_transparency",
+    description="Gets the transparency of an element. Takes element ID and returns transparency value (0-100) and opacity info."
+)
+async def get_transparency(element_id: int) -> dict:
+    return await visualization_ctrl.get_transparency(element_id)
+
+# --- GLOBAL VISIBILITY TOOLS ---
+
+@mcp.tool(
+    name="show_all_elements",
+    description="Makes all elements in the model visible. No parameters needed. Returns count of elements made visible."
+)
+async def show_all_elements() -> dict:
+    return await visualization_ctrl.show_all_elements()
+
+@mcp.tool(
+    name="hide_all_elements",
+    description="Hides all elements in the model. No parameters needed. Returns count of elements hidden."
+)
+async def hide_all_elements() -> dict:
+    return await visualization_ctrl.hide_all_elements()
+
+# --- DISPLAY MANAGEMENT TOOLS ---
+
+@mcp.tool(
+    name="refresh_display",
+    description="Refreshes the display/viewport after changes. No parameters needed. Important for updating view after many operations."
+)
+async def refresh_display() -> dict:
+    return await visualization_ctrl.refresh_display()
+
+@mcp.tool(
+    name="get_visible_element_count",
+    description="Gets count of currently visible elements in the model. Returns visibility statistics and percentages."
+)
+async def get_visible_element_count() -> dict:
+    return await visualization_ctrl.get_visible_element_count()
+
+# --- EXTENDED ATTRIBUTE TOOLS ---
+
+@mcp.tool(
+    name="set_group",
+    description="Sets the group for a list of elements. Takes element IDs and group name string."
+)
+async def set_group(element_ids: list, group: str) -> dict:
+    return await attribute_ctrl.set_group(element_ids, group)
+
+@mcp.tool(
+    name="set_comment",
+    description="Sets the comment for a list of elements. Takes element IDs and comment text string."
+)
+async def set_comment(element_ids: list, comment: str) -> dict:
+    return await attribute_ctrl.set_comment(element_ids, comment)
+
+@mcp.tool(
+    name="set_subgroup",
+    description="Sets the subgroup for a list of elements. Takes element IDs and subgroup name string."
+)
+async def set_subgroup(element_ids: list, subgroup: str) -> dict:
+    return await attribute_ctrl.set_subgroup(element_ids, subgroup)
 
 # --- VERSION TOOL ---
 

@@ -159,3 +159,150 @@ class ElementController(BaseController):
             "xl": xl,
             "zl": zl
         })
+    
+    async def get_elements_by_type(self, aElementType: str) -> dict:
+        """
+        Findet alle Elemente eines bestimmten Typs im Modell
+        
+        Args:
+            aElementType: Element-Typ ("beam", "panel", "drilling", etc.)
+        
+        Returns:
+            dict: Liste der Element-IDs des angegebenen Typs
+        """
+        try:
+            # Validierung des Element-Typs
+            lValidTypes = ["beam", "panel", "drilling", "node", "line", "surface", 
+                          "volume", "container", "auxiliary", "text_object", 
+                          "dimension", "architectural"]
+            
+            if not isinstance(aElementType, str) or aElementType not in lValidTypes:
+                return {"status": "error", 
+                       "message": f"element_type must be one of: {', '.join(lValidTypes)}"}
+            
+            # Command senden
+            return self.send_command("get_elements_by_type", {
+                "element_type": aElementType
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"get_elements_by_type failed: {e}"}
+    
+    async def filter_elements_by_material(self, aMaterialName: str) -> dict:
+        """
+        Filtert alle Elemente nach Material-Name
+        
+        Args:
+            aMaterialName: Material-Name (String)
+        
+        Returns:
+            dict: Liste der Element-IDs mit dem angegebenen Material
+        """
+        try:
+            # Validierung
+            if not isinstance(aMaterialName, str):
+                return {"status": "error", "message": "material_name must be a string"}
+            
+            if not aMaterialName.strip():
+                return {"status": "error", "message": "material_name cannot be empty"}
+            
+            # Command senden
+            return self.send_command("filter_elements_by_material", {
+                "material_name": aMaterialName.strip()
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"filter_elements_by_material failed: {e}"}
+    
+    async def get_elements_in_group(self, aGroupName: str) -> dict:
+        """
+        Findet alle Elemente in einer bestimmten Gruppe
+        
+        Args:
+            aGroupName: Gruppen-Name (String)
+        
+        Returns:
+            dict: Liste der Element-IDs in der angegebenen Gruppe
+        """
+        try:
+            # Validierung
+            if not isinstance(aGroupName, str):
+                return {"status": "error", "message": "group_name must be a string"}
+            
+            if not aGroupName.strip():
+                return {"status": "error", "message": "group_name cannot be empty"}
+            
+            # Command senden
+            return self.send_command("get_elements_in_group", {
+                "group_name": aGroupName.strip()
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"get_elements_in_group failed: {e}"}
+    
+    async def get_element_count_by_type(self) -> dict:
+        """
+        Ermittelt die Anzahl aller Elemente pro Typ im Modell
+        
+        Returns:
+            dict: Statistiken über Element-Verteilung nach Typen
+        """
+        try:
+            # Command senden
+            return self.send_command("get_element_count_by_type", {})
+            
+        except Exception as e:
+            return {"status": "error", "message": f"get_element_count_by_type failed: {e}"}
+    
+    async def get_material_statistics(self) -> dict:
+        """
+        Ermittelt Material-Statistiken des gesamten Modells
+        
+        Returns:
+            dict: Statistiken über Material-Verteilung (welche Materialien, Anzahl, Prozente)
+        """
+        try:
+            # Command senden
+            return self.send_command("get_material_statistics", {})
+            
+        except Exception as e:
+            return {"status": "error", "message": f"get_material_statistics failed: {e}"}
+    
+    async def get_group_statistics(self) -> dict:
+        """
+        Ermittelt Gruppen-Statistiken des gesamten Modells
+        
+        Returns:
+            dict: Statistiken über Gruppen-Verteilung (welche Gruppen, Anzahl, Prozente)
+        """
+        try:
+            # Command senden
+            return self.send_command("get_group_statistics", {})
+            
+        except Exception as e:
+            return {"status": "error", "message": f"get_group_statistics failed: {e}"}
+    
+    async def duplicate_elements(self, aElementIds: list) -> dict:
+        """
+        Dupliziert Elemente am gleichen Ort (ohne Versatz)
+        
+        Args:
+            aElementIds: Liste der Element-IDs zum Duplizieren
+        
+        Returns:
+            dict: Liste der neuen Element-IDs der duplizierten Elemente
+        """
+        try:
+            # Validierung
+            if not isinstance(aElementIds, list) or not aElementIds:
+                return {"status": "error", "message": "element_ids must be a non-empty list"}
+            
+            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            
+            # Command senden
+            return self.send_command("duplicate_elements", {
+                "element_ids": lValidatedIds
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"duplicate_elements failed: {e}"}

@@ -6,7 +6,7 @@ from typing import Dict, Any
 def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
     """Dispatch command to appropriate handler"""
     # Import handlers here to avoid circular imports
-    from .handlers import element_handlers, geometry_handlers, attribute_handlers, utility_handlers
+    from .handlers import element_handlers, geometry_handlers, attribute_handlers, utility_handlers, visualization_handlers
     
     # Map operations to their handlers
     OPERATION_HANDLERS = {
@@ -34,6 +34,13 @@ def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
         "create_standard_panel_points": element_handlers.handle_create_standard_panel_points,
         "create_drilling_points": element_handlers.handle_create_drilling_points,
         "create_polygon_beam": element_handlers.handle_create_polygon_beam,
+        "get_elements_by_type": element_handlers.handle_get_elements_by_type,
+        "filter_elements_by_material": element_handlers.handle_filter_elements_by_material,
+        "get_elements_in_group": element_handlers.handle_get_elements_in_group,
+        "get_element_count_by_type": element_handlers.handle_get_element_count_by_type,
+        "get_material_statistics": element_handlers.handle_get_material_statistics,
+        "get_group_statistics": element_handlers.handle_get_group_statistics,
+        "duplicate_elements": element_handlers.handle_duplicate_elements,
         
         # Geometry operations
         "get_element_width": geometry_handlers.handle_get_element_width,
@@ -59,6 +66,9 @@ def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
         "invert_model": geometry_handlers.handle_invert_model,
         "rotate_height_axis_90": geometry_handlers.handle_rotate_height_axis_90,
         "rotate_length_axis_90": geometry_handlers.handle_rotate_length_axis_90,
+        "get_element_type": geometry_handlers.handle_get_element_type,
+        "calculate_total_volume": geometry_handlers.handle_calculate_total_volume,
+        "calculate_total_weight": geometry_handlers.handle_calculate_total_weight,
         
         # Attribute operations
         "get_standard_attributes": attribute_handlers.handle_get_standard_attributes,
@@ -66,6 +76,22 @@ def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
         "list_defined_user_attributes": attribute_handlers.handle_list_defined_user_attributes,
         "set_name": attribute_handlers.handle_set_name,
         "set_material": attribute_handlers.handle_set_material,
+        
+        # Visualization operations
+        "set_color": visualization_handlers.handle_set_color,
+        "set_visibility": visualization_handlers.handle_set_visibility,
+        "set_transparency": visualization_handlers.handle_set_transparency,
+        "get_color": visualization_handlers.handle_get_color,
+        "get_transparency": visualization_handlers.handle_get_transparency,
+        "show_all_elements": visualization_handlers.handle_show_all_elements,
+        "hide_all_elements": visualization_handlers.handle_hide_all_elements,
+        "refresh_display": visualization_handlers.handle_refresh_display,
+        "get_visible_element_count": visualization_handlers.handle_get_visible_element_count,
+        
+        # Extended attribute operations
+        "set_group": attribute_handlers.handle_set_group,
+        "set_comment": attribute_handlers.handle_set_comment,
+        "set_subgroup": attribute_handlers.handle_set_subgroup,
     }
     if operation not in OPERATION_HANDLERS:
         return {

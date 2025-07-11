@@ -470,3 +470,322 @@ def handle_create_polygon_beam(params):
         
     except Exception as e:
         return {"status": "error", "message": f"Failed to create polygon beam: {e}"}
+
+def handle_get_elements_by_type(aParams: dict) -> dict:
+    """Findet alle Elemente eines bestimmten Typs"""
+    try:
+        import element_controller as ec
+        
+        lElementType = aParams.get("element_type")
+        
+        if not lElementType:
+            return {"status": "error", "message": "No element type provided"}
+        
+        # Typ-Mapping (String -> Cadwork API Nummer)
+        lTypeMapping = {
+            "beam": 1,
+            "panel": 2, 
+            "drilling": 3,
+            "node": 4,
+            "line": 5,
+            "surface": 6,
+            "volume": 7,
+            "container": 8,
+            "auxiliary": 9,
+            "text_object": 10,
+            "dimension": 11,
+            "architectural": 12
+        }
+        
+        if lElementType not in lTypeMapping:
+            return {"status": "error", "message": f"Unknown element type: {lElementType}"}
+        
+        lTypeId = lTypeMapping[lElementType]
+        
+        # Alle Elemente des Typs finden
+        lAllElements = ec.get_all_element_ids()
+        lFilteredElements = []
+        
+        for lElementId in lAllElements:
+            try:
+                lCurrentType = ec.get_element_type(lElementId)
+                if lCurrentType == lTypeId:
+                    lFilteredElements.append(lElementId)
+            except:
+                continue  # Element überspringen bei Fehlern
+        
+        return {
+            "status": "success",
+            "element_type": lElementType,
+            "type_id": lTypeId,
+            "element_ids": lFilteredElements,
+            "count": len(lFilteredElements)
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"get_elements_by_type failed: {e}"}
+
+def handle_filter_elements_by_material(aParams: dict) -> dict:
+    """Filtert Elemente nach Material"""
+    try:
+        import element_controller as ec
+        import attribute_controller as ac
+        
+        lMaterialName = aParams.get("material_name")
+        
+        if not lMaterialName:
+            return {"status": "error", "message": "No material name provided"}
+        
+        # Alle Elemente im Modell durchsuchen
+        lAllElements = ec.get_all_element_ids()
+        lFilteredElements = []
+        
+        for lElementId in lAllElements:
+            try:
+                lCurrentMaterial = ac.get_element_material_name(lElementId)
+                if lCurrentMaterial and lCurrentMaterial.strip().lower() == lMaterialName.strip().lower():
+                    lFilteredElements.append(lElementId)
+            except:
+                continue  # Element überspringen bei Fehlern
+        
+        return {
+            "status": "success",
+            "material_name": lMaterialName,
+            "element_ids": lFilteredElements,
+            "count": len(lFilteredElements)
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"filter_elements_by_material failed: {e}"}
+
+def handle_get_elements_in_group(aParams: dict) -> dict:
+    """Findet alle Elemente in einer bestimmten Gruppe"""
+    try:
+        import element_controller as ec
+        import attribute_controller as ac
+        
+        lGroupName = aParams.get("group_name")
+        
+        if not lGroupName:
+            return {"status": "error", "message": "No group name provided"}
+        
+        # Alle Elemente im Modell durchsuchen
+        lAllElements = ec.get_all_element_ids()
+        lFilteredElements = []
+        
+        for lElementId in lAllElements:
+            try:
+                lCurrentGroup = ac.get_element_group(lElementId)
+                if lCurrentGroup and lCurrentGroup.strip().lower() == lGroupName.strip().lower():
+                    lFilteredElements.append(lElementId)
+            except:
+                continue  # Element überspringen bei Fehlern
+        
+        return {
+            "status": "success",
+            "group_name": lGroupName,
+            "element_ids": lFilteredElements,
+            "count": len(lFilteredElements)
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"get_elements_in_group failed: {e}"}
+
+def handle_get_element_count_by_type(aParams: dict) -> dict:
+    """Ermittelt Anzahl Elemente pro Typ"""
+    try:
+        import element_controller as ec
+        
+        # Typ-Mapping
+        lTypeMapping = {
+            1: "beam",
+            2: "panel", 
+            3: "drilling",
+            4: "node",
+            5: "line",
+            6: "surface",
+            7: "volume",
+            8: "container",
+            9: "auxiliary",
+            10: "text_object",
+            11: "dimension",
+            12: "architectural"
+        }
+        
+        # Alle Elemente im Modell
+        lAllElements = ec.get_all_element_ids()
+        lTypeCounts = {}
+        lTotalCount = 0
+        
+        # Elemente nach Typ zählen
+        for lElementId in lAllElements:
+            try:
+                lTypeId = ec.get_element_type(lElementId)
+                lTypeName = lTypeMapping.get(lTypeId, f"unknown_type_{lTypeId}")
+                
+                if lTypeName not in lTypeCounts:
+                    lTypeCounts[lTypeName] = 0
+                lTypeCounts[lTypeName] += 1
+                lTotalCount += 1
+            except:
+                continue  # Element überspringen bei Fehlern
+        
+        # Prozentuale Verteilung berechnen
+        lTypePercentages = {}
+        if lTotalCount > 0:
+            for lTypeName, lCount in lTypeCounts.items():
+                lTypePercentages[lTypeName] = (lCount / lTotalCount) * 100.0
+        
+        return {
+            "status": "success",
+            "total_elements": lTotalCount,
+            "type_counts": lTypeCounts,
+            "type_percentages": lTypePercentages,
+            "available_types": list(lTypeCounts.keys())
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"get_element_count_by_type failed: {e}"}
+
+def handle_get_material_statistics(aParams: dict) -> dict:
+    """Ermittelt Material-Statistiken des gesamten Modells"""
+    try:
+        import element_controller as ec
+        import attribute_controller as ac
+        
+        # Alle Elemente im Modell
+        lAllElements = ec.get_all_element_ids()
+        lMaterialCounts = {}
+        lTotalCount = 0
+        lElementsWithoutMaterial = 0
+        
+        # Materialien aller Elemente zählen
+        for lElementId in lAllElements:
+            try:
+                lMaterial = ac.get_element_material_name(lElementId)
+                if lMaterial and lMaterial.strip():
+                    lMaterialName = lMaterial.strip()
+                    if lMaterialName not in lMaterialCounts:
+                        lMaterialCounts[lMaterialName] = 0
+                    lMaterialCounts[lMaterialName] += 1
+                else:
+                    lElementsWithoutMaterial += 1
+                lTotalCount += 1
+            except:
+                lElementsWithoutMaterial += 1
+                lTotalCount += 1
+        
+        # Prozentuale Verteilung berechnen
+        lMaterialPercentages = {}
+        if lTotalCount > 0:
+            for lMaterialName, lCount in lMaterialCounts.items():
+                lMaterialPercentages[lMaterialName] = (lCount / lTotalCount) * 100.0
+        
+        # Top Materialien sortieren
+        lSortedMaterials = sorted(lMaterialCounts.items(), key=lambda x: x[1], reverse=True)
+        
+        return {
+            "status": "success",
+            "total_elements": lTotalCount,
+            "elements_with_material": lTotalCount - lElementsWithoutMaterial,
+            "elements_without_material": lElementsWithoutMaterial,
+            "material_counts": lMaterialCounts,
+            "material_percentages": lMaterialPercentages,
+            "available_materials": list(lMaterialCounts.keys()),
+            "top_materials": lSortedMaterials[:10],  # Top 10
+            "unique_materials_count": len(lMaterialCounts)
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"get_material_statistics failed: {e}"}
+
+def handle_get_group_statistics(aParams: dict) -> dict:
+    """Ermittelt Gruppen-Statistiken des gesamten Modells"""
+    try:
+        import element_controller as ec
+        import attribute_controller as ac
+        
+        # Alle Elemente im Modell
+        lAllElements = ec.get_all_element_ids()
+        lGroupCounts = {}
+        lTotalCount = 0
+        lElementsWithoutGroup = 0
+        
+        # Gruppen aller Elemente zählen
+        for lElementId in lAllElements:
+            try:
+                lGroup = ac.get_element_group(lElementId)
+                if lGroup and lGroup.strip():
+                    lGroupName = lGroup.strip()
+                    if lGroupName not in lGroupCounts:
+                        lGroupCounts[lGroupName] = 0
+                    lGroupCounts[lGroupName] += 1
+                else:
+                    lElementsWithoutGroup += 1
+                lTotalCount += 1
+            except:
+                lElementsWithoutGroup += 1
+                lTotalCount += 1
+        
+        # Prozentuale Verteilung berechnen
+        lGroupPercentages = {}
+        if lTotalCount > 0:
+            for lGroupName, lCount in lGroupCounts.items():
+                lGroupPercentages[lGroupName] = (lCount / lTotalCount) * 100.0
+        
+        # Top Gruppen sortieren
+        lSortedGroups = sorted(lGroupCounts.items(), key=lambda x: x[1], reverse=True)
+        
+        return {
+            "status": "success",
+            "total_elements": lTotalCount,
+            "elements_with_group": lTotalCount - lElementsWithoutGroup,
+            "elements_without_group": lElementsWithoutGroup,
+            "group_counts": lGroupCounts,
+            "group_percentages": lGroupPercentages,
+            "available_groups": list(lGroupCounts.keys()),
+            "top_groups": lSortedGroups,
+            "unique_groups_count": len(lGroupCounts)
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"get_group_statistics failed: {e}"}
+
+def handle_duplicate_elements(aParams: dict) -> dict:
+    """Dupliziert Elemente am gleichen Ort"""
+    try:
+        import element_controller as ec
+        
+        lElementIds = aParams.get("element_ids", [])
+        
+        if not lElementIds:
+            return {"status": "error", "message": "No element IDs provided"}
+        
+        lNewElementIds = []
+        lFailedElements = []
+        
+        # Elemente einzeln duplizieren
+        for lElementId in lElementIds:
+            try:
+                # Kopieren mit Null-Vektor (kein Versatz)
+                lCopyResult = ec.copy_elements([lElementId], [0.0, 0.0, 0.0])
+                if lCopyResult and len(lCopyResult) > 0:
+                    lNewElementIds.extend(lCopyResult)
+                else:
+                    lFailedElements.append(lElementId)
+            except Exception as e:
+                lFailedElements.append(lElementId)
+        
+        return {
+            "status": "success",
+            "message": f"Duplicated {len(lNewElementIds)} elements",
+            "original_element_ids": lElementIds,
+            "new_element_ids": lNewElementIds,
+            "failed_elements": lFailedElements,
+            "duplicated_count": len(lNewElementIds),
+            "failed_count": len(lFailedElements),
+            "total_count": len(lElementIds)
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"duplicate_elements failed: {e}"}

@@ -14,6 +14,8 @@ from tests.test_config import TestResult
 from tests.test_element_controller import ElementControllerTests
 from tests.test_geometry_controller import GeometryControllerTests
 from tests.test_attribute_controller import AttributeControllerTests
+from tests.test_visualization_controller import VisualizationControllerTests
+from tests.test_utility_controller import UtilityControllerTests
 from tests.test_system import SystemTests
 
 def print_separator(char="=", length=80):
@@ -97,14 +99,14 @@ def run_connection_test():
         result = connection.send_command("ping")
         
         if result.get("status") == "ok":
-            print("✓ Bridge connection successful")
+            print("+ Bridge connection successful")
             return True
         else:
-            print(f"✗ Bridge connection failed: {result.get('message')}")
+            print(f"X Bridge connection failed: {result.get('message')}")
             return False
             
     except Exception as e:
-        print(f"✗ Connection test failed: {e}")
+        print(f"X Connection test failed: {e}")
         print("\nPlease ensure:")
         print("1. Cadwork 3D is running")
         print("2. Bridge is started (run start.txt in Cadwork Python console)")
@@ -123,7 +125,7 @@ def run_all_tests(skip_connection_test=False):
     # Connection test
     if not skip_connection_test:
         if not run_connection_test():
-            print("\n✗ Skipping tests due to connection failure")
+            print("\nX Skipping tests due to connection failure")
             print("Use --skip-connection to run tests without connection check")
             return False
     
@@ -132,6 +134,8 @@ def run_all_tests(skip_connection_test=False):
         ElementControllerTests(),
         GeometryControllerTests(), 
         AttributeControllerTests(),
+        VisualizationControllerTests(),
+        UtilityControllerTests(),
         SystemTests()
     ]
     
@@ -142,10 +146,10 @@ def run_all_tests(skip_connection_test=False):
             summary = suite.run_all_tests()
             summaries.append(summary)
         except KeyboardInterrupt:
-            print(f"\n✗ Tests interrupted during {suite.name}")
+            print(f"\nX Tests interrupted during {suite.name}")
             break
         except Exception as e:
-            print(f"\n✗ Test suite {suite.name} crashed: {e}")
+            print(f"\nX Test suite {suite.name} crashed: {e}")
             # Create error summary
             error_summary = {
                 "suite_name": suite.name,
@@ -171,13 +175,13 @@ def run_all_tests(skip_connection_test=False):
         print(f"Tests Per Second: {total_tests/total_duration:.1f}")
         
         if total_passed == total_tests:
-            print("\n🎉 ALL TESTS PASSED! 🎉")
+            print("\n[SUCCESS] ALL TESTS PASSED!")
             return True
         else:
-            print(f"\n⚠️  {total_tests - total_passed} TESTS FAILED")
+            print(f"\n[WARNING] {total_tests - total_passed} TESTS FAILED")
             return False
     else:
-        print("\n✗ No test results available")
+        print("\nX No test results available")
         return False
 
 def main():
@@ -187,7 +191,7 @@ def main():
     parser = argparse.ArgumentParser(description="Cadwork MCP Server Test Suite")
     parser.add_argument("--skip-connection", action="store_true", 
                        help="Skip connection test (useful for testing without Cadwork)")
-    parser.add_argument("--suite", choices=["element", "geometry", "attribute", "system"], 
+    parser.add_argument("--suite", choices=["element", "geometry", "attribute", "visualization", "utility", "system"], 
                        help="Run only specific test suite")
     
     args = parser.parse_args()
@@ -198,6 +202,8 @@ def main():
             "element": ElementControllerTests,
             "geometry": GeometryControllerTests,
             "attribute": AttributeControllerTests,
+            "visualization": VisualizationControllerTests,
+            "utility": UtilityControllerTests,
             "system": SystemTests
         }
         

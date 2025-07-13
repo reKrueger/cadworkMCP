@@ -32,7 +32,7 @@ class GeometryControllerTests(TestSuite):
             if result.get("status") == "ok" and "element_id" in result:
                 self.test_element_id = result["element_id"]
                 self.test_elements.append(self.test_element_id)
-                print(f"  ✓ Created test element {self.test_element_id}")
+                print(f"  + Created test element {self.test_element_id}")
             else:
                 raise Exception(f"Failed to create test element: {result}")
                 
@@ -45,10 +45,10 @@ class GeometryControllerTests(TestSuite):
             ))
             if result2.get("status") == "ok" and "element_id" in result2:
                 self.test_elements.append(result2["element_id"])
-                print(f"  ✓ Created second test element {result2['element_id']}")
+                print(f"  + Created second test element {result2['element_id']}")
                 
         except Exception as e:
-            print(f"  ✗ Setup failed: {e}")
+            print(f"  X Setup failed: {e}")
             raise
     
     def teardown(self):
@@ -58,7 +58,7 @@ class GeometryControllerTests(TestSuite):
             try:
                 result = asyncio.run(self.element_ctrl.delete_elements(self.test_elements))
                 if result.get("status") == "ok":
-                    print("  ✓ Geometry cleanup successful")
+                    print("  + Geometry cleanup successful")
                 else:
                     print(f"  ! Geometry cleanup warning: {result.get('message')}")
             except Exception as e:

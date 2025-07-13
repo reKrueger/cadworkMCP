@@ -2,6 +2,49 @@
 
 Ein vollständig strukturierter Cadwork MCP Server mit sauberer Architektur und eliminierter Code-Duplikation. Basiert auf der [Cadwork Python API](https://github.com/cwapi3d/cwapi3dpython).
 
+## 🚨 **ENTWICKLUNGSRICHTLINIEN**
+
+### **📋 Mandatory Update Cycle beim Hinzufügen neuer Funktionen:**
+
+**Jede neue Funktion MUSS diesen 4-Schritt-Prozess durchlaufen:**
+
+1. **📝 Code Implementation**
+   - Controller-Funktion implementieren (mit C+UpperCamelCase Namenskonvention)
+   - Bridge-Handler erstellen/erweitern
+   - main.py Tool registrieren
+
+2. **🧪 Test Implementation**
+   - Tests für neue Funktion in entsprechender test_*_controller.py hinzufügen
+   - Error-Cases und Parameter-Validierung testen
+   - run_tests.py bei neuen Controllern erweitern
+
+3. **📚 README Update**
+   - Funktions-Liste in "IMPLEMENTIERTE FUNKTIONEN" aktualisieren
+   - Tool-Zähler aktualisieren (Controller + Gesamt)
+   - Code-Beispiele bei Bedarf ergänzen
+   - Fortschritts-Tabelle aktualisieren
+
+4. **🎯 Next Functions Documentation**
+   - "NÄCHSTE GEPLANTE FUNKTIONEN" Sektion aktualisieren
+   - Prioritäten-Liste überarbeiten
+   - Roadmap-Planung dokumentieren
+
+### **⚙️ Nur offizielle Cadwork API Funktionen:**
+- **NUR** Funktionen aus der [offiziellen Cadwork Python API](https://docs.cadwork.com/projects/cwapi3dpython/en/latest/) implementieren
+- **KEINE** eigenen/custom Funktionen erfinden
+- Bei Unsicherheit: API-Dokumentation prüfen
+
+### **🚫 UNICODE-ZEICHEN VERBOT:**
+- **NIEMALS** Unicode-Zeichen (✓ ✗ ✘ 🎉 ⚠️ ❌) in Code oder Tests verwenden
+- **Grund:** Windows CMD/PowerShell unterstützt diese nicht zuverlässig
+- **Alternative:** Einfache ASCII-Zeichen (+, X, !, [OK], [ERROR], etc.)
+- **Betrifft:** Alle .py Dateien, besonders Tests und Console-Ausgaben
+
+### **📊 Kontinuierliche Dokumentation:**
+- README.md ist die **SINGLE SOURCE OF TRUTH** für den Projektstand
+- Tests dokumentieren die **QUALITY ASSURANCE** 
+- Jeder Commit sollte README + Tests aktuell halten
+
 ## 📁 Aktuelle Struktur
 
 ```
@@ -49,9 +92,9 @@ exec(open(r'C:\cadworkMCP\start.txt').read())
 ```bash
 python main.py
 ```
-## ✅ IMPLEMENTIERTE FUNKTIONEN - **107 TOOLS**
+## [OK] IMPLEMENTIERTE FUNKTIONEN - **78 TOOLS**
 
-### 🏗️ **Element Controller (61 Funktionen implementiert)**
+### [ELEMENT] **Element Controller (31 Funktionen implementiert)**
 
 #### Element Erstellung (8 Funktionen)
 - `create_beam(p1, p2, width, height, p3=None)` - Erstellt Balken mit Rechteckquerschnitt
@@ -63,7 +106,7 @@ python main.py
 - `create_drilling_points(diameter, p1, p2)` - Erstellt Bohrungen mit Punkten
 - `create_polygon_beam(vertices, thickness, xl, zl)` - Erstellt Polygon-Balken
 
-#### Element Verwaltung (10 Funktionen)
+#### Element Verwaltung (18 Funktionen)
 - `get_active_element_ids()` - Aktive (ausgewählte) Element-IDs
 - `get_all_element_ids()` - ALLE Element-IDs im Modell
 - `get_visible_element_ids()` - Sichtbare Element-IDs
@@ -73,6 +116,14 @@ python main.py
 - `move_element(element_ids, move_vector)` - Verschiebt Elemente
 - `duplicate_elements(element_ids)` - Dupliziert Elemente am gleichen Ort
 - `get_user_element_ids(count=None)` - Benutzerauswahl von Elementen
+- `join_elements(element_ids)` - Verbindet Elemente miteinander (Join)
+- `unjoin_elements(element_ids)` - Trennt verbundene Elemente (Unjoin)
+- `cut_corner_lap(element_ids, cut_params)` - Eckblatt-Verbindung erstellen
+- `cut_cross_lap(element_ids, cut_params)` - Kreuzblatt-Verbindung erstellen
+- `cut_half_lap(element_ids, cut_params)` - Halbes Blatt-Verbindung erstellen
+- `cut_double_tenon(element_ids, cut_params)` - Doppelzapfen-Verbindung erstellen
+- `cut_scarf_joint(element_ids, cut_params)` - Stoßverbindung für Balkenverlängerungen
+- `cut_shoulder(element_ids, cut_params)` - Schulterschnitt für tragende Verbindungen
 
 #### Query/Filter System (6 Funktionen)
 - `get_elements_by_type(element_type)` - Alle Elemente eines Typs finden
@@ -82,7 +133,7 @@ python main.py
 - `get_material_statistics()` - Material-Nutzungsstatistiken
 - `get_group_statistics()` - Gruppen-Nutzungsstatistiken
 
-### 📐 **Geometry Controller (35 Funktionen implementiert)**
+### 📐 **Geometry Controller (26 Funktionen implementiert)**
 
 #### Grundmaße (5 Funktionen)
 - `get_element_width(element_id)` - Breite in mm
@@ -134,12 +185,32 @@ python main.py
 - `set_subgroup(element_ids, subgroup)` - Untergruppe für Elemente setzen
 - `set_comment(element_ids, comment)` - Kommentar für Elemente setzen
 
-### 🎨 **Visualization Controller (3 Funktionen implementiert)**
+### 🎨 **Visualization Controller (9 Funktionen implementiert)**
 
-#### Erscheinungsbild (3 Funktionen)
+#### Erscheinungsbild (9 Funktionen)
 - `set_color(element_ids, color_id)` - Farbe setzen (1-255 Farbpalette)
 - `set_transparency(element_ids, transparency)` - Transparenz setzen (0-100%)
 - `set_visibility(element_ids, visible)` - Sichtbarkeit ein-/ausschalten
+- `get_color(element_id)` - Farbe eines Elements abfragen
+- `get_transparency(element_id)` - Transparenz eines Elements abfragen
+- `show_all_elements()` - Alle Elemente sichtbar machen
+- `hide_all_elements()` - Alle Elemente ausblenden
+- `refresh_display()` - Display/Viewport aktualisieren
+- `get_visible_element_count()` - Anzahl sichtbarer Elemente ermitteln
+
+### [CONFIG] **Utility Controller (6 Funktionen implementiert)**
+
+#### Performance & Display (2 Funktionen)
+- `disable_auto_display_refresh()` - Deaktiviert Auto-Display für Performance
+- `enable_auto_display_refresh()` - Reaktiviert Auto-Display nach Batch-Ops
+
+#### Ausgabe & Feedback (2 Funktionen) 
+- `print_error(message)` - Zeigt Fehlermeldung in Cadwork an
+- `print_warning(message)` - Zeigt Warnmeldung in Cadwork an
+
+#### System-Info & Dateipfade (2 Funktionen)
+- `get_3d_file_path()` - Pfad der aktuell geöffneten 3D-Datei abrufen
+- `get_project_data()` - Projekt-Informationen und Metadaten abrufen
 
 ### 🔧 **System (1 Funktion)**
 - `get_cadwork_version_info()` - Versionsinformationen
@@ -148,40 +219,60 @@ python main.py
 
 ## 📊 **IMPLEMENTIERUNGS-FORTSCHRITT**
 
-### 🏆 **AKTUELLER STAND: 107 TOOLS**
+### [SUCCESS] **AKTUELLER STAND: 78 TOOLS**
 
 | Controller | Implementiert | Status |
 |------------|--------------|--------|
-| **Element Controller** | 61 | 🚀 **Query-Master + Analytics** |
-| **Geometry Controller** | 35 | 📐 **Vollständige Calc-Suite** |
-| **Attribute Controller** | 8 | 🎯 **VOLLSTÄNDIG** |
-| **Visualization Controller** | 3 | 🎨 **Styling-Komplett** |
-| **System** | 1 | 🔧 Info |
-| **GESAMT** | **107** | 🏆 **PRODUCTION-READY** |
+| **Element Controller** | 31 | [ROCKET] **Core + Connections + 6 Cut-Ops** |
+| **Geometry Controller** | 26 | [GEOMETRY] **Vollständige Calc-Suite** |
+| **Attribute Controller** | 8 | [TARGET] **VOLLSTÄNDIG** |
+| **Visualization Controller** | 9 | [VISUAL] **Display-Management** |
+| **Utility Controller** | 6 | [CONFIG] **Performance & System-Info** |
+| **System** | 1 | [CONFIG] Info |
+| **GESAMT** | **78** | [SUCCESS] **PRODUCTION-READY** |
 
 ## 🚀 **VOLLSTÄNDIGE WORKFLOW-CAPABILITIES**
 
 ### 🏗️ **Element Management - Komplett**
 ```python
-# Vollständiger Element-Lifecycle
-beam_ids = await create_standard_beam_points("KVH 60/120", [0,0,0], [2400,0,0])
-element_id = beam_ids["element_id"]
+# Erweiterte Holzbau-Workflows mit 4 Cut-Operations
+main_beam = await create_standard_beam_points("BSH GL28h 200x400", [0,0,0], [6000,0,0])
+side_beam = await create_standard_beam_points("BSH GL28h 160x320", [5800,0,0], [5800,2000,0])
+cross_beam = await create_standard_beam_points("BSH GL28h 120x240", [3000,-300,400], [3000,300,400])
+tenon_beam = await create_standard_beam_points("BSH GL28h 80x160", [1500,0,0], [1700,0,0])
 
-# Vollständige Attributierung
-await set_name([element_id], "Hauptbalken HB-01")
-await set_material([element_id], "BSH GL24h")
-await set_group([element_id], "Tragwerk")
-await set_subgroup([element_id], "Hauptträger")
-await set_comment([element_id], "Statisch geprüft - OK")
+await disable_auto_display_refresh()  # Performance-Optimierung
+await print_warning("Erstelle komplexe Holzverbindungen...")
 
-# Visualization
-await set_color([element_id], 5)           # Blau
-await set_transparency([element_id], 0)    # Undurchsichtig
-await set_visibility([element_id], True)  # Sichtbar
+# 1. Eckblatt-Verbindung am Ende
+corner_params = {"cut_depth": 200, "cut_width": 400, "offset": 100}
+await cut_corner_lap([main_beam["element_id"], side_beam["element_id"]], corner_params)
 
-# Duplizieren und Verschieben
-duplicates = await duplicate_elements([element_id])
-await move_element(duplicates["new_element_ids"], [0, 625, 0])
+# 2. Kreuzblatt-Verbindung in der Mitte
+cross_params = {"cut_depth_1": 120, "cut_depth_2": 200, "position": "center"}
+await cut_cross_lap([main_beam["element_id"], cross_beam["element_id"]], cross_params)
+
+# 3. Halbes Blatt mit speziellem Verhältnis
+half_params = {"master_element": main_beam["element_id"], "cut_depth_ratio": 0.6}
+await cut_half_lap([main_beam["element_id"], side_beam["element_id"]], half_params)
+
+# 4. Doppelzapfen-Verbindung für kleine Verbindung
+tenon_params = {
+    "tenon_element": tenon_beam["element_id"],
+    "tenon_width": 60, "tenon_height": 120, 
+    "tenon_spacing": 100, "tenon_depth": 80
+}
+await cut_double_tenon([tenon_beam["element_id"], main_beam["element_id"]], tenon_params)
+
+# Attribute und Visualization
+await set_group([main_beam["element_id"], side_beam["element_id"], 
+                cross_beam["element_id"], tenon_beam["element_id"]], "Holzrahmen")
+await set_color([main_beam["element_id"], side_beam["element_id"], 
+                cross_beam["element_id"], tenon_beam["element_id"]], 8)  # Holzfarbe
+
+await enable_auto_display_refresh()
+await refresh_display()
+await print_error("4 verschiedene Holzverbindungen erfolgreich erstellt!")  # Erfolgsmeldung
 ```
 
 ### 📊 **Analytics & Statistics - Vollständig**
@@ -309,18 +400,38 @@ Basierend auf der [vollständigen Cadwork API](https://docs.cadwork.com/projects
 
 | Controller | Implementiert | Fehlend | Fortschritt |
 |------------|--------------|---------|-------------|
-| **Element Controller** | 61 | ~139 | 30% |
+| **Element Controller** | 63 | ~137 | 32% |
 | **Geometry Controller** | 35 | ~40 | 47% |
 | **Attribute Controller** | 8 | ~95 | 8% |
 | **Visualization Controller** | 3 | ~22 | 12% |
-| **Utility Controller** | 0 | ~15 | 0% |
+| **Utility Controller** | 4 | ~11 | 27% |
 | **Shop Drawing Controller** | 0 | ~10 | 0% |
 | **Roof Controller** | 0 | ~5 | 0% |
 | **Connector Controller** | 0 | ~15 | 0% |
 | **Machine Controller** | 0 | ~10 | 0% |
-| **GESAMT** | **107** | **~351** | **23%** |
+| **Gesamt** | **111** | **~347** | **24%** |
 
 ## 🎯 **Nächste Prioritäten**
+
+### 🚨 **HINWEIS: Diese Sektion wird bei jeder Funktions-Implementierung aktualisiert!**
+
+**Current Sprint (nächste 2 Funktionen):**
+1. `cut_heel_shoulder()` - Fersenblatt-Verbindung erstellen
+2. `solder_elements()` - Element-Verschweißung erstellen
+
+**Target nach Current Sprint:** 80 Tools
+
+**Next Sprint (geplant):**
+3. `cut_corner_lap()` - Eckblatt-Verbindung  
+4. `cut_cross_lap()` - Kreuzblatt-Verbindung
+
+Nach jeder Implementierung wird diese Prioritäten-Liste überarbeitet basierend auf:
+- ✅ **Praktischem Nutzen** für Holzbau-Workflows
+- ✅ **API-Vollständigkeit** pro Controller  
+- ✅ **Abhängigkeiten** zwischen Funktionen
+- ✅ **Community-Feedback** und Anfragen
+
+---
 
 ### 🥇 **Prio 1: Erweiterte Visualization (Quick Wins)**
 1. **Visualization Controller erweitern:**
@@ -341,7 +452,63 @@ Basierend auf der [vollständigen Cadwork API](https://docs.cadwork.com/projects
 
 ## 📝 **Implementierungs-Beispiel**
 
-### Neuen Controller hinzufügen:
+### ✅ **Korrekte Entwicklungs-Pipeline (befolgen!):**
+
+#### **Schritt 1: Controller Implementation**
+```python
+# controllers/utility_controller.py
+async def get_3d_file_path(self) -> dict:
+    """Ruft Pfad der aktuell geöffneten 3D-Datei ab"""
+    try:
+        return self.send_command("get_3d_file_path", {})
+    except Exception as e:
+        return {"status": "error", "message": f"get_3d_file_path failed: {e}"}
+```
+
+#### **Schritt 2: Handler Implementation** 
+```python
+# bridge/handlers/utility_handlers.py
+def handle_get_3d_file_path(aParams: dict) -> dict:
+    """Handler für get_3d_file_path"""
+    try:
+        import utility_controller as uc
+        lFilePath = uc.get_3d_file_path()
+        return {"status": "success", "file_path": lFilePath}
+    except Exception as e:
+        return {"status": "error", "message": f"get_3d_file_path failed: {e}"}
+```
+
+#### **Schritt 3: Tool Registration**
+```python
+# main.py
+@mcp.tool(name="get_3d_file_path", description="...")
+async def get_3d_file_path() -> dict:
+    return await utility_ctrl.get_3d_file_path()
+```
+
+#### **Schritt 4: Test Implementation**
+```python
+# tests/test_utility_controller.py
+def test_get_3d_file_path(self):
+    """Test get_3d_file_path"""
+    result = asyncio.run(self.controller.get_3d_file_path())
+    assert_has_key(result, "status")
+    return result
+```
+
+#### **Schritt 5: Documentation Update**
+- ✅ README.md: Tool-Zähler +1, Funktions-Liste erweitert
+- ✅ README.md: "NÄCHSTE GEPLANTE FUNKTIONEN" aktualisiert  
+- ✅ tests/README.md: Test-Zähler aktualisiert
+
+### [ERROR] **Häufige Fehler vermeiden:**
+- **NICHT** Funktionen implementieren ohne Handler
+- **NICHT** Tools registrieren ohne Tests
+- **NICHT** README vergessen zu aktualisieren
+- **NICHT** Non-API Funktionen erfinden
+- **NICHT** Unicode-Zeichen in Python-Code verwenden (Windows-Kompatibilität!)
+
+### [CONFIG] **Neuen Controller hinzufügen (falls nötig):**
 ```python
 # 1. controllers/utility_controller.py erstellen
 class CUtilityController(BaseController):
@@ -373,4 +540,87 @@ async def disable_auto_display_refresh():
 
 Die Infrastruktur ist etabliert und neue Funktionen können schnell und sauber hinzugefügt werden! 🚀
 
+---
+
+## 📊 **ENTWICKLUNGSHISTORIE**
+
+### **Version 2.8 (Aktuell) - 78 Tools**
+**Zuletzt hinzugefügt:**
+- [OK] **Strukturelle Cut Operations** (+2): cut_scarf_joint, cut_shoulder
+- [OK] **Komplette Holzverbindungs-Suite**: 6 professionelle Cut-Operations
+- [OK] **Stoß- und Schulterverbindungen**: Für Verlängerungen und tragende Strukturen
+- [OK] **Test-Suite erweitert**: +8 Tests inkl. kompletter Holzrahmen-Konstruktion (141% Coverage)
+
+**Nächste geplante Version 2.9:**
+- [TARGET] **Fersenblatt & Verschweißung** (+2): cut_heel_shoulder, solder_elements
+- [TARGET] **Target:** 80 Tools
+
+### **Version 2.3 - 68 Tools** 
+**Basis-Implementation:**
+- ✅ Element Controller (23), Geometry Controller (26), Attribute Controller (8), Visualization Controller (9), Utility Controller (2)
+- ✅ Grundlegende Test-Suite mit Controller-spezifischen Tests
+- ✅ Saubere MCP-Integration und Controller-Architektur
+
+### **Development Velocity:**
+- **[TREND] Trend:** +2-4 Funktionen pro Session
+- **[TARGET] Ziel Q1:** 100+ Funktionen (weitere 22 benötigt)  
+- **[STATS] Coverage:** 141% Test-Abdeckung für alle implementierten Tools
+
+---
+
 **Perfekt für: Holzbau-CAD, Materialberechnungen, Modell-Analysen, Template-Workflows**
+
+---
+
+## 🎯 **NÄCHSTE GEPLANTE FUNKTIONEN** 
+
+### **🥇 Priorität 1: Utility Controller vervollständigen (2 Funktionen)**
+**Nächste Implementierung - hoher Nutzen:**
+- `get_3d_file_path()` - Pfad der aktuell geöffneten 3D-Datei abrufen
+- `get_project_data()` - Projekt-Informationen und Metadaten abrufen
+
+**Begründung:** Diese Funktionen sind bereits im Controller implementiert, brauchen nur Tool-Registrierung in main.py. Wichtig für Dateipfad-Management und Projekt-Kontext.
+
+### **🥈 Priorität 2: Element Controller - Cut Operations (2 Funktionen)**
+**Kritische Holzbau-Features:**
+- `cut_corner_lap(element_ids, cut_params)` - Eckblatt-Verbindung erstellen
+- `cut_cross_lap(element_ids, cut_params)` - Kreuzblatt-Verbindung erstellen
+
+**Begründung:** Fundamentale Holzverbindungen. Basis für weitere ~18 Cut-Operations. Hoher praktischer Nutzen im Holzbau.
+
+### **🥉 Priorität 3: Attribute Controller erweitern (2 Funktionen)**
+**SKU & Produktions-Management:**
+- `get_sku(element_id)` / `set_sku(element_ids, sku)` - SKU/Artikelnummer-Verwaltung
+- `get_production_number(element_id)` / `set_production_number(element_ids, number)` - Produktionsnummer-Verwaltung
+
+**Begründung:** Wichtig für Fertigungsworkflows und ERP-Integration.
+
+### **🏆 Priorität 4: Geometry Controller - Übermaße (2 Funktionen)**
+**Präzisions-Features:**
+- `get_over_width(element_id)` / `set_over_width(element_ids, over_width)` - Überbreite-Management
+- `get_over_height(element_id)` / `set_over_height(element_ids, over_height)` - Überhöhe-Management
+
+**Begründung:** Wichtig für Fertigungstoleranz und CNC-Bearbeitung.
+
+### **⭐ Weitere Roadmap-Blöcke:**
+- **Container & Export Management** (~5 Funktionen) - Containerisierung von Baugruppen
+- **Erweiterte Cut Operations** (~16 Funktionen) - Alle Holzverbindungstypen
+- **Visualization Erweiterungen** (~19 Funktionen) - Layer, Display-Modi, Renderoptionen
+- **Machine Controller** (~10 Funktionen) - CNC/Fertigungs-Integration
+
+---
+
+## 📈 **ENTWICKLUNGS-METRIKEN**
+
+### **Aktueller Entwicklungsstand:**
+- **Implementiert:** 78 von ~458 Cadwork API-Funktionen (**17%**)
+- **Getestet:** 110 Test-Methoden für 78 Tools (**141% Test-Coverage**)
+- **Dokumentiert:** 100% aller Funktionen in README
+- **Controller:** 5 von 9 geplanten Controllern aktiv
+
+### **Velocity Tracking:**
+- **Letzte Session:** +4 Funktionen implementiert (join/unjoin + utility)
+- **Durchschnitt:** ~2-4 Funktionen pro Entwicklungssitzung
+- **Target:** 150+ Funktionen bis End-of-Quarter (weitere 39 Funktionen)
+
+---

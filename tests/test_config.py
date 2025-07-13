@@ -27,6 +27,10 @@ class TestSuite:
         self.results: List[TestResult] = []
         self.setup_done = False
     
+    def log(self, message: str):
+        """Log a message during testing"""
+        print(f"  {message}")
+    
     def setup(self):
         """Override in subclasses for setup"""
         pass
@@ -53,10 +57,10 @@ class TestSuite:
             
             if isinstance(result, dict) and result.get("status") == "ok":
                 test_result = TestResult(test_name, True, "PASSED", duration)
-                print(f"  ✓ PASSED ({duration:.2f}s)")
+                print(f"  + PASSED ({duration:.2f}s)")
             elif isinstance(result, dict) and result.get("status") == "error":
                 test_result = TestResult(test_name, False, f"API Error: {result.get('message')}", duration)
-                print(f"  ✗ FAILED: {result.get('message')} ({duration:.2f}s)")
+                print(f"  X FAILED: {result.get('message')} ({duration:.2f}s)")
             else:
                 test_result = TestResult(test_name, True, f"Unexpected result: {result}", duration)
                 print(f"  ? UNCLEAR: {result} ({duration:.2f}s)")
@@ -64,7 +68,7 @@ class TestSuite:
         except Exception as e:
             duration = time.time() - start_time
             test_result = TestResult(test_name, False, f"Exception: {str(e)}", duration)
-            print(f"  ✗ FAILED: {str(e)} ({duration:.2f}s)")
+            print(f"  X FAILED: {str(e)} ({duration:.2f}s)")
         
         self.results.append(test_result)
         return test_result

@@ -31,7 +31,7 @@ class AttributeControllerTests(TestSuite):
                 ))
                 if result.get("status") == "ok" and "element_id" in result:
                     self.test_elements.append(result["element_id"])
-                    print(f"  ✓ Created test element {result['element_id']}")
+                    print(f"  + Created test element {result['element_id']}")
                 else:
                     raise Exception(f"Failed to create test element {i+1}: {result}")
                     
@@ -46,7 +46,7 @@ class AttributeControllerTests(TestSuite):
             try:
                 result = asyncio.run(self.element_ctrl.delete_elements(self.test_elements))
                 if result.get("status") == "ok":
-                    print("  ✓ Attribute cleanup successful")
+                    print("  + Attribute cleanup successful")
                 else:
                     print(f"  ! Attribute cleanup warning: {result.get('message')}")
             except Exception as e:

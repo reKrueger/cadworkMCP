@@ -789,3 +789,456 @@ def handle_duplicate_elements(aParams: dict) -> dict:
         
     except Exception as e:
         return {"status": "error", "message": f"duplicate_elements failed: {e}"}
+
+
+def handle_join_elements(aParams: dict) -> dict:
+    """Verbindet Elemente miteinander"""
+    try:
+        import element_controller as ec
+        
+        lElementIds = aParams.get("element_ids", [])
+        
+        if len(lElementIds) < 2:
+            return {"status": "error", "message": "At least 2 element IDs required for joining"}
+        
+        # Cadwork API aufrufen
+        lJoinedCount = 0
+        lFailedJoins = []
+        
+        # Join-Operation durchführen
+        try:
+            # Mit dem ersten Element als Basis joinen
+            lBaseElement = lElementIds[0]
+            lElementsToJoin = lElementIds[1:]
+            
+            for lElementId in lElementsToJoin:
+                try:
+                    ec.join_elements([lBaseElement, lElementId])
+                    lJoinedCount += 1
+                except Exception as e:
+                    lFailedJoins.append({"element_id": lElementId, "error": str(e)})
+            
+        except Exception as e:
+            return {"status": "error", "message": f"Join operation failed: {e}"}
+        
+        return {
+            "status": "success",
+            "message": f"Successfully joined {lJoinedCount} elements",
+            "base_element": lElementIds[0],
+            "joined_elements": lElementIds[1:],
+            "joined_count": lJoinedCount,
+            "failed_joins": lFailedJoins,
+            "total_requested": len(lElementIds) - 1
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"join_elements failed: {e}"}
+
+def handle_unjoin_elements(aParams: dict) -> dict:
+    """Trennt verbundene Elemente"""
+    try:
+        import element_controller as ec
+        
+        lElementIds = aParams.get("element_ids", [])
+        
+        if not lElementIds:
+            return {"status": "error", "message": "No element IDs provided"}
+        
+        # Cadwork API aufrufen
+        lUnjoinedCount = 0
+        lFailedUnjoins = []
+        
+        # Unjoin-Operation durchführen
+        for lElementId in lElementIds:
+            try:
+                ec.unjoin_elements([lElementId])
+                lUnjoinedCount += 1
+            except Exception as e:
+                lFailedUnjoins.append({"element_id": lElementId, "error": str(e)})
+        
+        return {
+            "status": "success",
+            "message": f"Successfully unjoined {lUnjoinedCount} elements",
+            "processed_elements": lElementIds,
+            "unjoined_count": lUnjoinedCount,
+            "failed_unjoins": lFailedUnjoins,
+            "total_requested": len(lElementIds)
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"unjoin_elements failed: {e}"}
+
+
+def handle_cut_corner_lap(aParams: dict) -> dict:
+    """Erstellt Eckblatt-Verbindung zwischen Elementen"""
+    try:
+        import element_controller as ec
+        
+        lElementIds = aParams.get("element_ids", [])
+        lCutParams = aParams.get("cut_params", {})
+        
+        if len(lElementIds) < 2:
+            return {"status": "error", "message": "At least 2 element IDs required for corner lap cut"}
+        
+        # Cadwork API aufrufen - Eckblatt-Verbindung
+        lProcessedElements = []
+        lFailedElements = []
+        
+        try:
+            # Corner Lap Cut durchführen
+            # Typischerweise wird das erste Element als "Master" verwendet
+            lMasterElement = lElementIds[0]
+            lTargetElements = lElementIds[1:]
+            
+            for lTargetElement in lTargetElements:
+                try:
+                    # Cadwork Cut-Operation ausführen
+                    # Die genauen Parameter hängen von der Cadwork API ab
+                    if lCutParams:
+                        ec.cut_corner_lap_with_params([lMasterElement, lTargetElement], lCutParams)
+                    else:
+                        ec.cut_corner_lap([lMasterElement, lTargetElement])
+                    
+                    lProcessedElements.extend([lMasterElement, lTargetElement])
+                except Exception as e:
+                    lFailedElements.append({"elements": [lMasterElement, lTargetElement], "error": str(e)})
+            
+        except Exception as e:
+            return {"status": "error", "message": f"Corner lap cut operation failed: {e}"}
+        
+        return {
+            "status": "success",
+            "message": f"Successfully created corner lap cuts for {len(lProcessedElements)} elements",
+            "cut_type": "corner_lap",
+            "master_element": lMasterElement,
+            "target_elements": lTargetElements,
+            "processed_elements": lProcessedElements,
+            "failed_elements": lFailedElements,
+            "cut_params": lCutParams
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"cut_corner_lap failed: {e}"}
+
+def handle_cut_cross_lap(aParams: dict) -> dict:
+    """Erstellt Kreuzblatt-Verbindung zwischen Elementen"""
+    try:
+        import element_controller as ec
+        
+        lElementIds = aParams.get("element_ids", [])
+        lCutParams = aParams.get("cut_params", {})
+        
+        if len(lElementIds) < 2:
+            return {"status": "error", "message": "At least 2 element IDs required for cross lap cut"}
+        
+        # Cadwork API aufrufen - Kreuzblatt-Verbindung
+        lProcessedElements = []
+        lFailedElements = []
+        
+        try:
+            # Cross Lap Cut durchführen  
+            # Bei Kreuzblatt werden beide Elemente geschnitten
+            lElement1 = lElementIds[0]
+            lElement2 = lElementIds[1]
+            
+            # Für mehrere Elemente: paarweise verarbeiten
+            for i in range(0, len(lElementIds) - 1, 2):
+                try:
+                    lElem1 = lElementIds[i]
+                    lElem2 = lElementIds[i + 1] if i + 1 < len(lElementIds) else lElementIds[0]
+                    
+                    # Cadwork Cut-Operation ausführen
+                    if lCutParams:
+                        ec.cut_cross_lap_with_params([lElem1, lElem2], lCutParams)
+                    else:
+                        ec.cut_cross_lap([lElem1, lElem2])
+                    
+                    lProcessedElements.extend([lElem1, lElem2])
+                except Exception as e:
+                    lFailedElements.append({"elements": [lElem1, lElem2], "error": str(e)})
+            
+        except Exception as e:
+            return {"status": "error", "message": f"Cross lap cut operation failed: {e}"}
+        
+        return {
+            "status": "success",
+            "message": f"Successfully created cross lap cuts for {len(lProcessedElements)} elements",
+            "cut_type": "cross_lap", 
+            "processed_elements": lProcessedElements,
+            "failed_elements": lFailedElements,
+            "cut_params": lCutParams,
+            "pairs_processed": len(lProcessedElements) // 2
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"cut_cross_lap failed: {e}"}
+
+
+def handle_cut_half_lap(aParams: dict) -> dict:
+    """Erstellt Halbes Blatt-Verbindung zwischen Elementen"""
+    try:
+        import element_controller as ec
+        
+        lElementIds = aParams.get("element_ids", [])
+        lCutParams = aParams.get("cut_params", {})
+        
+        if len(lElementIds) < 2:
+            return {"status": "error", "message": "At least 2 element IDs required for half lap cut"}
+        
+        # Cadwork API aufrufen - Halbes Blatt-Verbindung
+        lProcessedElements = []
+        lFailedElements = []
+        
+        try:
+            # Half Lap Cut Parameter extrahieren
+            lMasterElement = lCutParams.get("master_element", lElementIds[0])
+            lCutDepthRatio = lCutParams.get("cut_depth_ratio", 0.5)
+            lCutPosition = lCutParams.get("cut_position", "end")
+            
+            # Half Lap Cut durchführen
+            # Das Master-Element wird zur Hälfte geschnitten, andere Elemente vollständig
+            for lTargetElement in lElementIds:
+                if lTargetElement == lMasterElement:
+                    continue
+                    
+                try:
+                    # Cadwork Half Lap Cut-Operation
+                    if "cut_depth_ratio" in lCutParams:
+                        ec.cut_half_lap_with_ratio([lMasterElement, lTargetElement], 
+                                                 lCutDepthRatio, lCutPosition)
+                    else:
+                        ec.cut_half_lap([lMasterElement, lTargetElement])
+                    
+                    lProcessedElements.extend([lMasterElement, lTargetElement])
+                except Exception as e:
+                    lFailedElements.append({
+                        "master": lMasterElement, 
+                        "target": lTargetElement, 
+                        "error": str(e)
+                    })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"Half lap cut operation failed: {e}"}
+        
+        return {
+            "status": "success",
+            "message": f"Successfully created half lap cuts for {len(lProcessedElements)} elements",
+            "cut_type": "half_lap",
+            "master_element": lMasterElement,
+            "cut_depth_ratio": lCutDepthRatio,
+            "cut_position": lCutPosition,
+            "processed_elements": lProcessedElements,
+            "failed_elements": lFailedElements,
+            "cut_params": lCutParams
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"cut_half_lap failed: {e}"}
+
+def handle_cut_double_tenon(aParams: dict) -> dict:
+    """Erstellt Doppelzapfen-Verbindung zwischen Elementen"""
+    try:
+        import element_controller as ec
+        
+        lElementIds = aParams.get("element_ids", [])
+        lCutParams = aParams.get("cut_params", {})
+        
+        if len(lElementIds) != 2:
+            return {"status": "error", "message": "Exactly 2 element IDs required for double tenon cut"}
+        
+        # Cadwork API aufrufen - Doppelzapfen-Verbindung
+        try:
+            # Double Tenon Parameter extrahieren
+            lTenonElement = lCutParams.get("tenon_element", lElementIds[0])
+            lMortiseElement = lCutParams.get("mortise_element", lElementIds[1])
+            lTenonWidth = lCutParams.get("tenon_width", 40)
+            lTenonHeight = lCutParams.get("tenon_height", 80)
+            lTenonSpacing = lCutParams.get("tenon_spacing", 60)
+            lTenonDepth = lCutParams.get("tenon_depth", 50)
+            
+            # Validation der Parameter
+            if lTenonElement not in lElementIds or lMortiseElement not in lElementIds:
+                return {"status": "error", "message": "Tenon and mortise elements must be from provided element IDs"}
+            
+            # Cadwork Double Tenon Cut-Operation ausführen
+            lTenonParams = {
+                "width": lTenonWidth,
+                "height": lTenonHeight, 
+                "spacing": lTenonSpacing,
+                "depth": lTenonDepth
+            }
+            
+            if all(param in lCutParams for param in ["tenon_width", "tenon_height", "tenon_spacing"]):
+                ec.cut_double_tenon_with_params([lTenonElement, lMortiseElement], lTenonParams)
+            else:
+                ec.cut_double_tenon([lTenonElement, lMortiseElement])
+            
+        except Exception as e:
+            return {"status": "error", "message": f"Double tenon cut operation failed: {e}"}
+        
+        return {
+            "status": "success",
+            "message": f"Successfully created double tenon connection",
+            "cut_type": "double_tenon",
+            "tenon_element": lTenonElement,
+            "mortise_element": lMortiseElement,
+            "tenon_specifications": {
+                "width": lTenonWidth,
+                "height": lTenonHeight,
+                "spacing": lTenonSpacing,
+                "depth": lTenonDepth
+            },
+            "processed_elements": lElementIds,
+            "cut_params": lCutParams
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"cut_double_tenon failed: {e}"}
+
+
+def handle_cut_scarf_joint(aParams: dict) -> dict:
+    """Erstellt Stoßverbindung zwischen Elementen"""
+    try:
+        import element_controller as ec
+        
+        lElementIds = aParams.get("element_ids", [])
+        lCutParams = aParams.get("cut_params", {})
+        
+        if len(lElementIds) != 2:
+            return {"status": "error", "message": "Exactly 2 element IDs required for scarf joint"}
+        
+        # Cadwork API aufrufen - Stoßverbindung
+        try:
+            # Scarf Joint Parameter extrahieren
+            lScarfType = lCutParams.get("scarf_type", "plain_scarf")
+            lScarfLength = lCutParams.get("scarf_length", 400)
+            lScarfAngle = lCutParams.get("scarf_angle", 30)
+            lElement1 = lCutParams.get("element_1", lElementIds[0])
+            lElement2 = lCutParams.get("element_2", lElementIds[1])
+            lOverlapLength = lCutParams.get("overlap_length", 50)
+            
+            # Validation der Parameter
+            if lElement1 not in lElementIds or lElement2 not in lElementIds:
+                return {"status": "error", "message": "Element references must be from provided element IDs"}
+            
+            # Parameter-Validierung
+            if lScarfLength <= 0 or lScarfAngle <= 0 or lScarfAngle >= 90:
+                return {"status": "error", "message": "Invalid scarf parameters: length > 0, angle between 0-90 degrees"}
+            
+            # Cadwork Scarf Joint Cut-Operation ausführen
+            lScarfParams = {
+                "type": lScarfType,
+                "length": lScarfLength,
+                "angle": lScarfAngle,
+                "overlap": lOverlapLength
+            }
+            
+            if "scarf_length" in lCutParams and "scarf_angle" in lCutParams:
+                ec.cut_scarf_joint_with_params([lElement1, lElement2], lScarfParams)
+            else:
+                ec.cut_scarf_joint([lElement1, lElement2])
+            
+        except Exception as e:
+            return {"status": "error", "message": f"Scarf joint cut operation failed: {e}"}
+        
+        return {
+            "status": "success",
+            "message": f"Successfully created scarf joint connection",
+            "cut_type": "scarf_joint",
+            "scarf_specifications": {
+                "type": lScarfType,
+                "length": lScarfLength,
+                "angle": lScarfAngle,
+                "overlap_length": lOverlapLength
+            },
+            "element_1": lElement1,
+            "element_2": lElement2,
+            "processed_elements": lElementIds,
+            "cut_params": lCutParams
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"cut_scarf_joint failed: {e}"}
+
+def handle_cut_shoulder(aParams: dict) -> dict:
+    """Erstellt Schulterschnitt zwischen Elementen"""
+    try:
+        import element_controller as ec
+        
+        lElementIds = aParams.get("element_ids", [])
+        lCutParams = aParams.get("cut_params", {})
+        
+        if len(lElementIds) < 2:
+            return {"status": "error", "message": "At least 2 element IDs required for shoulder cut"}
+        
+        # Cadwork API aufrufen - Schulterschnitt
+        lProcessedPairs = []
+        lFailedPairs = []
+        
+        try:
+            # Shoulder Cut Parameter extrahieren
+            lSupportingElement = lCutParams.get("supporting_element", lElementIds[0])
+            lShoulderDepth = lCutParams.get("shoulder_depth", 40)
+            lShoulderWidth = lCutParams.get("shoulder_width", 120)
+            lShoulderType = lCutParams.get("shoulder_type", "simple_shoulder")
+            lContactAngle = lCutParams.get("contact_angle", 90)
+            
+            # Parameter-Validierung
+            if lShoulderDepth <= 0 or lShoulderWidth <= 0:
+                return {"status": "error", "message": "Shoulder depth and width must be positive values"}
+            
+            if lContactAngle <= 0 or lContactAngle > 180:
+                return {"status": "error", "message": "Contact angle must be between 0 and 180 degrees"}
+            
+            # Shoulder Cut für alle Elemente ausführen (außer dem tragenden Element)
+            for lSupportedElement in lElementIds:
+                if lSupportedElement == lSupportingElement:
+                    continue
+                    
+                try:
+                    # Cadwork Shoulder Cut-Operation
+                    lShoulderParams = {
+                        "depth": lShoulderDepth,
+                        "width": lShoulderWidth,
+                        "type": lShoulderType,
+                        "angle": lContactAngle
+                    }
+                    
+                    if all(param in lCutParams for param in ["shoulder_depth", "shoulder_width"]):
+                        ec.cut_shoulder_with_params([lSupportingElement, lSupportedElement], lShoulderParams)
+                    else:
+                        ec.cut_shoulder([lSupportingElement, lSupportedElement])
+                    
+                    lProcessedPairs.append({
+                        "supporting": lSupportingElement,
+                        "supported": lSupportedElement
+                    })
+                except Exception as e:
+                    lFailedPairs.append({
+                        "supporting": lSupportingElement,
+                        "supported": lSupportedElement,
+                        "error": str(e)
+                    })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"Shoulder cut operation failed: {e}"}
+        
+        return {
+            "status": "success",
+            "message": f"Successfully created shoulder cuts for {len(lProcessedPairs)} element pairs",
+            "cut_type": "shoulder",
+            "supporting_element": lSupportingElement,
+            "shoulder_specifications": {
+                "depth": lShoulderDepth,
+                "width": lShoulderWidth,
+                "type": lShoulderType,
+                "contact_angle": lContactAngle
+            },
+            "processed_pairs": lProcessedPairs,
+            "failed_pairs": lFailedPairs,
+            "total_pairs": len(lProcessedPairs),
+            "cut_params": lCutParams
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"cut_shoulder failed: {e}"}

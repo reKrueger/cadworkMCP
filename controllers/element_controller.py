@@ -306,3 +306,276 @@ class ElementController(BaseController):
             
         except Exception as e:
             return {"status": "error", "message": f"duplicate_elements failed: {e}"}
+    
+    async def join_elements(self, aElementIds: list) -> dict:
+        """
+        Verbindet Elemente miteinander (Join)
+        
+        Args:
+            aElementIds: Liste der Element-IDs die verbunden werden sollen (mindestens 2)
+        
+        Returns:
+            dict: Status der Verbindungs-Operation
+        """
+        try:
+            # Validierung
+            if not isinstance(aElementIds, list) or len(aElementIds) < 2:
+                return {"status": "error", "message": "At least 2 element IDs required for joining"}
+            
+            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            
+            # Command senden
+            return self.send_command("join_elements", {
+                "element_ids": lValidatedIds
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"join_elements failed: {e}"}
+    
+    async def unjoin_elements(self, aElementIds: list) -> dict:
+        """
+        Trennt verbundene Elemente (Unjoin)
+        
+        Args:
+            aElementIds: Liste der Element-IDs deren Verbindungen getrennt werden sollen
+        
+        Returns:
+            dict: Status der Trennungs-Operation
+        """
+        try:
+            # Validierung
+            if not isinstance(aElementIds, list) or not aElementIds:
+                return {"status": "error", "message": "element_ids must be a non-empty list"}
+            
+            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            
+            # Command senden
+            return self.send_command("unjoin_elements", {
+                "element_ids": lValidatedIds
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"unjoin_elements failed: {e}"}
+    
+    async def cut_corner_lap(self, aElementIds: list, aCutParams: dict = None) -> dict:
+        """
+        Erstellt Eckblatt-Verbindung zwischen Elementen
+        
+        Args:
+            aElementIds: Liste der Element-IDs für Eckblatt-Verbindung (mindestens 2)
+            aCutParams: Optionale Schnitt-Parameter (Tiefe, Breite, etc.)
+        
+        Returns:
+            dict: Status der Eckblatt-Operation
+        """
+        try:
+            # Validierung
+            if not isinstance(aElementIds, list) or len(aElementIds) < 2:
+                return {"status": "error", "message": "At least 2 element IDs required for corner lap cut"}
+            
+            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            
+            # Standard-Parameter wenn nicht angegeben
+            if aCutParams is None:
+                aCutParams = {}
+            
+            # Command senden
+            return self.send_command("cut_corner_lap", {
+                "element_ids": lValidatedIds,
+                "cut_params": aCutParams
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"cut_corner_lap failed: {e}"}
+    
+    async def cut_cross_lap(self, aElementIds: list, aCutParams: dict = None) -> dict:
+        """
+        Erstellt Kreuzblatt-Verbindung zwischen Elementen
+        
+        Args:
+            aElementIds: Liste der Element-IDs für Kreuzblatt-Verbindung (mindestens 2)
+            aCutParams: Optionale Schnitt-Parameter (Tiefe, Breite, Position, etc.)
+        
+        Returns:
+            dict: Status der Kreuzblatt-Operation
+        """
+        try:
+            # Validierung
+            if not isinstance(aElementIds, list) or len(aElementIds) < 2:
+                return {"status": "error", "message": "At least 2 element IDs required for cross lap cut"}
+            
+            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            
+            # Standard-Parameter wenn nicht angegeben
+            if aCutParams is None:
+                aCutParams = {}
+            
+            # Command senden
+            return self.send_command("cut_cross_lap", {
+                "element_ids": lValidatedIds,
+                "cut_params": aCutParams
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"cut_cross_lap failed: {e}"}
+    
+    async def cut_half_lap(self, aElementIds: list, aCutParams: dict = None) -> dict:
+        """
+        Erstellt Halbes Blatt-Verbindung zwischen Elementen
+        
+        Bei dieser Verbindung wird nur ein Element zur Hälfte seiner Dicke geschnitten,
+        während das andere Element vollständig durchgeschnitten wird.
+        
+        Args:
+            aElementIds: Liste der Element-IDs für Halbes Blatt (mindestens 2)
+            aCutParams: Optionale Schnitt-Parameter (cut_depth, master_element, etc.)
+        
+        Returns:
+            dict: Status der Halbes Blatt-Operation
+        """
+        try:
+            # Validierung
+            if not isinstance(aElementIds, list) or len(aElementIds) < 2:
+                return {"status": "error", "message": "At least 2 element IDs required for half lap cut"}
+            
+            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            
+            # Standard-Parameter wenn nicht angegeben
+            if aCutParams is None:
+                aCutParams = {
+                    "master_element": lValidatedIds[0],  # Erstes Element als Master
+                    "cut_depth_ratio": 0.5,             # 50% der Elementdicke
+                    "cut_position": "end"                # Position des Schnitts
+                }
+            
+            # Command senden
+            return self.send_command("cut_half_lap", {
+                "element_ids": lValidatedIds,
+                "cut_params": aCutParams
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"cut_half_lap failed: {e}"}
+    
+    async def cut_double_tenon(self, aElementIds: list, aCutParams: dict = None) -> dict:
+        """
+        Erstellt Doppelzapfen-Verbindung zwischen Elementen
+        
+        Diese Verbindung erstellt zwei parallele Zapfen an einem Element
+        und entsprechende Nuten am anderen Element.
+        
+        Args:
+            aElementIds: Liste der Element-IDs für Doppelzapfen (genau 2 Elemente)
+            aCutParams: Optionale Schnitt-Parameter (tenon_width, tenon_height, spacing, etc.)
+        
+        Returns:
+            dict: Status der Doppelzapfen-Operation
+        """
+        try:
+            # Validierung
+            if not isinstance(aElementIds, list) or len(aElementIds) != 2:
+                return {"status": "error", "message": "Exactly 2 element IDs required for double tenon cut"}
+            
+            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            
+            # Standard-Parameter wenn nicht angegeben
+            if aCutParams is None:
+                aCutParams = {
+                    "tenon_element": lValidatedIds[0],    # Element mit Zapfen
+                    "mortise_element": lValidatedIds[1],  # Element mit Nuten
+                    "tenon_width": 40,                    # Breite der Zapfen (mm)
+                    "tenon_height": 80,                   # Höhe der Zapfen (mm)
+                    "tenon_spacing": 60,                  # Abstand zwischen Zapfen (mm)
+                    "tenon_depth": 50                     # Tiefe der Zapfen (mm)
+                }
+            
+            # Command senden
+            return self.send_command("cut_double_tenon", {
+                "element_ids": lValidatedIds,
+                "cut_params": aCutParams
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"cut_double_tenon failed: {e}"}
+    
+    async def cut_scarf_joint(self, aElementIds: list, aCutParams: dict = None) -> dict:
+        """
+        Erstellt Stoßverbindung zwischen Elementen
+        
+        Stoßverbindungen werden verwendet um Balken zu verlängern oder
+        zwei Balken nahtlos miteinander zu verbinden.
+        
+        Args:
+            aElementIds: Liste der Element-IDs für Stoßverbindung (genau 2 Elemente)
+            aCutParams: Optionale Schnitt-Parameter (scarf_type, scarf_length, angle, etc.)
+        
+        Returns:
+            dict: Status der Stoßverbindung-Operation
+        """
+        try:
+            # Validierung
+            if not isinstance(aElementIds, list) or len(aElementIds) != 2:
+                return {"status": "error", "message": "Exactly 2 element IDs required for scarf joint"}
+            
+            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            
+            # Standard-Parameter wenn nicht angegeben
+            if aCutParams is None:
+                aCutParams = {
+                    "scarf_type": "plain_scarf",        # Art der Stoßverbindung
+                    "scarf_length": 400,                # Länge der Stoßverbindung (mm)
+                    "scarf_angle": 30,                  # Winkel des Schnitts (Grad)
+                    "element_1": lValidatedIds[0],      # Erstes Element
+                    "element_2": lValidatedIds[1],      # Zweites Element
+                    "overlap_length": 50                # Überlappungslänge (mm)
+                }
+            
+            # Command senden
+            return self.send_command("cut_scarf_joint", {
+                "element_ids": lValidatedIds,
+                "cut_params": aCutParams
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"cut_scarf_joint failed: {e}"}
+    
+    async def cut_shoulder(self, aElementIds: list, aCutParams: dict = None) -> dict:
+        """
+        Erstellt Schulterschnitt zwischen Elementen
+        
+        Schulterschnitte werden für tragende Verbindungen verwendet,
+        bei denen ein Element auf einem anderen aufliegt.
+        
+        Args:
+            aElementIds: Liste der Element-IDs für Schulterschnitt (mindestens 2)
+            aCutParams: Optionale Schnitt-Parameter (shoulder_depth, shoulder_width, etc.)
+        
+        Returns:
+            dict: Status der Schulterschnitt-Operation
+        """
+        try:
+            # Validierung
+            if not isinstance(aElementIds, list) or len(aElementIds) < 2:
+                return {"status": "error", "message": "At least 2 element IDs required for shoulder cut"}
+            
+            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            
+            # Standard-Parameter wenn nicht angegeben
+            if aCutParams is None:
+                aCutParams = {
+                    "supporting_element": lValidatedIds[0],   # Tragendes Element (unten)
+                    "supported_element": lValidatedIds[1],    # Getragenes Element (oben)
+                    "shoulder_depth": 40,                     # Tiefe der Schulter (mm)
+                    "shoulder_width": 120,                    # Breite der Schulter (mm)
+                    "shoulder_type": "simple_shoulder",       # Art des Schulterschnitts
+                    "contact_angle": 90                       # Kontaktwinkel (Grad)
+                }
+            
+            # Command senden
+            return self.send_command("cut_shoulder", {
+                "element_ids": lValidatedIds,
+                "cut_params": aCutParams
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"cut_shoulder failed: {e}"}

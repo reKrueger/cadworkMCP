@@ -8,6 +8,7 @@ from controllers.element_controller import ElementController
 from controllers.geometry_controller import GeometryController
 from controllers.attribute_controller import AttributeController
 from controllers.visualization_controller import CVisualizationController
+from controllers.utility_controller import CUtilityController
 
 # Create MCP server
 mcp = create_mcp_server()
@@ -17,6 +18,7 @@ element_ctrl = ElementController()
 geometry_ctrl = GeometryController()
 attribute_ctrl = AttributeController()
 visualization_ctrl = CVisualizationController()
+utility_ctrl = CUtilityController()
 
 # --- ELEMENT TOOLS ---
 
@@ -184,6 +186,62 @@ async def get_material_statistics() -> dict:
 )
 async def get_group_statistics() -> dict:
     return await element_ctrl.get_group_statistics()
+
+@mcp.tool(
+    name="join_elements",
+    description="Joins multiple elements together. Takes a list of element IDs (minimum 2 elements) to create connections between them."
+)
+async def join_elements(element_ids: list) -> dict:
+    return await element_ctrl.join_elements(element_ids)
+
+@mcp.tool(
+    name="unjoin_elements", 
+    description="Unjoins/disconnects previously joined elements. Takes a list of element IDs to remove their connections."
+)
+async def unjoin_elements(element_ids: list) -> dict:
+    return await element_ctrl.unjoin_elements(element_ids)
+
+@mcp.tool(
+    name="cut_corner_lap",
+    description="Creates corner lap cuts between elements for wood connections. Takes element IDs (minimum 2) and optional cut parameters (depth, width, etc.)."
+)
+async def cut_corner_lap(element_ids: list, cut_params: dict = None) -> dict:
+    return await element_ctrl.cut_corner_lap(element_ids, cut_params)
+
+@mcp.tool(
+    name="cut_cross_lap", 
+    description="Creates cross lap cuts between elements for wood connections. Takes element IDs (minimum 2) and optional cut parameters (depth, width, position, etc.)."
+)
+async def cut_cross_lap(element_ids: list, cut_params: dict = None) -> dict:
+    return await element_ctrl.cut_cross_lap(element_ids, cut_params)
+
+@mcp.tool(
+    name="cut_half_lap",
+    description="Creates half lap cuts between elements. One element is cut to half its thickness while the other is cut completely. Takes element IDs (minimum 2) and optional cut parameters."
+)
+async def cut_half_lap(element_ids: list, cut_params: dict = None) -> dict:
+    return await element_ctrl.cut_half_lap(element_ids, cut_params)
+
+@mcp.tool(
+    name="cut_double_tenon",
+    description="Creates double tenon and mortise connections between exactly 2 elements. Creates two parallel tenons on one element and corresponding mortises on the other."
+)
+async def cut_double_tenon(element_ids: list, cut_params: dict = None) -> dict:
+    return await element_ctrl.cut_double_tenon(element_ids, cut_params)
+
+@mcp.tool(
+    name="cut_scarf_joint",
+    description="Creates scarf joint connections between exactly 2 elements for beam extensions or seamless connections. Takes scarf type, length, angle parameters."
+)
+async def cut_scarf_joint(element_ids: list, cut_params: dict = None) -> dict:
+    return await element_ctrl.cut_scarf_joint(element_ids, cut_params)
+
+@mcp.tool(
+    name="cut_shoulder",
+    description="Creates shoulder cuts between elements for load-bearing connections. One element supports another with a shoulder cut. Takes depth, width, type parameters."
+)
+async def cut_shoulder(element_ids: list, cut_params: dict = None) -> dict:
+    return await element_ctrl.cut_shoulder(element_ids, cut_params)
 
 # --- GEOMETRY TOOLS ---
 
@@ -509,6 +567,50 @@ async def set_comment(element_ids: list, comment: str) -> dict:
 )
 async def set_subgroup(element_ids: list, subgroup: str) -> dict:
     return await attribute_ctrl.set_subgroup(element_ids, subgroup)
+
+# --- UTILITY TOOLS ---
+
+@mcp.tool(
+    name="disable_auto_display_refresh",
+    description="Disables automatic display refresh for performance during batch operations. Important: Remember to enable it again afterwards."
+)
+async def disable_auto_display_refresh() -> dict:
+    return await utility_ctrl.disable_auto_display_refresh()
+
+@mcp.tool(
+    name="enable_auto_display_refresh", 
+    description="Re-enables automatic display refresh after batch operations. Should be called after disable_auto_display_refresh()."
+)
+async def enable_auto_display_refresh() -> dict:
+    return await utility_ctrl.enable_auto_display_refresh()
+
+@mcp.tool(
+    name="print_error",
+    description="Displays an error message in Cadwork. Takes a message string to show in the Cadwork interface."
+)
+async def print_error(message: str) -> dict:
+    return await utility_ctrl.print_error(message)
+
+@mcp.tool(
+    name="print_warning",
+    description="Displays a warning message in Cadwork. Takes a message string to show in the Cadwork interface."
+)
+async def print_warning(message: str) -> dict:
+    return await utility_ctrl.print_warning(message)
+
+@mcp.tool(
+    name="get_3d_file_path",
+    description="Retrieves the file path of the currently opened 3D file in Cadwork. Returns file path and file information."
+)
+async def get_3d_file_path() -> dict:
+    return await utility_ctrl.get_3d_file_path()
+
+@mcp.tool(
+    name="get_project_data", 
+    description="Retrieves general project data and metadata from the current Cadwork project. Returns project information like name, path, etc."
+)
+async def get_project_data() -> dict:
+    return await utility_ctrl.get_project_data()
 
 # --- VERSION TOOL ---
 

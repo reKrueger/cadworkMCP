@@ -4,8 +4,8 @@
 
 Das Test-Framework für den Cadwork MCP Server bietet umfassende Tests für alle implementierten Funktionen:
 
-- **91 Funktionen getestet** 
-- **3 Test-Controller** (Element, Geometry, Attribute)
+- **70 Funktionen getestet** 
+- **6 Test-Controller** (Element, Geometry, Attribute, Visualization, Utility, System)
 - **Automatische Bereinigung** - Erstelle Test-Elemente werden automatisch gelöscht
 - **Umfassende Validierung** - Parameter, Rückgabewerte und Fehlerfälle
 - **Detaillierte Berichte** - Erfolgsraten, Timing, Fehlerdetails
@@ -19,6 +19,9 @@ tests/
 ├── test_element_controller.py     # Element Creation & Management Tests
 ├── test_geometry_controller.py    # Geometry & Transformation Tests
 ├── test_attribute_controller.py   # Attribute Get/Set Tests
+├── test_visualization_controller.py # Visualization & Display Tests
+├── test_utility_controller.py     # Utility & Performance Tests
+├── test_system.py                 # System Information Tests
 ├── run_tests.py                   # Main Test Runner
 ├── requirements.txt               # Test Dependencies
 └── README.md                      # This file
@@ -40,8 +43,8 @@ python tests\run_tests.py --suite element
 # Nur Geometry Controller Tests  
 python tests\run_tests.py --suite geometry
 
-# Nur Attribute Controller Tests
-python tests\run_tests.py --suite attribute
+# Nur Visualization Controller Tests
+python tests\run_tests.py --suite visualization
 ```
 
 ### Ohne Verbindungstest (für Debugging):
@@ -49,7 +52,7 @@ python tests\run_tests.py --suite attribute
 python tests\run_tests.py --skip-connection
 ```
 
-## ⚙️ Voraussetzungen
+## [CONFIG] Voraussetzungen
 
 ### Für vollständige Tests:
 1. **Cadwork 3D läuft**
@@ -69,20 +72,25 @@ python tests\run_tests.py --skip-connection
 ================================================================================
 Suite                          Total    Passed   Failed   Success    Time    
 --------------------------------------------------------------------------------
-Element Controller Tests      15       14       1        93.3%      2.45s
-Geometry Controller Tests     12       12       0        100.0%     1.88s
-Attribute Controller Tests    10       9        1        90.0%      1.33s
+Element Controller Tests      28       26       2        92.9%      3.45s
+Geometry Controller Tests     26       26       0        100.0%     2.10s
+Attribute Controller Tests    8        8        0        100.0%     1.15s
+Visualization Controller Tests 12      12       0        100.0%     1.67s
+Utility Controller Tests      10       10       0        100.0%     1.45s
+System Tests                  1        1        0        100.0%     0.23s
 --------------------------------------------------------------------------------
-TOTAL                          37       35       2        94.6%      5.66s
+TOTAL                          85       83       2        97.6%      10.05s
 ================================================================================
 ```
 
 ## 🧪 Was wird getestet?
 
-### Element Controller (15 Tests):
+### Element Controller (28 Tests):
 - **Element Creation:** create_beam, create_panel, create_circular_beam_points, etc.
 - **Element Management:** copy_elements, move_element, delete_elements
-- **Element Retrieval:** get_all_element_ids, get_active_element_ids, etc.  
+- **Element Connections:** join_elements, unjoin_elements
+- **Element Retrieval:** get_all_element_ids, get_active_element_ids, get_visible_element_ids, etc.  
+- **Query & Filter:** get_elements_by_type, filter_by_material, statistics
 - **Error Handling:** Ungültige Parameter, negative IDs
 
 ### Geometry Controller (12 Tests):
@@ -93,7 +101,39 @@ TOTAL                          37       35       2        94.6%      5.66s
 - **Schwerpunkt:** get_center_of_gravity, get_center_of_gravity_for_list
 - **Oberflächen:** get_element_reference_face_area, get_total_area_of_all_faces
 
-### Attribute Controller (10 Tests):
+### Geometry Controller (26 Tests):
+- **Dimensionen:** get_element_width, get_element_height, get_element_length
+- **Volumen & Gewicht:** get_element_volume, get_element_weight
+- **Koordinatensystem:** get_element_xl, get_element_yl, get_element_zl
+- **Punkte:** get_element_p1, get_element_p2, get_element_p3
+- **Schwerpunkt:** get_center_of_gravity, get_center_of_gravity_for_list
+- **Oberflächen:** get_element_reference_face_area, get_total_area_of_all_faces
+- **Transformationen:** rotate_elements, apply_global_scale, invert_model
+- **Berechnungen:** calculate_total_volume, calculate_total_weight
+
+### Attribute Controller (8 Tests):
+- **Attribute Getter:** get_standard_attributes, get_user_attributes
+- **Attribute Setter:** set_name, set_material, set_group, set_comment, set_subgroup
+- **Listen:** list_defined_user_attributes
+- **Validierung:** Verschiedene Parameter-Kombinationen
+
+### Visualization Controller (12 Tests):
+- **Farben:** set_color, get_color mit Validierung
+- **Transparenz:** set_transparency, get_transparency mit Edge-Cases  
+- **Sichtbarkeit:** set_visibility, show_all_elements, hide_all_elements
+- **Display:** refresh_display, get_visible_element_count
+- **Workflow-Tests:** Komplette Visualization-Pipelines
+- **Error-Handling:** Ungültige Farb-IDs und Transparenz-Werte
+
+### Utility Controller (10 Tests):
+- **Performance Functions:** disable/enable_auto_display_refresh (NEU!)
+- **Output Functions:** print_error, print_warning (NEU!)
+- **System Info:** get_3d_file_path, get_project_data (NEU!)
+- **Workflow Tests:** Komplette Display-Refresh Workflows
+- **Error Handling:** Parameter-Validierung für alle Utility-Funktionen
+
+### System Controller (1 Test):
+- **Version Info:** get_cadwork_version_info - Cadwork Version abrufen
 - **Attribute Getter:** get_standard_attributes, get_user_attributes
 - **Attribute Setter:** set_name, set_material
 - **Listen:** list_defined_user_attributes
@@ -199,7 +239,7 @@ print(f"Result: {result}")
 ## 🎯 Qualitätssicherung
 
 ### Code Coverage:
-- **91/91 Funktionen** haben mindestens einen Test
+- **70/70 Funktionen** haben mindestens einen Test
 - **Error Paths** werden explizit getestet
 - **Parameter Validation** wird geprüft
 - **Return Value Validation** für alle Funktionen
@@ -213,4 +253,4 @@ python tests\run_tests.py
 echo $?  # Prüfe Exit Code
 ```
 
-Das Test-System gewährleistet, dass alle 91 implementierten MCP-Tools korrekt funktionieren! 🚀
+Das Test-System gewährleistet, dass alle 70 implementierten MCP-Tools korrekt funktionieren! 🚀

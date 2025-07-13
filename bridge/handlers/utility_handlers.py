@@ -1,51 +1,128 @@
 """
-Utility operation handlers
+Utility Handler für Cadwork Bridge
+Verarbeitet Display-Refresh und System-Utilities
 """
-from typing import Dict, Any
 
-def handle_ping(args: Dict[str, Any]) -> Dict[str, Any]:
-    """Handle ping command"""
-    return {"status": "ok", "message": "pong"}
-
-def handle_get_version_info(args: Dict[str, Any]) -> Dict[str, Any]:
-    """Handle get version info command"""
+def handle_disable_auto_display_refresh(aParams: dict) -> dict:
+    """Deaktiviert automatische Display-Aktualisierung"""
     try:
-        # Import here to avoid import-time errors
         import utility_controller as uc
-        cw_version = str(uc.get_3d_version())
+        
+        # Cadwork API aufrufen
+        uc.disable_auto_display_refresh()
+        
         return {
-            "status": "ok", 
-            "cw_version": cw_version, 
-            "plugin_version": "0.2.0"
+            "status": "success",
+            "message": "Auto display refresh disabled",
+            "operation": "disable_auto_display_refresh",
+            "note": "Remember to enable it again after batch operations"
         }
-    except ImportError as e:
-        return {
-            "status": "error", 
-            "message": f"Failed to import Cadwork modules: {e}"
-        }
+        
     except Exception as e:
-        return {
-            "status": "error", 
-            "message": f"Failed to get version info: {e}"
-        }
+        return {"status": "error", "message": f"disable_auto_display_refresh failed: {e}"}
 
-def handle_get_model_name(args: Dict[str, Any]) -> Dict[str, Any]:
-    """Handle get model name command"""
+def handle_enable_auto_display_refresh(aParams: dict) -> dict:
+    """Aktiviert automatische Display-Aktualisierung"""
     try:
-        # Import here to avoid import-time errors
         import utility_controller as uc
-        model_name = uc.get_3d_file_name()
+        
+        # Cadwork API aufrufen
+        uc.enable_auto_display_refresh()
+        
         return {
-            "status": "ok", 
-            "name": model_name or "(unsaved model)"
+            "status": "success",
+            "message": "Auto display refresh enabled",
+            "operation": "enable_auto_display_refresh"
         }
-    except ImportError as e:
-        return {
-            "status": "error", 
-            "message": f"Failed to import Cadwork modules: {e}"
-        }
+        
     except Exception as e:
+        return {"status": "error", "message": f"enable_auto_display_refresh failed: {e}"}
+
+def handle_print_error(aParams: dict) -> dict:
+    """Gibt Fehlermeldung in Cadwork aus"""
+    try:
+        import utility_controller as uc
+        
+        lMessage = aParams.get("message")
+        
+        if not lMessage:
+            return {"status": "error", "message": "No message provided"}
+        
+        # Cadwork API aufrufen
+        uc.print_error(lMessage)
+        
         return {
-            "status": "error", 
-            "message": f"Failed to get model name: {e}"
+            "status": "success",
+            "message": f"Error message displayed in Cadwork: '{lMessage}'",
+            "displayed_message": lMessage,
+            "operation": "print_error"
         }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"print_error failed: {e}"}
+
+def handle_print_warning(aParams: dict) -> dict:
+    """Gibt Warnmeldung in Cadwork aus"""
+    try:
+        import utility_controller as uc
+        
+        lMessage = aParams.get("message")
+        
+        if not lMessage:
+            return {"status": "error", "message": "No message provided"}
+        
+        # Cadwork API aufrufen
+        uc.print_warning(lMessage)
+        
+        return {
+            "status": "success",
+            "message": f"Warning message displayed in Cadwork: '{lMessage}'",
+            "displayed_message": lMessage,
+            "operation": "print_warning"
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"print_warning failed: {e}"}
+
+def handle_get_3d_file_path(aParams: dict) -> dict:
+    """Ruft Pfad der 3D-Datei ab"""
+    try:
+        import utility_controller as uc
+        
+        # Cadwork API aufrufen
+        lFilePath = uc.get_3d_file_path()
+        
+        # Pfad-Informationen extrahieren
+        import os
+        lFileName = os.path.basename(lFilePath) if lFilePath else ""
+        lDirectory = os.path.dirname(lFilePath) if lFilePath else ""
+        lFileExists = os.path.exists(lFilePath) if lFilePath else False
+        
+        return {
+            "status": "success",
+            "file_path": lFilePath,
+            "file_name": lFileName,
+            "directory": lDirectory,
+            "file_exists": lFileExists,
+            "operation": "get_3d_file_path"
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"get_3d_file_path failed: {e}"}
+
+def handle_get_project_data(aParams: dict) -> dict:
+    """Ruft Projektdaten ab"""
+    try:
+        import utility_controller as uc
+        
+        # Cadwork API aufrufen
+        lProjectData = uc.get_project_data()
+        
+        return {
+            "status": "success",
+            "project_data": lProjectData,
+            "operation": "get_project_data"
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"get_project_data failed: {e}"}

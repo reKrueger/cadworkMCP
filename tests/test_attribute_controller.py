@@ -36,7 +36,7 @@ class AttributeControllerTests(TestSuite):
                     raise Exception(f"Failed to create test element {i+1}: {result}")
                     
         except Exception as e:
-            print(f"  ✗ Setup failed: {e}")
+            print(f"  X Setup failed: {e}")
             raise
     
     def teardown(self):

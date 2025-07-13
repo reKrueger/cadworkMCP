@@ -21,7 +21,7 @@ class VisualizationControllerTests(TestSuite):
         super().__init__("Visualization Controller Tests")
         self.controller = CVisualizationController()
         self.element_controller = ElementController()
-        self.test_elements = []
+        self.element_ids = []
     
     def setup(self):
         """Setup vor allen Tests"""
@@ -30,7 +30,7 @@ class VisualizationControllerTests(TestSuite):
         try:
             result = asyncio.run(self.element_controller.create_beam([0, 0, 0], [1000, 0, 0], 60, 120))
             if result.get("status") == "ok" and "element_id" in result:
-                self.test_elements.append(result["element_id"])
+                self.element_ids.append(result["element_id"])
                 self.log(f"Created test element: {result['element_id']}")
         except Exception as e:
             self.log(f"Could not create test element: {e}")
@@ -39,23 +39,23 @@ class VisualizationControllerTests(TestSuite):
         """Cleanup nach allen Tests"""
         self.log("Cleaning up Visualization Controller tests...")
         # Test-Elemente löschen
-        if self.test_elements:
+        if self.element_ids:
             try:
-                asyncio.run(self.element_controller.delete_elements(self.test_elements))
-                self.log(f"Deleted {len(self.test_elements)} test elements")
+                asyncio.run(self.element_controller.delete_elements(self.element_ids))
+                self.log(f"Deleted {len(self.element_ids)} test elements")
             except Exception as e:
                 self.log(f"Could not delete test elements: {e}")
     
     def get_test_element(self):
         """Hilfsmethode um Test-Element zu bekommen"""
-        if self.test_elements:
-            return self.test_elements[0]
+        if self.element_ids:
+            return self.element_ids[0]
         else:
             # Fallback: erstelle neues Element
             result = asyncio.run(self.element_controller.create_beam([0, 0, 100], [1000, 0, 100], 60, 120))
             if result.get("status") == "ok" and "element_id" in result:
                 element_id = result["element_id"]
-                self.test_elements.append(element_id)
+                self.element_ids.append(element_id)
                 return element_id
             return None
     

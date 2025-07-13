@@ -7,7 +7,7 @@ from .base_controller import BaseController
 class GeometryController(BaseController):
     """Controller for geometry operations"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("GeometryController")
     
     async def get_element_width(self, element_id: int) -> Dict[str, Any]:

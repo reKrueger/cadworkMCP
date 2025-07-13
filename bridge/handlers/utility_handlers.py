@@ -3,6 +3,41 @@ Utility Handler für Cadwork Bridge
 Verarbeitet Display-Refresh und System-Utilities
 """
 
+def handle_ping(aParams: dict) -> dict:
+    """Ping handler for connection testing"""
+    return {
+        "status": "ok",
+        "message": "pong",
+        "operation": "ping"
+    }
+
+def handle_get_version_info(aParams: dict) -> dict:
+    """Get version info handler"""
+    return handle_get_cadwork_version_info(aParams)
+
+def handle_get_model_name(aParams: dict) -> dict:
+    """Get model name handler"""
+    try:
+        import utility_controller as uc
+        
+        # Try to get the 3D file path and extract model name
+        lFilePath = uc.get_3d_file_path()
+        
+        if lFilePath:
+            import os
+            lModelName = os.path.splitext(os.path.basename(lFilePath))[0]
+        else:
+            lModelName = "Unknown"
+        
+        return {
+            "status": "success",
+            "model_name": lModelName,
+            "operation": "get_model_name"
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"get_model_name failed: {e}"}
+
 def handle_disable_auto_display_refresh(aParams: dict) -> dict:
     """Deaktiviert automatische Display-Aktualisierung"""
     try:

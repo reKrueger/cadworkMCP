@@ -9,11 +9,9 @@ def handle_create_beam(args: Dict[str, Any]) -> Dict[str, Any]:
     try:
         # Import here to avoid import-time errors
         import cadwork
-
-        # Import here to avoid import-time errors
         import element_controller as ec
-
-        # Import here to avoid import-time errors
+        import geometry_controller as gc
+        import attribute_controller as ac
         
         # Validate required arguments
         required = ["p1", "p2", "width", "height"]
@@ -57,9 +55,9 @@ def handle_create_panel(args: Dict[str, Any]) -> Dict[str, Any]:
     try:
         # Import here to avoid import-time errors
         import cadwork
-
-        # Import here to avoid import-time errors
         import element_controller as ec
+        import geometry_controller as gc
+        import attribute_controller as ac
 
         # Validate required arguments
         required = ["p1", "p2", "width", "thickness"]
@@ -283,9 +281,9 @@ def handle_get_element_info(args: Dict[str, Any]) -> Dict[str, Any]:
     try:
         # Import here to avoid import-time errors
         import cadwork
-
-        # Import here to avoid import-time errors
         import element_controller as ec
+        import geometry_controller as gc
+        import attribute_controller as ac
 
         element_id = args.get("element_id")
         if element_id is None:
@@ -352,7 +350,7 @@ def handle_get_element_info(args: Dict[str, Any]) -> Dict[str, Any]:
 
 # --- EXTENDED ELEMENT CREATION HANDLERS ---
 
-def handle_create_circular_beam_points(params):
+def handle_create_circular_beam_points(params: Dict[str, Any]) -> Dict[str, Any]:
     """Handle circular beam creation with points"""
     try:
         import element_controller as ec
@@ -373,7 +371,7 @@ def handle_create_circular_beam_points(params):
     except Exception as e:
         return {"status": "error", "message": f"Failed to create circular beam: {e}"}
 
-def handle_create_square_beam_points(params):
+def handle_create_square_beam_points(params: Dict[str, Any]) -> Dict[str, Any]:
     """Handle square beam creation with points"""
     try:
         import element_controller as ec
@@ -394,7 +392,7 @@ def handle_create_square_beam_points(params):
     except Exception as e:
         return {"status": "error", "message": f"Failed to create square beam: {e}"}
 
-def handle_create_standard_beam_points(params):
+def handle_create_standard_beam_points(params: Dict[str, Any]) -> Dict[str, Any]:
     """Handle standard beam creation with points"""
     try:
         import element_controller as ec
@@ -415,7 +413,7 @@ def handle_create_standard_beam_points(params):
     except Exception as e:
         return {"status": "error", "message": f"Failed to create standard beam: {e}"}
 
-def handle_create_standard_panel_points(params):
+def handle_create_standard_panel_points(params: Dict[str, Any]) -> Dict[str, Any]:
     """Handle standard panel creation with points"""
     try:
         import element_controller as ec
@@ -436,7 +434,7 @@ def handle_create_standard_panel_points(params):
     except Exception as e:
         return {"status": "error", "message": f"Failed to create standard panel: {e}"}
 
-def handle_create_drilling_points(params):
+def handle_create_drilling_points(params: Dict[str, Any]) -> Dict[str, Any]:
     """Handle drilling creation with points"""
     try:
         import element_controller as ec
@@ -453,7 +451,7 @@ def handle_create_drilling_points(params):
     except Exception as e:
         return {"status": "error", "message": f"Failed to create drilling: {e}"}
 
-def handle_create_polygon_beam(params):
+def handle_create_polygon_beam(params: Dict[str, Any]) -> Dict[str, Any]:
     """Handle polygon beam creation"""
     try:
         import element_controller as ec

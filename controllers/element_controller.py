@@ -7,7 +7,7 @@ from .base_controller import BaseController
 class ElementController(BaseController):
     """Controller for element operations"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("ElementController")
     
     async def create_beam(self, p1: list, p2: list, width: float, height: float, 
@@ -107,7 +107,7 @@ class ElementController(BaseController):
     
     # --- EXTENDED ELEMENT CREATION ---
     
-    async def create_circular_beam_points(self, diameter: float, p1: list, p2: list, p3: list = None) -> Dict[str, Any]:
+    async def create_circular_beam_points(self, diameter: float, p1: List[float], p2: List[float], p3: Optional[List[float]] = None) -> Dict[str, Any]:
         """Create circular beam using points. Requires diameter, start point p1, end point p2, optional orientation point p3"""
         return self.send_command("create_circular_beam_points", {
             "diameter": float(diameter),
@@ -116,7 +116,7 @@ class ElementController(BaseController):
             "p3": p3
         })
     
-    async def create_square_beam_points(self, width: float, p1: list, p2: list, p3: list = None) -> Dict[str, Any]:
+    async def create_square_beam_points(self, width: float, p1: List[float], p2: List[float], p3: Optional[List[float]] = None) -> Dict[str, Any]:
         """Create square beam using points. Requires width, start point p1, end point p2, optional orientation point p3"""
         return self.send_command("create_square_beam_points", {
             "width": float(width),
@@ -125,7 +125,7 @@ class ElementController(BaseController):
             "p3": p3
         })
     
-    async def create_standard_beam_points(self, standard_element_name: str, p1: list, p2: list, p3: list = None) -> Dict[str, Any]:
+    async def create_standard_beam_points(self, standard_element_name: str, p1: List[float], p2: List[float], p3: Optional[List[float]] = None) -> Dict[str, Any]:
         """Create standard beam using points. Requires standard element name, start point p1, end point p2, optional orientation point p3"""
         return self.send_command("create_standard_beam_points", {
             "standard_element_name": str(standard_element_name),
@@ -134,7 +134,7 @@ class ElementController(BaseController):
             "p3": p3
         })
     
-    async def create_standard_panel_points(self, standard_element_name: str, p1: list, p2: list, p3: list = None) -> Dict[str, Any]:
+    async def create_standard_panel_points(self, standard_element_name: str, p1: List[float], p2: List[float], p3: Optional[List[float]] = None) -> Dict[str, Any]:
         """Create standard panel using points. Requires standard element name, start point p1, end point p2, optional orientation point p3"""
         return self.send_command("create_standard_panel_points", {
             "standard_element_name": str(standard_element_name),
@@ -357,7 +357,7 @@ class ElementController(BaseController):
         except Exception as e:
             return {"status": "error", "message": f"unjoin_elements failed: {e}"}
     
-    async def cut_corner_lap(self, aElementIds: list, aCutParams: dict = None) -> dict:
+    async def cut_corner_lap(self, aElementIds: List[int], aCutParams: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Erstellt Eckblatt-Verbindung zwischen Elementen
         
@@ -388,7 +388,7 @@ class ElementController(BaseController):
         except Exception as e:
             return {"status": "error", "message": f"cut_corner_lap failed: {e}"}
     
-    async def cut_cross_lap(self, aElementIds: list, aCutParams: dict = None) -> dict:
+    async def cut_cross_lap(self, aElementIds: List[int], aCutParams: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Erstellt Kreuzblatt-Verbindung zwischen Elementen
         
@@ -419,7 +419,7 @@ class ElementController(BaseController):
         except Exception as e:
             return {"status": "error", "message": f"cut_cross_lap failed: {e}"}
     
-    async def cut_half_lap(self, aElementIds: list, aCutParams: dict = None) -> dict:
+    async def cut_half_lap(self, aElementIds: List[int], aCutParams: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Erstellt Halbes Blatt-Verbindung zwischen Elementen
         
@@ -457,7 +457,7 @@ class ElementController(BaseController):
         except Exception as e:
             return {"status": "error", "message": f"cut_half_lap failed: {e}"}
     
-    async def cut_double_tenon(self, aElementIds: list, aCutParams: dict = None) -> dict:
+    async def cut_double_tenon(self, aElementIds: List[int], aCutParams: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Erstellt Doppelzapfen-Verbindung zwischen Elementen
         
@@ -498,7 +498,7 @@ class ElementController(BaseController):
         except Exception as e:
             return {"status": "error", "message": f"cut_double_tenon failed: {e}"}
     
-    async def cut_scarf_joint(self, aElementIds: list, aCutParams: dict = None) -> dict:
+    async def cut_scarf_joint(self, aElementIds: List[int], aCutParams: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Erstellt Stoßverbindung zwischen Elementen
         
@@ -539,7 +539,7 @@ class ElementController(BaseController):
         except Exception as e:
             return {"status": "error", "message": f"cut_scarf_joint failed: {e}"}
     
-    async def cut_shoulder(self, aElementIds: list, aCutParams: dict = None) -> dict:
+    async def cut_shoulder(self, aElementIds: List[int], aCutParams: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Erstellt Schulterschnitt zwischen Elementen
         
@@ -580,7 +580,7 @@ class ElementController(BaseController):
         except Exception as e:
             return {"status": "error", "message": f"cut_shoulder failed: {e}"}
     
-    async def create_auxiliary_beam_points(self, aP1: list, aP2: list, aP3: list = None) -> dict:
+    async def create_auxiliary_beam_points(self, aP1: List[float], aP2: List[float], aP3: Optional[List[float]] = None) -> Dict[str, Any]:
         """
         Erstellt ein Hilfs-Balkenelement zwischen zwei Punkten
         

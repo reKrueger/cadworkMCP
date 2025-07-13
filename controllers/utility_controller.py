@@ -7,7 +7,7 @@ from .base_controller import BaseController
 class CUtilityController(BaseController):
     """Controller für Utility-Operationen"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("UtilityController")
     
     async def disable_auto_display_refresh(self) -> dict:

@@ -3,7 +3,7 @@ Test Configuration and Utilities
 """
 import sys
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional, Callable
 import time
 
 # Add project root to path
@@ -27,19 +27,19 @@ class TestSuite:
         self.results: List[TestResult] = []
         self.setup_done = False
     
-    def log(self, message: str):
+    def log(self, message: str) -> None:
         """Log a message during testing"""
         print(f"  {message}")
     
-    def setup(self):
+    def setup(self) -> None:
         """Override in subclasses for setup"""
         pass
     
-    def teardown(self):
+    def teardown(self) -> None:
         """Override in subclasses for cleanup"""
         pass
     
-    def run_test(self, test_func, test_name: str = None) -> TestResult:
+    def run_test(self, test_func, test_name: Optional[str] = None) -> TestResult:
         """Run a single test function"""
         if not self.setup_done:
             self.setup()
@@ -102,26 +102,26 @@ class TestSuite:
             "results": self.results
         }
 
-def assert_ok(result: Dict[str, Any], message: str = ""):
+def assert_ok(result: Dict[str, Any], message: str = "") -> None:
     """Assert that result status is 'ok'"""
     if not isinstance(result, dict):
         raise AssertionError(f"Expected dict result, got {type(result)}: {result}")
     if result.get("status") != "ok":
         raise AssertionError(f"Expected status 'ok', got '{result.get('status')}': {result.get('message', '')} {message}")
 
-def assert_error(result: Dict[str, Any], message: str = ""):
+def assert_error(result: Dict[str, Any], message: str = "") -> None:
     """Assert that result status is 'error'"""
     if not isinstance(result, dict):
         raise AssertionError(f"Expected dict result, got {type(result)}: {result}")
     if result.get("status") != "error":
         raise AssertionError(f"Expected status 'error', got '{result.get('status')}' {message}")
 
-def assert_has_key(result: Dict[str, Any], key: str, message: str = ""):
+def assert_has_key(result: Dict[str, Any], key: str, message: str = "") -> None:
     """Assert that result has specific key"""
     if key not in result:
         raise AssertionError(f"Expected key '{key}' in result {message}")
 
-def assert_element_id(result: Dict[str, Any], message: str = ""):
+def assert_element_id(result: Dict[str, Any], message: str = "") -> None:
     """Assert that result contains valid element_id"""
     assert_ok(result)
     assert_has_key(result, "element_id")
@@ -129,17 +129,17 @@ def assert_element_id(result: Dict[str, Any], message: str = ""):
     if not isinstance(element_id, int) or element_id <= 0:
         raise AssertionError(f"Expected positive integer element_id, got {element_id} {message}")
 
-def assert_equal(actual, expected, message: str = ""):
+def assert_equal(actual: Any, expected: Any, message: str = "") -> None:
     """Assert that two values are equal"""
     if actual != expected:
         raise AssertionError(f"Expected {expected}, got {actual} {message}")
 
-def assert_in(item, container, message: str = ""):
+def assert_in(item: Any, container: Any, message: str = "") -> None:
     """Assert that item is in container"""
     if item not in container:
         raise AssertionError(f"Expected {item} to be in {container} {message}")
 
-def assert_list_equal(actual, expected, message: str = ""):
+def assert_list_equal(actual: List[Any], expected: List[Any], message: str = "") -> None:
     """Assert that two lists are equal"""
     if actual != expected:
         raise AssertionError(f"Expected list {expected}, got {actual} {message}")

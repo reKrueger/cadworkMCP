@@ -7,7 +7,7 @@ from .base_controller import BaseController
 class CVisualizationController(BaseController):
     """Controller für Visualization-Operationen"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("VisualizationController")
     
     async def set_color(self, aElementIds: list, aColorId: int) -> dict:

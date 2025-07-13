@@ -17,7 +17,7 @@ class CadworkConnection:
         self.host = host
         self.port = port
     
-    def send_command(self, operation: str, args: Dict[str, Any] = None) -> Dict[str, Any]:
+    def send_command(self, operation: str, args: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Send command to Cadwork and return response"""
         command = {
             "operation": operation,
@@ -39,7 +39,7 @@ class CadworkConnection:
             
             # Receive response
             response_data = self._receive_response(sock)
-            response = json.loads(response_data.decode('utf-8'))
+            response: Dict[str, Any] = json.loads(response_data.decode('utf-8'))
             
             log_info(f"Command {operation} completed with status: {response.get('status', 'unknown')}")
             return response

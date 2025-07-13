@@ -2,6 +2,9 @@
 New clean Cadwork MCP Server
 """
 import os
+from typing import Optional, List, Dict, Any
+from contextlib import asynccontextmanager
+from mcp.server.fastmcp import FastMCP
 from core.server import create_mcp_server
 from core.logging import get_logger
 from controllers.element_controller import ElementController
@@ -32,14 +35,14 @@ machine_ctrl = CMachineController()
     name="create_beam",
     description="Creates a rectangular beam element. Requires start point p1 ([x,y,z]), end point p2 ([x,y,z]), width, and height. Optional orientation point p3 ([x,y,z])."
 )
-async def create_beam(p1: list, p2: list, width: float, height: float, p3: list = None) -> dict:
+async def create_beam(p1: List[float], p2: List[float], width: float, height: float, p3: Optional[List[float]] = None) -> Dict[str, Any]:
     return await element_ctrl.create_beam(p1, p2, width, height, p3)
 
 @mcp.tool(
     name="create_panel", 
     description="Creates a rectangular panel element. Requires start point p1 ([x,y,z]), end point p2 ([x,y,z]), width, and thickness. Optional orientation point p3 ([x,y,z])."
 )
-async def create_panel(p1: list, p2: list, width: float, thickness: float, p3: list = None) -> dict:
+async def create_panel(p1: List[float], p2: List[float], width: float, thickness: float, p3: Optional[List[float]] = None) -> Dict[str, Any]:
     return await element_ctrl.create_panel(p1, p2, width, thickness, p3)
 
 @mcp.tool(
@@ -102,7 +105,7 @@ async def duplicate_elements(element_ids: list) -> dict:
     name="get_user_element_ids", 
     description="Prompts user to select elements in Cadwork 3D and returns their IDs. Optional count parameter limits selection to specific number of elements."
 )
-async def get_user_element_ids(count: int = None) -> dict:
+async def get_user_element_ids(count: Optional[int] = None) -> Dict[str, Any]:
     return await element_ctrl.get_user_element_ids(count)
 
 # --- EXTENDED ELEMENT CREATION TOOLS ---
@@ -111,28 +114,28 @@ async def get_user_element_ids(count: int = None) -> dict:
     name="create_circular_beam_points",
     description="Creates a circular beam element using points. Requires diameter, start point p1 ([x,y,z]), end point p2 ([x,y,z]), and optional orientation point p3 ([x,y,z])."
 )
-async def create_circular_beam_points(diameter: float, p1: list, p2: list, p3: list = None) -> dict:
+async def create_circular_beam_points(diameter: float, p1: List[float], p2: List[float], p3: Optional[List[float]] = None) -> Dict[str, Any]:
     return await element_ctrl.create_circular_beam_points(diameter, p1, p2, p3)
 
 @mcp.tool(
     name="create_square_beam_points", 
     description="Creates a square beam element using points. Requires width, start point p1 ([x,y,z]), end point p2 ([x,y,z]), and optional orientation point p3 ([x,y,z])."
 )
-async def create_square_beam_points(width: float, p1: list, p2: list, p3: list = None) -> dict:
+async def create_square_beam_points(width: float, p1: List[float], p2: List[float], p3: Optional[List[float]] = None) -> Dict[str, Any]:
     return await element_ctrl.create_square_beam_points(width, p1, p2, p3)
 
 @mcp.tool(
     name="create_standard_beam_points",
     description="Creates a standard beam element using points from Cadwork library. Requires standard_element_name, start point p1 ([x,y,z]), end point p2 ([x,y,z]), and optional orientation point p3 ([x,y,z])."
 )
-async def create_standard_beam_points(standard_element_name: str, p1: list, p2: list, p3: list = None) -> dict:
+async def create_standard_beam_points(standard_element_name: str, p1: List[float], p2: List[float], p3: Optional[List[float]] = None) -> Dict[str, Any]:
     return await element_ctrl.create_standard_beam_points(standard_element_name, p1, p2, p3)
 
 @mcp.tool(
     name="create_standard_panel_points",
     description="Creates a standard panel element using points from Cadwork library. Requires standard_element_name, start point p1 ([x,y,z]), end point p2 ([x,y,z]), and optional orientation point p3 ([x,y,z])."
 )
-async def create_standard_panel_points(standard_element_name: str, p1: list, p2: list, p3: list = None) -> dict:
+async def create_standard_panel_points(standard_element_name: str, p1: List[float], p2: List[float], p3: Optional[List[float]] = None) -> Dict[str, Any]:
     return await element_ctrl.create_standard_panel_points(standard_element_name, p1, p2, p3)
 
 @mcp.tool(
@@ -211,42 +214,42 @@ async def unjoin_elements(element_ids: list) -> dict:
     name="cut_corner_lap",
     description="Creates corner lap cuts between elements for wood connections. Takes element IDs (minimum 2) and optional cut parameters (depth, width, etc.)."
 )
-async def cut_corner_lap(element_ids: list, cut_params: dict = None) -> dict:
+async def cut_corner_lap(element_ids: List[int], cut_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     return await element_ctrl.cut_corner_lap(element_ids, cut_params)
 
 @mcp.tool(
     name="cut_cross_lap", 
     description="Creates cross lap cuts between elements for wood connections. Takes element IDs (minimum 2) and optional cut parameters (depth, width, position, etc.)."
 )
-async def cut_cross_lap(element_ids: list, cut_params: dict = None) -> dict:
+async def cut_cross_lap(element_ids: List[int], cut_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     return await element_ctrl.cut_cross_lap(element_ids, cut_params)
 
 @mcp.tool(
     name="cut_half_lap",
     description="Creates half lap cuts between elements. One element is cut to half its thickness while the other is cut completely. Takes element IDs (minimum 2) and optional cut parameters."
 )
-async def cut_half_lap(element_ids: list, cut_params: dict = None) -> dict:
+async def cut_half_lap(element_ids: List[int], cut_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     return await element_ctrl.cut_half_lap(element_ids, cut_params)
 
 @mcp.tool(
     name="cut_double_tenon",
     description="Creates double tenon and mortise connections between exactly 2 elements. Creates two parallel tenons on one element and corresponding mortises on the other."
 )
-async def cut_double_tenon(element_ids: list, cut_params: dict = None) -> dict:
+async def cut_double_tenon(element_ids: List[int], cut_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     return await element_ctrl.cut_double_tenon(element_ids, cut_params)
 
 @mcp.tool(
     name="cut_scarf_joint",
     description="Creates scarf joint connections between exactly 2 elements for beam extensions or seamless connections. Takes scarf type, length, angle parameters."
 )
-async def cut_scarf_joint(element_ids: list, cut_params: dict = None) -> dict:
+async def cut_scarf_joint(element_ids: List[int], cut_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     return await element_ctrl.cut_scarf_joint(element_ids, cut_params)
 
 @mcp.tool(
     name="cut_shoulder",
     description="Creates shoulder cuts between elements for load-bearing connections. One element supports another with a shoulder cut. Takes depth, width, type parameters."
 )
-async def cut_shoulder(element_ids: list, cut_params: dict = None) -> dict:
+async def cut_shoulder(element_ids: List[int], cut_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     return await element_ctrl.cut_shoulder(element_ids, cut_params)
 
 # --- GEOMETRY TOOLS ---
@@ -636,7 +639,7 @@ async def get_cadwork_version_info() -> dict:
     name="create_auxiliary_beam_points",
     description="Creates an auxiliary beam element using points. Auxiliary elements are used for construction purposes and can be converted to regular beams later. Requires start point p1 ([x,y,z]), end point p2 ([x,y,z]), and optional orientation point p3 ([x,y,z])."
 )
-async def create_auxiliary_beam_points(p1: list, p2: list, p3: list = None) -> dict:
+async def create_auxiliary_beam_points(p1: List[float], p2: List[float], p3: Optional[List[float]] = None) -> Dict[str, Any]:
     return await element_ctrl.create_auxiliary_beam_points(p1, p2, p3)
 
 @mcp.tool(
@@ -678,14 +681,14 @@ async def get_container_content_elements(container_id: int) -> dict:
     name="add_wall_section_x",
     description="Adds a wall section in X-direction for technical drawings. Creates cross-sectional views parallel to X-axis for workshop drawings. Takes wall element ID and optional section parameters (position, depth, display options)."
 )
-async def add_wall_section_x(wall_id: int, section_params: dict = None) -> dict:
+async def add_wall_section_x(wall_id: int, section_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     return await shop_drawing_ctrl.add_wall_section_x(wall_id, section_params)
 
 @mcp.tool(
     name="add_wall_section_y", 
     description="Adds a wall section in Y-direction for technical drawings. Creates cross-sectional views parallel to Y-axis for workshop drawings. Takes wall element ID and optional section parameters (position, depth, display options)."
 )
-async def add_wall_section_y(wall_id: int, section_params: dict = None) -> dict:
+async def add_wall_section_y(wall_id: int, section_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     return await shop_drawing_ctrl.add_wall_section_y(wall_id, section_params)
 
 @mcp.tool(
@@ -730,7 +733,7 @@ if __name__ == "__main__":
         try:
             # Use uvicorn for HTTP transport
             import uvicorn
-            uvicorn.run(mcp, host=args.host, port=args.port)
+            uvicorn.run(mcp.app, host=args.host, port=args.port)  # type: ignore
         except KeyboardInterrupt:
             logger.info("Server stopped by user")
         except Exception as e:

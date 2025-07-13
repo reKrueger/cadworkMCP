@@ -7,7 +7,7 @@ from .base_controller import BaseController
 class CMachineController(BaseController):
     """Controller für Machine/CNC-Operationen"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("MachineController")
     
     async def check_production_list_discrepancies(self, aProductionListId: int) -> dict:

@@ -25,6 +25,8 @@ def get_logger() -> logging.Logger:
     global _logger
     if _logger is None:
         setup_logging()
+    # _logger is guaranteed to be non-None after setup_logging()
+    assert _logger is not None
     return _logger
 
 def log_info(message: str) -> None:

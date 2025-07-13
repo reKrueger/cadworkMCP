@@ -13,7 +13,10 @@ def handle_get_element_width(args: Dict[str, Any]) -> Dict[str, Any]:
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         width = gc.get_width(element_id)
         
         if isinstance(width, (int, float)):
@@ -37,7 +40,10 @@ def handle_get_element_height(args: Dict[str, Any]) -> Dict[str, Any]:
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         height = gc.get_height(element_id)
         
         if isinstance(height, (int, float)):
@@ -61,7 +67,10 @@ def handle_get_element_length(args: Dict[str, Any]) -> Dict[str, Any]:
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         length = gc.get_length(element_id)
         
         if isinstance(length, (int, float)):
@@ -85,7 +94,10 @@ def handle_get_element_volume(args: Dict[str, Any]) -> Dict[str, Any]:
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         volume = gc.get_volume(element_id)
         
         if isinstance(volume, (int, float)):
@@ -109,7 +121,10 @@ def handle_get_element_weight(args: Dict[str, Any]) -> Dict[str, Any]:
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         weight = gc.get_weight(element_id)
         
         if isinstance(weight, (int, float)):
@@ -133,7 +148,10 @@ def handle_get_element_xl(args: Dict[str, Any]) -> Dict[str, Any]:
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         xl_vector = gc.get_xl(element_id)
         
         # Convert point_3d to list
@@ -155,7 +173,10 @@ def handle_get_element_yl(args: Dict[str, Any]) -> Dict[str, Any]:
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         yl_vector = gc.get_yl(element_id)
         
         # Convert point_3d to list
@@ -177,7 +198,10 @@ def handle_get_element_zl(args: Dict[str, Any]) -> Dict[str, Any]:
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         zl_vector = gc.get_zl(element_id)
         
         # Convert point_3d to list
@@ -199,7 +223,10 @@ def handle_get_element_p1(args: Dict[str, Any]) -> Dict[str, Any]:
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         p1_point = gc.get_p1(element_id)
         
         # Convert point_3d to list
@@ -221,7 +248,10 @@ def handle_get_element_p2(args: Dict[str, Any]) -> Dict[str, Any]:
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         p2_point = gc.get_p2(element_id)
         
         # Convert point_3d to list
@@ -243,7 +273,10 @@ def handle_get_element_p3(args: Dict[str, Any]) -> Dict[str, Any]:
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         p3_point = gc.get_p3(element_id)
         
         # Convert point_3d to list
@@ -265,7 +298,10 @@ def handle_get_center_of_gravity(args: Dict[str, Any]) -> Dict[str, Any]:
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         cog_point = gc.get_center_of_gravity(element_id)
         
         # Convert point_3d to list
@@ -317,7 +353,10 @@ def handle_get_element_vertices(args: Dict[str, Any]) -> Dict[str, Any]:
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         vertices = gc.get_element_vertices(element_id)
         
         # Convert list of point_3d to list of lists
@@ -343,8 +382,15 @@ def handle_get_minimum_distance_between_elements(args: Dict[str, Any]) -> Dict[s
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        first_element_id = validate_element_id(args.get("first_element_id"))
-        second_element_id = validate_element_id(args.get("second_element_id"))
+        first_element_id_raw = args.get("first_element_id")
+        if first_element_id_raw is None:
+            raise ValueError("Missing required argument: first_element_id")
+        first_element_id = validate_element_id(first_element_id_raw)
+        
+        second_element_id_raw = args.get("second_element_id")
+        if second_element_id_raw is None:
+            raise ValueError("Missing required argument: second_element_id")
+        second_element_id = validate_element_id(second_element_id_raw)
         
         distance = gc.get_minimum_distance_between_elements(first_element_id, second_element_id)
         
@@ -374,7 +420,10 @@ def handle_get_element_facets(args: Dict[str, Any]) -> Dict[str, Any]:
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         facets = gc.get_element_facets(element_id)
         
         # Convert facet_list to appropriate format
@@ -424,7 +473,10 @@ def handle_get_element_reference_face_area(args: Dict[str, Any]) -> Dict[str, An
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         area = gc.get_element_reference_face_area(element_id)
         
         if isinstance(area, (int, float)):
@@ -448,7 +500,10 @@ def handle_get_total_area_of_all_faces(args: Dict[str, Any]) -> Dict[str, Any]:
         # Import here to avoid import-time errors
         import geometry_controller as gc
 
-        element_id = validate_element_id(args.get("element_id"))
+        element_id_raw = args.get("element_id")
+        if element_id_raw is None:
+            raise ValueError("Missing required argument: element_id")
+        element_id = validate_element_id(element_id_raw)
         total_area = gc.get_total_area_of_all_faces(element_id)
         
         if isinstance(total_area, (int, float)):

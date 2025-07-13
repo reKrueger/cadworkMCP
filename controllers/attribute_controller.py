@@ -7,7 +7,7 @@ from .base_controller import BaseController
 class AttributeController(BaseController):
     """Controller for attribute operations"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("AttributeController")
     
     async def get_standard_attributes(self, element_ids: List[int]) -> Dict[str, Any]:

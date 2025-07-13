@@ -2,15 +2,16 @@
 Shop Drawing Controller für Cadwork MCP Server
 Verwaltet Werkstattzeichnungs-spezifische Funktionen für Fertigungsplanung
 """
+from typing import Dict, Any, Optional
 from .base_controller import BaseController
 
 class CShopDrawingController(BaseController):
     """Controller für Shop Drawing Operationen"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("ShopDrawingController")
     
-    async def add_wall_section_x(self, aWallId: int, aSectionParams: dict = None) -> dict:
+    async def add_wall_section_x(self, aWallId: int, aSectionParams: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Fügt einen Wandschnitt in X-Richtung hinzu
         
@@ -41,7 +42,7 @@ class CShopDrawingController(BaseController):
         except Exception as e:
             return {"status": "error", "message": f"add_wall_section_x failed: {e}"}
     
-    async def add_wall_section_y(self, aWallId: int, aSectionParams: dict = None) -> dict:
+    async def add_wall_section_y(self, aWallId: int, aSectionParams: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Fügt einen Wandschnitt in Y-Richtung hinzu
         

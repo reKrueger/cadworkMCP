@@ -1,9 +1,12 @@
 """
 Helper functions for data conversion
 """
-from typing import List, Union
+from typing import List, Union, TYPE_CHECKING
 
-def to_point_3d(coords: Union[List, tuple]):
+if TYPE_CHECKING:
+    import cadwork
+
+def to_point_3d(coords: Union[List, tuple]) -> 'cadwork.point_3d':
     """Convert [x,y,z] list/tuple to cadwork.point_3d"""
     # Import cadwork here to avoid import-time errors
     import cadwork
@@ -16,7 +19,7 @@ def to_point_3d(coords: Union[List, tuple]):
     except (ValueError, TypeError) as e:
         raise ValueError(f"Invalid coordinates in point {coords}: {e}")
 
-def point_3d_to_list(pt) -> List[float]:
+def point_3d_to_list(pt: 'cadwork.point_3d') -> List[float]:
     """Convert cadwork.point_3d to [x, y, z] list"""
     # Import cadwork here to avoid import-time errors
     import cadwork
@@ -41,7 +44,7 @@ def validate_element_id(element_id: Union[int, str]) -> int:
     except (ValueError, TypeError):
         raise ValueError(f"Invalid element ID: {element_id}")
 
-def validate_element_ids(element_ids: List) -> List[int]:
+def validate_element_ids(element_ids: List[Union[int, str]]) -> List[int]:
     """Validate list of element IDs"""
     if not isinstance(element_ids, list):
         raise ValueError("element_ids must be a list")

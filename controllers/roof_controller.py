@@ -7,7 +7,7 @@ from .base_controller import BaseController
 class CRoofController(BaseController):
     """Controller für Roof/Dach-Operationen"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("RoofController")
     
     async def get_roof_surfaces(self, aElementIds: list) -> dict:

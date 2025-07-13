@@ -2,7 +2,7 @@
 System Tests für weitere MCP-Tools
 """
 import asyncio
-from test_config import TestSuite, assert_ok, assert_error
+from .test_config import TestSuite, assert_ok, assert_error
 
 class SystemTests(TestSuite):
     """Test suite for system functions"""

@@ -2,7 +2,7 @@
 Geometry Controller Tests
 """
 import asyncio
-from test_config import TestSuite, assert_ok, assert_error, TEST_POINTS
+from .test_config import TestSuite, assert_ok, assert_error, TEST_POINTS
 
 # Import controllers
 from controllers.geometry_controller import GeometryController

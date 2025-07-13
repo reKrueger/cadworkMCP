@@ -129,6 +129,21 @@ def assert_element_id(result: Dict[str, Any], message: str = ""):
     if not isinstance(element_id, int) or element_id <= 0:
         raise AssertionError(f"Expected positive integer element_id, got {element_id} {message}")
 
+def assert_equal(actual, expected, message: str = ""):
+    """Assert that two values are equal"""
+    if actual != expected:
+        raise AssertionError(f"Expected {expected}, got {actual} {message}")
+
+def assert_in(item, container, message: str = ""):
+    """Assert that item is in container"""
+    if item not in container:
+        raise AssertionError(f"Expected {item} to be in {container} {message}")
+
+def assert_list_equal(actual, expected, message: str = ""):
+    """Assert that two lists are equal"""
+    if actual != expected:
+        raise AssertionError(f"Expected list {expected}, got {actual} {message}")
+
 # Test data containers
 TEST_POINTS = {
     "origin": [0, 0, 0],

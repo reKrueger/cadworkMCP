@@ -9,6 +9,9 @@ from controllers.geometry_controller import GeometryController
 from controllers.attribute_controller import AttributeController
 from controllers.visualization_controller import CVisualizationController
 from controllers.utility_controller import CUtilityController
+from controllers.shop_drawing_controller import CShopDrawingController
+from controllers.roof_controller import CRoofController
+from controllers.machine_controller import CMachineController
 
 # Create MCP server
 mcp = create_mcp_server()
@@ -19,6 +22,9 @@ geometry_ctrl = GeometryController()
 attribute_ctrl = AttributeController()
 visualization_ctrl = CVisualizationController()
 utility_ctrl = CUtilityController()
+shop_drawing_ctrl = CShopDrawingController()
+roof_ctrl = CRoofController()
+machine_ctrl = CMachineController()
 
 # --- ELEMENT TOOLS ---
 
@@ -625,6 +631,83 @@ async def get_cadwork_version_info() -> dict:
         return connection.send_command("get_version_info")
     except Exception as e:
         return {"status": "error", "message": f"Failed to get version info: {e}"}
+
+@mcp.tool(
+    name="create_auxiliary_beam_points",
+    description="Creates an auxiliary beam element using points. Auxiliary elements are used for construction purposes and can be converted to regular beams later. Requires start point p1 ([x,y,z]), end point p2 ([x,y,z]), and optional orientation point p3 ([x,y,z])."
+)
+async def create_auxiliary_beam_points(p1: list, p2: list, p3: list = None) -> dict:
+    return await element_ctrl.create_auxiliary_beam_points(p1, p2, p3)
+
+@mcp.tool(
+    name="convert_beam_to_panel", 
+    description="Converts beam elements to panel elements. The geometry is adjusted accordingly - width becomes thickness, height becomes width of the resulting panel. Takes a list of element IDs to convert."
+)
+async def convert_beam_to_panel(element_ids: list) -> dict:
+    return await element_ctrl.convert_beam_to_panel(element_ids)
+
+@mcp.tool(
+    name="convert_panel_to_beam",
+    description="Converts panel elements to beam elements. The geometry is adjusted accordingly - thickness becomes width, width becomes height of the resulting beam. Takes a list of element IDs to convert."
+)
+async def convert_panel_to_beam(element_ids: list) -> dict:
+    return await element_ctrl.convert_panel_to_beam(element_ids)
+
+@mcp.tool(
+    name="convert_auxiliary_to_beam",
+    description="Converts auxiliary elements to regular beam elements. Auxiliary elements become full-featured beams while preserving their geometry. Takes a list of auxiliary element IDs to convert."
+)
+async def convert_auxiliary_to_beam(element_ids: list) -> dict:
+    return await element_ctrl.convert_auxiliary_to_beam(element_ids)
+
+@mcp.tool(
+    name="create_auto_container_from_standard",
+    description="Creates an automatic container from standard elements. Containers are groups that organize multiple elements together. Useful for complex structures and assemblies. Takes element IDs and container name."
+)
+async def create_auto_container_from_standard(element_ids: list, container_name: str) -> dict:
+    return await element_ctrl.create_auto_container_from_standard(element_ids, container_name)
+
+@mcp.tool(
+    name="get_container_content_elements", 
+    description="Retrieves all elements contained within a specific container. Returns list of element IDs and detailed information about each contained element. Takes container ID."
+)
+async def get_container_content_elements(container_id: int) -> dict:
+    return await element_ctrl.get_container_content_elements(container_id)
+
+@mcp.tool(
+    name="add_wall_section_x",
+    description="Adds a wall section in X-direction for technical drawings. Creates cross-sectional views parallel to X-axis for workshop drawings. Takes wall element ID and optional section parameters (position, depth, display options)."
+)
+async def add_wall_section_x(wall_id: int, section_params: dict = None) -> dict:
+    return await shop_drawing_ctrl.add_wall_section_x(wall_id, section_params)
+
+@mcp.tool(
+    name="add_wall_section_y", 
+    description="Adds a wall section in Y-direction for technical drawings. Creates cross-sectional views parallel to Y-axis for workshop drawings. Takes wall element ID and optional section parameters (position, depth, display options)."
+)
+async def add_wall_section_y(wall_id: int, section_params: dict = None) -> dict:
+    return await shop_drawing_ctrl.add_wall_section_y(wall_id, section_params)
+
+@mcp.tool(
+    name="get_roof_surfaces",
+    description="Retrieves roof surface information for specified elements. Analyzes roof elements and returns detailed information about roof surfaces, slopes, orientations and geometric properties. Takes list of element IDs to analyze as roof elements."
+)
+async def get_roof_surfaces(element_ids: list) -> dict:
+    return await roof_ctrl.get_roof_surfaces(element_ids)
+
+@mcp.tool(
+    name="calculate_roof_area",
+    description="Calculates total roof area for specified roof elements. Performs specialized roof area calculations considering slopes, overhangs and complex roof geometries. Takes list of roof element IDs for area calculation."
+)
+async def calculate_roof_area(roof_element_ids: list) -> dict:
+    return await roof_ctrl.calculate_roof_area(roof_element_ids)
+
+@mcp.tool(
+    name="check_production_list_discrepancies",
+    description="Checks production lists for discrepancies and conflicts. Analyzes production lists for potential issues like missing elements, inconsistent dimensions, material errors or CNC machining conflicts. Essential for quality-assured manufacturing. Takes production list ID."
+)
+async def check_production_list_discrepancies(production_list_id: int) -> dict:
+    return await machine_ctrl.check_production_list_discrepancies(production_list_id)
 
 if __name__ == "__main__":
     import argparse

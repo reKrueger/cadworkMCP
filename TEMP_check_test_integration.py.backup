@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+"""
+Überprüfung der neuen Test-Integration
+Testet, ob die neuen Funktionen automatisch in run_tests.py eingebunden sind
+"""
+import sys
+import os
+
+# Add project root to path
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, PROJECT_ROOT)
+
+from tests.test_element_controller import ElementControllerTests
+
+def check_new_test_integration():
+    """Überprüft ob neue Tests automatisch erkannt werden"""
+    print("=== NEUE TEST-INTEGRATION ÜBERPRÜFUNG ===")
+    
+    # Erstelle Test-Suite
+    lTestSuite = ElementControllerTests()
+    
+    # Hole alle Test-Methoden
+    lTestMethods = [method for method in dir(lTestSuite) if method.startswith('test_')]
+    
+    print(f"\nGefundene Test-Methoden: {len(lTestMethods)}")
+    
+    # Prüfe auf neue Test-Methoden
+    lNewTests = [
+        'test_create_auxiliary_beam_points_basic',
+        'test_create_auxiliary_beam_points_with_orientation', 
+        'test_convert_beam_to_panel_single',
+        'test_convert_beam_to_panel_multiple',
+        'test_auxiliary_to_regular_workflow'
+    ]
+    
+    print("\n--- NEUE TEST-METHODEN ÜBERPRÜFUNG ---")
+    lFoundNew = 0
+    for lTestName in lNewTests:
+        if lTestName in lTestMethods:
+            print(f"✅ {lTestName} - GEFUNDEN")
+            lFoundNew += 1
+        else:
+            print(f"❌ {lTestName} - NICHT GEFUNDEN")
+    
+    print(f"\n--- ZUSAMMENFASSUNG ---")
+    print(f"Erwartete neue Tests: {len(lNewTests)}")
+    print(f"Gefundene neue Tests: {lFoundNew}")
+    print(f"Gesamt Test-Methoden: {len(lTestMethods)}")
+    
+    if lFoundNew == len(lNewTests):
+        print("\n🎉 ERFOLG: Alle neuen Tests sind automatisch integriert!")
+        print("Die Tests werden bei 'python tests/run_tests.py' automatisch ausgeführt.")
+    else:
+        print(f"\n⚠️  WARNUNG: {len(lNewTests) - lFoundNew} Tests fehlen in der Integration")
+    
+    # Zeige alle Test-Methoden für Debugging
+    print("\n--- ALLE ELEMENT CONTROLLER TESTS ---")
+    for i, lMethod in enumerate(sorted(lTestMethods), 1):
+        lIsNew = "🆕" if lMethod in lNewTests else "  "
+        print(f"{i:2d}. {lIsNew} {lMethod}")
+    
+    return lFoundNew == len(lNewTests)
+
+if __name__ == "__main__":
+    check_new_test_integration()

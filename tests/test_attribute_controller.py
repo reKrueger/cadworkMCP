@@ -2,7 +2,7 @@
 Attribute Controller Tests
 """
 import asyncio
-from test_config import TestSuite, assert_ok, assert_error, TEST_MATERIALS, TEST_NAMES
+from .test_config import TestSuite, assert_ok, assert_error, TEST_MATERIALS, TEST_NAMES
 
 # Import controllers
 from controllers.attribute_controller import AttributeController

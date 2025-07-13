@@ -16,6 +16,8 @@ from tests.test_geometry_controller import GeometryControllerTests
 from tests.test_attribute_controller import AttributeControllerTests
 from tests.test_visualization_controller import VisualizationControllerTests
 from tests.test_utility_controller import UtilityControllerTests
+from tests.test_shop_drawing_controller import ShopDrawingControllerTests
+from tests.test_roof_controller import RoofControllerTests
 from tests.test_system import SystemTests
 
 def print_separator(char="=", length=80):
@@ -136,6 +138,8 @@ def run_all_tests(skip_connection_test=False):
         AttributeControllerTests(),
         VisualizationControllerTests(),
         UtilityControllerTests(),
+        ShopDrawingControllerTests(),
+        RoofControllerTests(),
         SystemTests()
     ]
     
@@ -191,7 +195,7 @@ def main():
     parser = argparse.ArgumentParser(description="Cadwork MCP Server Test Suite")
     parser.add_argument("--skip-connection", action="store_true", 
                        help="Skip connection test (useful for testing without Cadwork)")
-    parser.add_argument("--suite", choices=["element", "geometry", "attribute", "visualization", "utility", "system"], 
+    parser.add_argument("--suite", choices=["element", "geometry", "attribute", "visualization", "utility", "shop_drawing", "roof", "system"], 
                        help="Run only specific test suite")
     
     args = parser.parse_args()
@@ -204,6 +208,8 @@ def main():
             "attribute": AttributeControllerTests,
             "visualization": VisualizationControllerTests,
             "utility": UtilityControllerTests,
+            "shop_drawing": ShopDrawingControllerTests,
+            "roof": RoofControllerTests,
             "system": SystemTests
         }
         

@@ -126,3 +126,20 @@ def handle_get_project_data(aParams: dict) -> dict:
         
     except Exception as e:
         return {"status": "error", "message": f"get_project_data failed: {e}"}
+
+def handle_get_cadwork_version_info(aParams: dict) -> dict:
+    """Ruft Cadwork Versionsinformationen ab"""
+    try:
+        import utility_controller as uc
+        
+        # Cadwork API aufrufen
+        lVersionInfo = uc.get_cadwork_version_info()
+        
+        return {
+            "status": "success",
+            "version_info": lVersionInfo,
+            "operation": "get_cadwork_version_info"
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"get_cadwork_version_info failed: {e}"}

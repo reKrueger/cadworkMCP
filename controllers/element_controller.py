@@ -579,3 +579,185 @@ class ElementController(BaseController):
             
         except Exception as e:
             return {"status": "error", "message": f"cut_shoulder failed: {e}"}
+    
+    async def create_auxiliary_beam_points(self, aP1: list, aP2: list, aP3: list = None) -> dict:
+        """
+        Erstellt ein Hilfs-Balkenelement zwischen zwei Punkten
+        
+        Hilfselemente werden für Konstruktionszwecke verwendet und können später
+        in reguläre Balken konvertiert werden.
+        
+        Args:
+            aP1: Startpunkt [x, y, z] in mm
+            aP2: Endpunkt [x, y, z] in mm  
+            aP3: Optionaler Orientierungspunkt [x, y, z] in mm
+        
+        Returns:
+            dict: Element-ID und Informationen über das erstellte Hilfselement
+        """
+        try:
+            # Punkte validieren
+            lP1 = self.validate_point_3d(aP1, "p1")
+            lP2 = self.validate_point_3d(aP2, "p2")
+            lP3 = self.validate_point_3d(aP3, "p3") if aP3 is not None else None
+            
+            # Command senden
+            return self.send_command("create_auxiliary_beam_points", {
+                "p1": lP1,
+                "p2": lP2,
+                "p3": lP3
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"create_auxiliary_beam_points failed: {e}"}
+    
+    async def convert_beam_to_panel(self, aElementIds: list) -> dict:
+        """
+        Konvertiert Balken-Elemente zu Platten-Elementen
+        
+        Die Geometrie wird dabei entsprechend angepasst. Breite wird zur Dicke,
+        Höhe wird zur Breite der resultierenden Platte.
+        
+        Args:
+            aElementIds: Liste von Element-IDs die konvertiert werden sollen
+        
+        Returns:
+            dict: Informationen über die Konvertierung und neue Element-IDs
+        """
+        try:
+            # Element-IDs validieren
+            lValidatedIds = []
+            for lId in aElementIds:
+                lValidatedIds.append(self.validate_element_id(lId))
+            
+            if not lValidatedIds:
+                return {"status": "error", "message": "No valid element IDs provided"}
+            
+            # Command senden
+            return self.send_command("convert_beam_to_panel", {
+                "element_ids": lValidatedIds
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"convert_beam_to_panel failed: {e}"}
+    
+    async def convert_panel_to_beam(self, aElementIds: list) -> dict:
+        """
+        Konvertiert Platten-Elemente zu Balken-Elementen
+        
+        Die Geometrie wird dabei entsprechend angepasst. Dicke wird zur Breite,
+        Breite wird zur Höhe des resultierenden Balkens.
+        
+        Args:
+            aElementIds: Liste von Element-IDs die konvertiert werden sollen
+        
+        Returns:
+            dict: Informationen über die Konvertierung und neue Element-IDs
+        """
+        try:
+            # Element-IDs validieren
+            lValidatedIds = []
+            for lId in aElementIds:
+                lValidatedIds.append(self.validate_element_id(lId))
+            
+            if not lValidatedIds:
+                return {"status": "error", "message": "No valid element IDs provided"}
+            
+            # Command senden
+            return self.send_command("convert_panel_to_beam", {
+                "element_ids": lValidatedIds
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"convert_panel_to_beam failed: {e}"}
+    
+    async def convert_auxiliary_to_beam(self, aElementIds: list) -> dict:
+        """
+        Konvertiert Auxiliary-Elemente zu regulären Balken-Elementen
+        
+        Hilfselemente werden zu vollwertigen Balken mit allen Eigenschaften
+        konvertiert. Geometrie bleibt dabei erhalten.
+        
+        Args:
+            aElementIds: Liste von Auxiliary Element-IDs die konvertiert werden sollen
+        
+        Returns:
+            dict: Informationen über die Konvertierung und neue Element-IDs
+        """
+        try:
+            # Element-IDs validieren
+            lValidatedIds = []
+            for lId in aElementIds:
+                lValidatedIds.append(self.validate_element_id(lId))
+            
+            if not lValidatedIds:
+                return {"status": "error", "message": "No valid element IDs provided"}
+            
+            # Command senden
+            return self.send_command("convert_auxiliary_to_beam", {
+                "element_ids": lValidatedIds
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"convert_auxiliary_to_beam failed: {e}"}
+    
+    async def create_auto_container_from_standard(self, aElementIds: list, aContainerName: str) -> dict:
+        """
+        Erstellt automatisch einen Container aus Standard-Elementen
+        
+        Container sind Baugruppen die mehrere Elemente zusammenfassen.
+        Useful für Organisation komplexer Strukturen und Bauteile.
+        
+        Args:
+            aElementIds: Liste von Element-IDs die in den Container sollen
+            aContainerName: Name des zu erstellenden Containers
+        
+        Returns:
+            dict: Container-ID und Informationen über erstellten Container
+        """
+        try:
+            # Element-IDs validieren
+            lValidatedIds = []
+            for lId in aElementIds:
+                lValidatedIds.append(self.validate_element_id(lId))
+            
+            if not lValidatedIds:
+                return {"status": "error", "message": "No valid element IDs provided"}
+            
+            # Container-Name validieren
+            if not isinstance(aContainerName, str) or not aContainerName.strip():
+                return {"status": "error", "message": "Container name must be a non-empty string"}
+            
+            # Command senden
+            return self.send_command("create_auto_container_from_standard", {
+                "element_ids": lValidatedIds,
+                "container_name": aContainerName.strip()
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"create_auto_container_from_standard failed: {e}"}
+    
+    async def get_container_content_elements(self, aContainerId: int) -> dict:
+        """
+        Ruft alle Elemente eines Containers ab
+        
+        Gibt eine Liste aller Element-IDs zurück, die in dem angegebenen
+        Container enthalten sind.
+        
+        Args:
+            aContainerId: ID des Containers dessen Inhalt abgerufen werden soll
+        
+        Returns:
+            dict: Liste der Element-IDs und Container-Informationen
+        """
+        try:
+            # Container-ID validieren
+            lValidatedId = self.validate_element_id(aContainerId)
+            
+            # Command senden
+            return self.send_command("get_container_content_elements", {
+                "container_id": lValidatedId
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"get_container_content_elements failed: {e}"}

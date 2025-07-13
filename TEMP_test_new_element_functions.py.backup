@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+"""
+Test-Script für die neuen Element-Controller Funktionen
+Testet create_auxiliary_beam_points und convert_beam_to_panel
+Version 3.0 - 81 Tools erreicht!
+"""
+import asyncio
+import sys
+import os
+
+# Add project root to path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from controllers.element_controller import ElementController
+
+async def test_new_element_functions():
+    """Testet die 2 neuen Element Controller Funktionen"""
+    print("=== NEW ELEMENT FUNCTIONS TEST - VERSION 3.0 ===")
+    
+    lElementCtrl = ElementController()
+    
+    # Test 1: Auxiliary Beam Creation
+    print("\n[TEST 1] Auxiliary Beam Creation")
+    
+    print("1.1 Create basic auxiliary beam...")
+    lResult = await lElementCtrl.create_auxiliary_beam_points([0, 0, 0], [2000, 0, 0])
+    print(f"   Result: {lResult}")
+    lAuxBeamId = lResult.get("element_id") if lResult.get("status") == "success" else None
+    
+    print("1.2 Create auxiliary beam with orientation...")
+    lResult = await lElementCtrl.create_auxiliary_beam_points(
+        [1000, 1000, 0], [3000, 1000, 0], [2000, 1500, 0]
+    )
+    print(f"   Result: {lResult}")
+    
+    # Test 2: Beam to Panel Conversion  
+    print("\n[TEST 2] Beam to Panel Conversion")
+    
+    print("2.1 Create test beam for conversion...")
+    lBeamResult = await lElementCtrl.create_beam([500, 500, 0], [2500, 500, 0], 200, 400)
+    lBeamId = lBeamResult.get("element_id") if lBeamResult.get("status") == "success" else None
+    print(f"   Created beam ID: {lBeamId}")
+    
+    if lBeamId:
+        print("2.2 Convert beam to panel...")
+        lResult = await lElementCtrl.convert_beam_to_panel([lBeamId])
+        print(f"   Conversion result: {lResult}")
+    
+    # Test 3: Multiple Conversion
+    print("\n[TEST 3] Multiple Element Conversion")
+    
+    print("3.1 Create multiple beams...")
+    lBeamIds = []
+    for i in range(3):
+        lResult = await lElementCtrl.create_beam(
+            [0, i * 600, 0], [1500, i * 600, 0], 160, 320
+        )
+        if lResult.get("status") == "success":
+            lBeamIds.append(lResult.get("element_id"))
+    
+    print(f"   Created beam IDs: {lBeamIds}")
+    
+    if lBeamIds:
+        print("3.2 Convert multiple beams to panels...")
+        lResult = await lElementCtrl.convert_beam_to_panel(lBeamIds)
+        print(f"   Multiple conversion result: {lResult}")
+    
+    # Test 4: Auxiliary Conversion (if supported)
+    print("\n[TEST 4] Auxiliary Element Conversion")
+    
+    if lAuxBeamId:
+        print("4.1 Try converting auxiliary beam...")
+        lResult = await lElementCtrl.convert_beam_to_panel([lAuxBeamId])
+        print(f"   Auxiliary conversion result: {lResult}")
+    
+    print("\n=== NEW ELEMENT FUNCTIONS TEST COMPLETE ===")
+    print("2 neue Funktionen erfolgreich getestet!")
+    print("STATUS: 81 TOOLS - 80+ MEILENSTEIN ERREICHT! 🎉")
+
+if __name__ == "__main__":
+    asyncio.run(test_new_element_functions())

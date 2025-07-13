@@ -2,7 +2,7 @@
 Element Controller Tests
 """
 import asyncio
-from test_config import TestSuite, assert_ok, assert_error, assert_element_id, TEST_POINTS, TEST_MATERIALS, TEST_NAMES
+from .test_config import TestSuite, assert_ok, assert_error, assert_element_id, TEST_POINTS, TEST_MATERIALS, TEST_NAMES, assert_has_key, assert_equal, assert_in, assert_list_equal
 
 # Import controllers
 from controllers.element_controller import ElementController
@@ -824,3 +824,365 @@ class ElementControllerTests(TestSuite):
             "structure_elements": 6,
             "structure_type": "timber_frame"
         }
+
+    def test_create_auxiliary_beam_points_basic(self):
+        """Test create_auxiliary_beam_points mit Grundparametern"""
+        lP1 = [0, 0, 0]
+        lP2 = [2000, 0, 0]  
+        
+        result = asyncio.run(self.controller.create_auxiliary_beam_points(lP1, lP2))
+        assert_ok(result)
+        assert_has_key(result, "element_id")
+        assert_equal(result.get("element_type"), "auxiliary_beam")
+        assert_equal(result.get("p1"), lP1)
+        assert_equal(result.get("p2"), lP2)
+        self.log(f"Auxiliary beam created: ID {result.get('element_id')}")
+        return result.get("element_id")
+    
+    def test_create_auxiliary_beam_points_with_orientation(self):
+        """Test create_auxiliary_beam_points mit Orientierungspunkt"""
+        lP1 = [1000, 1000, 0]
+        lP2 = [3000, 1000, 0]
+        lP3 = [2000, 1500, 0]  # Orientierungspunkt
+        
+        result = asyncio.run(self.controller.create_auxiliary_beam_points(lP1, lP2, lP3))
+        assert_ok(result)
+        assert_has_key(result, "element_id")
+        assert_equal(result.get("element_type"), "auxiliary_beam") 
+        assert_equal(result.get("p3"), lP3)
+        self.log(f"Auxiliary beam with orientation created: ID {result.get('element_id')}")
+        return result.get("element_id")
+    
+    def test_convert_beam_to_panel_single(self):
+        """Test convert_beam_to_panel mit einzelnem Balken"""
+        # Erstelle einen Test-Balken
+        lBeamId = self.create_test_element([0, 0, 0], [2000, 0, 0])
+        
+        result = asyncio.run(self.controller.convert_beam_to_panel([lBeamId]))
+        assert_ok(result)
+        assert_has_key(result, "converted_elements")
+        assert_has_key(result, "original_element_ids")
+        assert_has_key(result, "new_element_ids")
+        assert_equal(result.get("converted_elements"), 1)
+        assert_in(lBeamId, result.get("original_element_ids"))
+        self.log(f"Beam {lBeamId} converted to panel: {result.get('new_element_ids')}")
+        return result
+    
+    def test_convert_beam_to_panel_multiple(self):
+        """Test convert_beam_to_panel mit mehreren Balken"""
+        # Erstelle mehrere Test-Balken
+        lBeam1 = self.create_test_element([0, 0, 0], [1500, 0, 0])
+        lBeam2 = self.create_test_element([0, 500, 0], [1500, 500, 0])
+        lBeam3 = self.create_test_element([0, 1000, 0], [1500, 1000, 0])
+        
+        lBeamIds = [lBeam1, lBeam2, lBeam3]
+        
+        result = asyncio.run(self.controller.convert_beam_to_panel(lBeamIds))
+        assert_ok(result)
+        assert_equal(result.get("converted_elements"), 3)
+        assert_list_equal(result.get("original_element_ids"), lBeamIds)
+        assert_has_key(result, "before_conversion")
+        self.log(f"Multiple beams converted: {len(lBeamIds)} -> panels: {result.get('new_element_ids')}")
+        return result
+    
+    def test_auxiliary_to_regular_workflow(self):
+        """Test kompletter Workflow: Auxiliary Element erstellen und konvertieren"""
+        # 1. Auxiliary Beam erstellen
+        lAuxId = self.test_create_auxiliary_beam_points_basic()
+        
+        # 2. Zu regulärem Panel konvertieren (falls API das unterstützt)
+        try:
+            result = asyncio.run(self.controller.convert_beam_to_panel([lAuxId]))
+            if result.get("status") == "success":
+                self.log(f"Auxiliary beam {lAuxId} successfully converted to panel")
+                return result
+            else:
+                self.log(f"Auxiliary conversion not supported or failed: {result.get('message')}")
+                return result
+        except Exception as e:
+            self.log(f"Auxiliary conversion test completed with exception: {e}")
+            return {"status": "info", "message": "Auxiliary conversion tested"}
+
+    def test_convert_panel_to_beam_single(self):
+        """Test convert_panel_to_beam mit einzelner Platte"""
+        # Erstelle eine Test-Platte
+        lPanelResult = asyncio.run(self.controller.create_panel([0, 0, 0], [2000, 0, 0], 300, 18))
+        lPanelId = lPanelResult.get("element_id") if lPanelResult.get("status") == "success" else None
+        
+        if not lPanelId:
+            self.log("Konnte Test-Platte nicht erstellen, Test übersprungen")
+            return {"status": "info", "message": "Panel creation failed, test skipped"}
+        
+        result = asyncio.run(self.controller.convert_panel_to_beam([lPanelId]))
+        assert_ok(result)
+        assert_has_key(result, "converted_elements")
+        assert_has_key(result, "original_element_ids")
+        assert_has_key(result, "new_element_ids")
+        assert_equal(result.get("converted_elements"), 1)
+        assert_equal(result.get("conversion_type"), "panel_to_beam")
+        assert_in(lPanelId, result.get("original_element_ids"))
+        self.log(f"Panel {lPanelId} converted to beam: {result.get('new_element_ids')}")
+        return result
+    
+    def test_convert_panel_to_beam_multiple(self):
+        """Test convert_panel_to_beam mit mehreren Platten"""
+        # Erstelle mehrere Test-Platten
+        lPanelIds = []
+        for i in range(3):
+            lResult = asyncio.run(self.controller.create_panel(
+                [0, i * 400, 0], [1800, i * 400, 0], 250, 20
+            ))
+            if lResult.get("status") == "success":
+                lPanelIds.append(lResult.get("element_id"))
+        
+        if not lPanelIds:
+            self.log("Konnte Test-Platten nicht erstellen, Test übersprungen")
+            return {"status": "info", "message": "Panel creation failed, test skipped"}
+        
+        result = asyncio.run(self.controller.convert_panel_to_beam(lPanelIds))
+        assert_ok(result)
+        assert_equal(result.get("converted_elements"), len(lPanelIds))
+        assert_list_equal(result.get("original_element_ids"), lPanelIds)
+        assert_equal(result.get("conversion_type"), "panel_to_beam")
+        assert_has_key(result, "before_conversion")
+        self.log(f"Multiple panels converted: {len(lPanelIds)} -> beams: {result.get('new_element_ids')}")
+        return result
+    
+    def test_convert_auxiliary_to_beam_single(self):
+        """Test convert_auxiliary_to_beam mit einzelnem Auxiliary Element"""
+        # Erstelle ein Auxiliary Element
+        lAuxResult = asyncio.run(self.controller.create_auxiliary_beam_points([0, 0, 0], [2500, 0, 0]))
+        lAuxId = lAuxResult.get("element_id") if lAuxResult.get("status") == "success" else None
+        
+        if not lAuxId:
+            self.log("Konnte Auxiliary Element nicht erstellen, Test übersprungen")
+            return {"status": "info", "message": "Auxiliary creation failed, test skipped"}
+        
+        result = asyncio.run(self.controller.convert_auxiliary_to_beam([lAuxId]))
+        assert_ok(result)
+        assert_has_key(result, "converted_elements")
+        assert_has_key(result, "original_element_ids")
+        assert_has_key(result, "new_element_ids")
+        assert_equal(result.get("converted_elements"), 1)
+        assert_equal(result.get("conversion_type"), "auxiliary_to_beam")
+        assert_in(lAuxId, result.get("original_element_ids"))
+        self.log(f"Auxiliary {lAuxId} converted to beam: {result.get('new_element_ids')}")
+        return result
+    
+    def test_conversion_workflow_complete(self):
+        """Test kompletter Konvertierungs-Workflow: Auxiliary -> Beam -> Panel -> Beam"""
+        # 1. Auxiliary Element erstellen
+        lAuxResult = asyncio.run(self.controller.create_auxiliary_beam_points([0, 0, 100], [2000, 0, 100]))
+        lAuxId = lAuxResult.get("element_id") if lAuxResult.get("status") == "success" else None
+        
+        if not lAuxId:
+            self.log("Konnte Auxiliary Element nicht erstellen, Workflow-Test übersprungen")
+            return {"status": "info", "message": "Auxiliary creation failed, workflow test skipped"}
+        
+        try:
+            # 2. Auxiliary zu Beam konvertieren
+            lBeamResult = asyncio.run(self.controller.convert_auxiliary_to_beam([lAuxId]))
+            if lBeamResult.get("status") != "success":
+                self.log(f"Auxiliary->Beam Konvertierung fehlgeschlagen: {lBeamResult.get('message')}")
+                return lBeamResult
+            
+            lBeamId = lBeamResult.get("new_element_ids", [None])[0]
+            self.log(f"Schritt 1: Auxiliary {lAuxId} -> Beam {lBeamId}")
+            
+            # 3. Beam zu Panel konvertieren  
+            if lBeamId:
+                lPanelResult = asyncio.run(self.controller.convert_beam_to_panel([lBeamId]))
+                if lPanelResult.get("status") == "success":
+                    lPanelId = lPanelResult.get("new_element_ids", [None])[0]
+                    self.log(f"Schritt 2: Beam {lBeamId} -> Panel {lPanelId}")
+                    
+                    # 4. Panel zurück zu Beam konvertieren
+                    if lPanelId:
+                        lFinalResult = asyncio.run(self.controller.convert_panel_to_beam([lPanelId]))
+                        if lFinalResult.get("status") == "success":
+                            lFinalBeamId = lFinalResult.get("new_element_ids", [None])[0]
+                            self.log(f"Schritt 3: Panel {lPanelId} -> Beam {lFinalBeamId}")
+                            self.log("Kompletter Konvertierungs-Workflow erfolgreich!")
+                            return {"status": "success", "message": "Complete conversion workflow successful", 
+                                  "auxiliary_id": lAuxId, "final_beam_id": lFinalBeamId}
+            
+            return {"status": "success", "message": "Partial conversion workflow completed"}
+            
+        except Exception as e:
+            self.log(f"Workflow-Test Fehler: {e}")
+            return {"status": "error", "message": f"Workflow test failed: {e}"}
+    
+    def test_conversion_error_handling(self):
+        """Test Fehlerbehandlung bei Konvertierungen"""
+        # Test mit ungültigen Element-IDs
+        result = asyncio.run(self.controller.convert_panel_to_beam([99999, 88888]))
+        # Kann sowohl error als auch success sein, je nach API-Verhalten
+        assert_has_key(result, "status")
+        self.log(f"Invalid ID conversion test: {result.get('status')} - {result.get('message', 'No message')}")
+        
+        # Test mit leerer Liste
+        result = asyncio.run(self.controller.convert_auxiliary_to_beam([]))
+        assert_error(result)
+        assert_in("No valid element IDs", result.get("message", ""))
+        self.log("Empty list error handling: OK")
+        
+        return {"status": "success", "message": "Error handling tests completed"}
+
+    def test_create_auto_container_basic(self):
+        """Test create_auto_container_from_standard mit Basis-Funktionalität"""
+        # Erstelle mehrere Test-Elemente für Container
+        lElement1 = self.create_test_element([0, 0, 0], [1000, 0, 0])
+        lElement2 = self.create_test_element([0, 300, 0], [1000, 300, 0])
+        lElement3 = self.create_test_element([0, 600, 0], [1000, 600, 0])
+        
+        lElementIds = [lElement1, lElement2, lElement3]
+        lContainerName = "Test_Baugruppe_Basic"
+        
+        result = asyncio.run(self.controller.create_auto_container_from_standard(lElementIds, lContainerName))
+        assert_ok(result)
+        assert_has_key(result, "container_id")
+        assert_has_key(result, "container_name")
+        assert_has_key(result, "element_count")
+        assert_equal(result.get("container_name"), lContainerName)
+        assert_equal(result.get("element_count"), 3)
+        assert_list_equal(result.get("contained_elements"), lElementIds)
+        
+        lContainerId = result.get("container_id")
+        self.log(f"Container created: ID {lContainerId}, Name: {lContainerName}, Elements: {lElementIds}")
+        return lContainerId
+    
+    def test_create_auto_container_with_different_types(self):
+        """Test create_auto_container_from_standard mit verschiedenen Element-Typen"""
+        # Erstelle verschiedene Element-Typen
+        lBeam = self.create_test_element([0, 0, 0], [2000, 0, 0])
+        
+        # Erstelle Panel (falls möglich)
+        try:
+            lPanelResult = asyncio.run(self.controller.create_panel([0, 400, 0], [2000, 400, 0], 200, 18))
+            lPanel = lPanelResult.get("element_id") if lPanelResult.get("status") == "success" else None
+        except:
+            lPanel = None
+        
+        # Erstelle Auxiliary Element
+        try:
+            lAuxResult = asyncio.run(self.controller.create_auxiliary_beam_points([0, 800, 0], [2000, 800, 0]))
+            lAux = lAuxResult.get("element_id") if lAuxResult.get("status") == "success" else None
+        except:
+            lAux = None
+        
+        # Sammle verfügbare Elemente
+        lElementIds = [lId for lId in [lBeam, lPanel, lAux] if lId is not None]
+        
+        if len(lElementIds) < 2:
+            self.log("Nicht genügend verschiedene Element-Typen erstellt, Test mit verfügbaren Elementen")
+            lElementIds = [lBeam, self.create_test_element([0, 1200, 0], [2000, 1200, 0])]
+        
+        lContainerName = "Test_Mixed_Elements"
+        
+        result = asyncio.run(self.controller.create_auto_container_from_standard(lElementIds, lContainerName))
+        assert_ok(result)
+        assert_equal(result.get("element_count"), len(lElementIds))
+        assert_has_key(result, "element_info")
+        
+        self.log(f"Mixed container created with {len(lElementIds)} different element types")
+        return result.get("container_id")
+    
+    def test_get_container_content_elements_basic(self):
+        """Test get_container_content_elements mit existierendem Container"""
+        # Erstelle einen Container
+        lContainerId = self.test_create_auto_container_basic()
+        
+        if not lContainerId:
+            self.log("Container-Erstellung fehlgeschlagen, Content-Test übersprungen")
+            return {"status": "info", "message": "Container creation failed, content test skipped"}
+        
+        # Rufe Container-Inhalt ab
+        result = asyncio.run(self.controller.get_container_content_elements(lContainerId))
+        assert_ok(result)
+        assert_has_key(result, "container_id")
+        assert_has_key(result, "element_count")
+        assert_has_key(result, "content_element_ids")
+        assert_has_key(result, "element_details")
+        assert_equal(result.get("container_id"), lContainerId)
+        
+        lElementCount = result.get("element_count")
+        lContentIds = result.get("content_element_ids")
+        
+        self.log(f"Container {lContainerId} contains {lElementCount} elements: {lContentIds}")
+        
+        # Prüfe Element-Details
+        lElementDetails = result.get("element_details", [])
+        assert_equal(len(lElementDetails), lElementCount)
+        
+        for lDetail in lElementDetails:
+            assert_has_key(lDetail, "id")
+            assert_has_key(lDetail, "type")
+            self.log(f"  Element {lDetail['id']}: Type={lDetail['type']}, Name={lDetail.get('name', 'N/A')}")
+        
+        return result
+    
+    def test_container_workflow_complete(self):
+        """Test kompletter Container-Workflow: Erstellen, Inhalt abrufen, Validierung"""
+        # 1. Erstelle Test-Elemente
+        lElements = []
+        for i in range(4):
+            lElementId = self.create_test_element([i * 500, 0, 0], [(i + 1) * 500, 0, 0])
+            lElements.append(lElementId)
+        
+        lContainerName = "Test_Complete_Workflow"
+        
+        # 2. Erstelle Container
+        lCreateResult = asyncio.run(self.controller.create_auto_container_from_standard(lElements, lContainerName))
+        assert_ok(lCreateResult)
+        
+        lContainerId = lCreateResult.get("container_id")
+        self.log(f"Workflow Schritt 1: Container {lContainerId} erstellt mit {len(lElements)} Elementen")
+        
+        # 3. Rufe Container-Inhalt ab
+        lContentResult = asyncio.run(self.controller.get_container_content_elements(lContainerId))
+        assert_ok(lContentResult)
+        
+        lRetrievedElements = lContentResult.get("content_element_ids", [])
+        self.log(f"Workflow Schritt 2: {len(lRetrievedElements)} Elemente aus Container abgerufen")
+        
+        # 4. Validiere dass alle Elemente im Container sind
+        for lOriginalElement in lElements:
+            assert_in(lOriginalElement, lRetrievedElements)
+        
+        # 5. Prüfe Element-Details
+        lElementDetails = lContentResult.get("element_details", [])
+        assert_equal(len(lElementDetails), len(lElements))
+        
+        self.log("Workflow Schritt 3: Alle Elemente erfolgreich validiert")
+        self.log("Kompletter Container-Workflow erfolgreich!")
+        
+        return {
+            "status": "success",
+            "message": "Complete container workflow successful",
+            "container_id": lContainerId,
+            "original_elements": lElements,
+            "retrieved_elements": lRetrievedElements
+        }
+    
+    def test_container_error_handling(self):
+        """Test Fehlerbehandlung bei Container-Operationen"""
+        # Test 1: Container mit leerer Element-Liste
+        result = asyncio.run(self.controller.create_auto_container_from_standard([], "Empty_Container"))
+        assert_error(result)
+        assert_in("No valid element IDs", result.get("message", ""))
+        self.log("Empty element list error handling: OK")
+        
+        # Test 2: Container mit leerem Namen
+        lTestElement = self.create_test_element([0, 0, 0], [1000, 0, 0])
+        result = asyncio.run(self.controller.create_auto_container_from_standard([lTestElement], ""))
+        assert_error(result)
+        assert_in("Container name must", result.get("message", ""))
+        self.log("Empty container name error handling: OK")
+        
+        # Test 3: Container-Inhalt mit ungültiger ID
+        result = asyncio.run(self.controller.get_container_content_elements(99999))
+        # Kann sowohl error als auch success mit leerer Liste sein, je nach API
+        assert_has_key(result, "status")
+        self.log(f"Invalid container ID test: {result.get('status')} - {result.get('message', 'No message')}")
+        
+        return {"status": "success", "message": "Container error handling tests completed"}

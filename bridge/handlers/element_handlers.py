@@ -1242,3 +1242,242 @@ def handle_cut_shoulder(aParams: dict) -> dict:
         
     except Exception as e:
         return {"status": "error", "message": f"cut_shoulder failed: {e}"}
+
+
+def handle_create_auxiliary_beam_points(aParams: dict) -> dict:
+    """Erstellt Hilfs-Balkenelement mit Punkten"""
+    try:
+        import element_controller as ec
+        from bridge.helpers import to_point_3d
+        
+        # Parameter extrahieren
+        lP1 = aParams.get("p1")
+        lP2 = aParams.get("p2") 
+        lP3 = aParams.get("p3")
+        
+        if not lP1 or not lP2:
+            return {"status": "error", "message": "p1 and p2 points are required"}
+        
+        # Zu Cadwork Point3D konvertieren
+        lCwP1 = to_point_3d(lP1)
+        lCwP2 = to_point_3d(lP2)
+        lCwP3 = to_point_3d(lP3) if lP3 else None
+        
+        # Cadwork API aufrufen
+        if lCwP3:
+            lElementId = ec.create_auxiliary_beam_points(lCwP1, lCwP2, lCwP3)
+        else:
+            lElementId = ec.create_auxiliary_beam_points(lCwP1, lCwP2)
+        
+        return {
+            "status": "success",
+            "element_id": lElementId,
+            "element_type": "auxiliary_beam",
+            "p1": lP1,
+            "p2": lP2,
+            "p3": lP3,
+            "operation": "create_auxiliary_beam_points"
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"create_auxiliary_beam_points failed: {e}"}
+
+def handle_convert_beam_to_panel(aParams: dict) -> dict:
+    """Konvertiert Balken zu Platten"""
+    try:
+        import element_controller as ec
+        
+        lElementIds = aParams.get("element_ids", [])
+        
+        if not lElementIds:
+            return {"status": "error", "message": "No element IDs provided"}
+        
+        # Vor Konvertierung - Element-Informationen sammeln  
+        lBeforeInfo = []
+        for lId in lElementIds:
+            try:
+                lInfo = ec.get_element_info(lId)
+                lBeforeInfo.append({"id": lId, "type": lInfo.get("type", "unknown")})
+            except:
+                lBeforeInfo.append({"id": lId, "type": "unknown"})
+        
+        # Cadwork API aufrufen
+        lNewElementIds = ec.convert_beam_to_panel(lElementIds)
+        
+        return {
+            "status": "success", 
+            "converted_elements": len(lElementIds),
+            "original_element_ids": lElementIds,
+            "new_element_ids": lNewElementIds if isinstance(lNewElementIds, list) else [lNewElementIds],
+            "before_conversion": lBeforeInfo,
+            "operation": "convert_beam_to_panel"
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"convert_beam_to_panel failed: {e}"}
+
+
+def handle_convert_panel_to_beam(aParams: dict) -> dict:
+    """Konvertiert Platten zu Balken"""
+    try:
+        import element_controller as ec
+        
+        lElementIds = aParams.get("element_ids", [])
+        
+        if not lElementIds:
+            return {"status": "error", "message": "No element IDs provided"}
+        
+        # Vor Konvertierung - Element-Informationen sammeln  
+        lBeforeInfo = []
+        for lId in lElementIds:
+            try:
+                lInfo = ec.get_element_info(lId)
+                lBeforeInfo.append({"id": lId, "type": lInfo.get("type", "unknown")})
+            except:
+                lBeforeInfo.append({"id": lId, "type": "unknown"})
+        
+        # Cadwork API aufrufen
+        lNewElementIds = ec.convert_panel_to_beam(lElementIds)
+        
+        return {
+            "status": "success", 
+            "converted_elements": len(lElementIds),
+            "original_element_ids": lElementIds,
+            "new_element_ids": lNewElementIds if isinstance(lNewElementIds, list) else [lNewElementIds],
+            "before_conversion": lBeforeInfo,
+            "conversion_type": "panel_to_beam",
+            "operation": "convert_panel_to_beam"
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"convert_panel_to_beam failed: {e}"}
+
+def handle_convert_auxiliary_to_beam(aParams: dict) -> dict:
+    """Konvertiert Auxiliary Elemente zu regulären Balken"""
+    try:
+        import element_controller as ec
+        
+        lElementIds = aParams.get("element_ids", [])
+        
+        if not lElementIds:
+            return {"status": "error", "message": "No element IDs provided"}
+        
+        # Vor Konvertierung - Element-Informationen sammeln  
+        lBeforeInfo = []
+        for lId in lElementIds:
+            try:
+                lInfo = ec.get_element_info(lId)
+                lBeforeInfo.append({"id": lId, "type": lInfo.get("type", "unknown")})
+            except:
+                lBeforeInfo.append({"id": lId, "type": "auxiliary_unknown"})
+        
+        # Cadwork API aufrufen
+        lNewElementIds = ec.convert_auxiliary_to_beam(lElementIds)
+        
+        return {
+            "status": "success", 
+            "converted_elements": len(lElementIds),
+            "original_element_ids": lElementIds,
+            "new_element_ids": lNewElementIds if isinstance(lNewElementIds, list) else [lNewElementIds],
+            "before_conversion": lBeforeInfo,
+            "conversion_type": "auxiliary_to_beam",
+            "operation": "convert_auxiliary_to_beam"
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"convert_auxiliary_to_beam failed: {e}"}
+
+
+def handle_create_auto_container_from_standard(aParams: dict) -> dict:
+    """Erstellt automatischen Container aus Standard-Elementen"""
+    try:
+        import element_controller as ec
+        
+        lElementIds = aParams.get("element_ids", [])
+        lContainerName = aParams.get("container_name", "")
+        
+        if not lElementIds:
+            return {"status": "error", "message": "No element IDs provided"}
+        
+        if not lContainerName:
+            return {"status": "error", "message": "No container name provided"}
+        
+        # Vor Container-Erstellung - Element-Informationen sammeln
+        lElementInfo = []
+        for lId in lElementIds:
+            try:
+                lInfo = ec.get_element_info(lId)
+                lElementInfo.append({
+                    "id": lId, 
+                    "type": lInfo.get("type", "unknown"),
+                    "name": lInfo.get("name", "")
+                })
+            except:
+                lElementInfo.append({"id": lId, "type": "unknown", "name": ""})
+        
+        # Cadwork API aufrufen
+        lContainerId = ec.create_auto_container_from_standard(lElementIds, lContainerName)
+        
+        return {
+            "status": "success",
+            "container_id": lContainerId,
+            "container_name": lContainerName,
+            "element_count": len(lElementIds),
+            "contained_elements": lElementIds,
+            "element_info": lElementInfo,
+            "operation": "create_auto_container_from_standard"
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"create_auto_container_from_standard failed: {e}"}
+
+def handle_get_container_content_elements(aParams: dict) -> dict:
+    """Ruft Container-Inhalt ab"""
+    try:
+        import element_controller as ec
+        
+        lContainerId = aParams.get("container_id")
+        
+        if lContainerId is None:
+            return {"status": "error", "message": "No container ID provided"}
+        
+        # Cadwork API aufrufen
+        lContentElements = ec.get_container_content_elements(lContainerId)
+        
+        # Element-IDs in Liste konvertieren falls nötig
+        if not isinstance(lContentElements, list):
+            if lContentElements is None:
+                lContentElements = []
+            else:
+                lContentElements = [lContentElements]
+        
+        # Zusätzliche Informationen über enthaltene Elemente sammeln
+        lElementDetails = []
+        for lElementId in lContentElements:
+            try:
+                lInfo = ec.get_element_info(lElementId)
+                lElementDetails.append({
+                    "id": lElementId,
+                    "type": lInfo.get("type", "unknown"),
+                    "name": lInfo.get("name", ""),
+                    "material": lInfo.get("material", "")
+                })
+            except:
+                lElementDetails.append({
+                    "id": lElementId, 
+                    "type": "unknown", 
+                    "name": "", 
+                    "material": ""
+                })
+        
+        return {
+            "status": "success",
+            "container_id": lContainerId,
+            "element_count": len(lContentElements),
+            "content_element_ids": lContentElements,
+            "element_details": lElementDetails,
+            "operation": "get_container_content_elements"
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"get_container_content_elements failed: {e}"}

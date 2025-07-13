@@ -6,7 +6,7 @@ from typing import Dict, Any
 def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
     """Dispatch command to appropriate handler"""
     # Import handlers here to avoid circular imports
-    from .handlers import element_handlers, geometry_handlers, attribute_handlers, utility_handlers, visualization_handlers
+    from .handlers import element_handlers, geometry_handlers, attribute_handlers, utility_handlers, visualization_handlers, shop_drawing_handlers, roof_handlers, machine_handlers
     
     # Map operations to their handlers
     OPERATION_HANDLERS = {
@@ -41,6 +41,26 @@ def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
         "get_material_statistics": element_handlers.handle_get_material_statistics,
         "get_group_statistics": element_handlers.handle_get_group_statistics,
         "duplicate_elements": element_handlers.handle_duplicate_elements,
+        
+        # Element connections and cuts
+        "join_elements": element_handlers.handle_join_elements,
+        "unjoin_elements": element_handlers.handle_unjoin_elements,
+        "cut_corner_lap": element_handlers.handle_cut_corner_lap,
+        "cut_cross_lap": element_handlers.handle_cut_cross_lap,
+        "cut_half_lap": element_handlers.handle_cut_half_lap,
+        "cut_double_tenon": element_handlers.handle_cut_double_tenon,
+        "cut_scarf_joint": element_handlers.handle_cut_scarf_joint,
+        "cut_shoulder": element_handlers.handle_cut_shoulder,
+        
+        # Element creation & conversion
+        "create_auxiliary_beam_points": element_handlers.handle_create_auxiliary_beam_points,
+        "convert_beam_to_panel": element_handlers.handle_convert_beam_to_panel,
+        "convert_panel_to_beam": element_handlers.handle_convert_panel_to_beam,
+        "convert_auxiliary_to_beam": element_handlers.handle_convert_auxiliary_to_beam,
+        
+        # Container management
+        "create_auto_container_from_standard": element_handlers.handle_create_auto_container_from_standard,
+        "get_container_content_elements": element_handlers.handle_get_container_content_elements,
         
         # Geometry operations
         "get_element_width": geometry_handlers.handle_get_element_width,
@@ -92,6 +112,26 @@ def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
         "set_group": attribute_handlers.handle_set_group,
         "set_comment": attribute_handlers.handle_set_comment,
         "set_subgroup": attribute_handlers.handle_set_subgroup,
+        
+        # Utility operations - extended
+        "disable_auto_display_refresh": utility_handlers.handle_disable_auto_display_refresh,
+        "enable_auto_display_refresh": utility_handlers.handle_enable_auto_display_refresh,
+        "print_error": utility_handlers.handle_print_error,
+        "print_warning": utility_handlers.handle_print_warning,
+        "get_3d_file_path": utility_handlers.handle_get_3d_file_path,
+        "get_project_data": utility_handlers.handle_get_project_data,
+        "get_cadwork_version_info": utility_handlers.handle_get_cadwork_version_info,
+        
+        # Shop drawing operations
+        "add_wall_section_x": shop_drawing_handlers.handle_add_wall_section_x,
+        "add_wall_section_y": shop_drawing_handlers.handle_add_wall_section_y,
+        
+        # Roof operations
+        "get_roof_surfaces": roof_handlers.handle_get_roof_surfaces,
+        "calculate_roof_area": roof_handlers.handle_calculate_roof_area,
+        
+        # Machine/CNC operations
+        "check_production_list_discrepancies": machine_handlers.handle_check_production_list_discrepancies,
     }
     if operation not in OPERATION_HANDLERS:
         return {

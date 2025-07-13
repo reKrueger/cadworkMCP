@@ -4,8 +4,8 @@
 
 Das Test-Framework für den Cadwork MCP Server bietet umfassende Tests für alle implementierten Funktionen:
 
-- **70 Funktionen getestet** 
-- **6 Test-Controller** (Element, Geometry, Attribute, Visualization, Utility, System)
+- **89 Funktionen getestet** (Update: Version 3.4) 
+- **8 Test-Controller** (Element, Geometry, Attribute, Visualization, Utility, Shop Drawing, Roof, System)
 - **Automatische Bereinigung** - Erstelle Test-Elemente werden automatisch gelöscht
 - **Umfassende Validierung** - Parameter, Rückgabewerte und Fehlerfälle
 - **Detaillierte Berichte** - Erfolgsraten, Timing, Fehlerdetails
@@ -43,8 +43,8 @@ python tests\run_tests.py --suite element
 # Nur Geometry Controller Tests  
 python tests\run_tests.py --suite geometry
 
-# Nur Visualization Controller Tests
-python tests\run_tests.py --suite visualization
+# Nur Shop Drawing Controller Tests
+python tests\run_tests.py --suite shop_drawing
 ```
 
 ### Ohne Verbindungstest (für Debugging):
@@ -85,12 +85,17 @@ TOTAL                          85       83       2        97.6%      10.05s
 
 ## 🧪 Was wird getestet?
 
-### Element Controller (28 Tests):
-- **Element Creation:** create_beam, create_panel, create_circular_beam_points, etc.
+### Element Controller (40 Tests):
+- **Element Creation:** create_beam, create_panel, create_circular_beam_points, create_auxiliary_beam_points, etc.
 - **Element Management:** copy_elements, move_element, delete_elements
+- **Element Conversion:** VOLLSTÄNDIGE Suite - beam/panel/auxiliary Konvertierungen (NEU)
 - **Element Connections:** join_elements, unjoin_elements
 - **Element Retrieval:** get_all_element_ids, get_active_element_ids, get_visible_element_ids, etc.  
 - **Query & Filter:** get_elements_by_type, filter_by_material, statistics
+- **Cut Operations:** 6 verschiedene Holzverbindungstypen
+- **Container Management:** NEUE Suite - Container-Erstellung und -Verwaltung (NEU)
+- **Auxiliary Elements:** Hilfs-Konstruktionen und Workflows
+- **Workflow Tests:** Komplette Konvertierungs- und Container-Workflows (NEU)
 - **Error Handling:** Ungültige Parameter, negative IDs
 
 ### Geometry Controller (12 Tests):
@@ -254,3 +259,18 @@ echo $?  # Prüfe Exit Code
 ```
 
 Das Test-System gewährleistet, dass alle 70 implementierten MCP-Tools korrekt funktionieren! 🚀
+
+
+### Shop Drawing Controller (5 Tests):
+- **Werkstattzeichnungs-Funktionen:** add_wall_section_x, add_wall_section_y (NEU)
+- **Technische Schnitte:** X- und Y-Richtungs-Wandschnitte für Fertigungsplanung
+- **Parameter-Management:** Section-Parameter für Darstellungsoptionen
+- **Workflow Tests:** Komplette Shop Drawing Workflows (NEU)
+- **Error Handling:** Ungültige Wall-IDs und Parameter-Validierung
+
+### Roof Controller (5 Tests):
+- **Dach-spezifische Funktionen:** get_roof_surfaces, calculate_roof_area (NEU)
+- **Dachflächen-Analyse:** Neigungen, Orientierungen und geometrische Eigenschaften
+- **Flächenberechnungen:** Spezialisierte Roof-Area-Berechnungen für Zimmerei
+- **Workflow Tests:** Komplette Dach-Konstruktions-Workflows (NEU)
+- **Error Handling:** Validierung von Dach-Elementen und Parameter-Checks

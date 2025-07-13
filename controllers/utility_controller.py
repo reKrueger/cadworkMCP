@@ -117,3 +117,17 @@ class CUtilityController(BaseController):
             
         except Exception as e:
             return {"status": "error", "message": f"get_project_data failed: {e}"}
+    
+    async def get_cadwork_version_info(self) -> dict:
+        """
+        Ruft Cadwork Versionsinformationen ab
+        
+        Returns:
+            dict: Versionsinformationen der Cadwork-Installation
+        """
+        try:
+            # Command senden
+            return self.send_command("get_cadwork_version_info", {})
+            
+        except Exception as e:
+            return {"status": "error", "message": f"get_cadwork_version_info failed: {e}"}

@@ -14,7 +14,7 @@ import utility_controller as uc
 # Global variables
 bridge_running = False
 
-def start_bridge():
+def start_bridge() -> bool:
     """Start the MCP bridge by executing start.txt"""
     global bridge_running
     
@@ -53,7 +53,7 @@ def start_bridge():
         uc.print_to_console(f"Failed to start bridge: {e}")
         return False
 
-def stop_bridge():
+def stop_bridge() -> None:
     """Stop the MCP bridge"""
     global bridge_running
     

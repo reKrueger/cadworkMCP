@@ -63,13 +63,13 @@ def stop_bridge() -> None:
 class BridgeGUI:
     """Simple GUI for bridge control"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.root = None
         self.status_label = None
         self.start_btn = None
         self.stop_btn = None
     
-    def create_gui(self):
+    def create_gui(self) -> None:
         """Create the GUI"""
         self.root = tk.Tk()
         self.root.title("MCP Bridge Control")
@@ -106,7 +106,7 @@ class BridgeGUI:
         # Center window
         self.center_window()
     
-    def center_window(self):
+    def center_window(self) -> None:
         """Center window on screen"""
         self.root.update_idletasks()
         width, height = 350, 200
@@ -114,7 +114,7 @@ class BridgeGUI:
         y = (self.root.winfo_screenheight() // 2) - (height // 2)
         self.root.geometry(f"{width}x{height}+{x}+{y}")
     
-    def on_start(self):
+    def on_start(self) -> None:
         """Handle start button"""
         success = start_bridge()
         if success:
@@ -123,13 +123,13 @@ class BridgeGUI:
             messagebox.showerror("Error", "Failed to start bridge!")
         self.update_status()
     
-    def on_stop(self):
+    def on_stop(self) -> None:
         """Handle stop button"""
         stop_bridge()
         messagebox.showinfo("Bridge", "MCP Bridge stopped!")
         self.update_status()
     
-    def update_status(self):
+    def update_status(self) -> None:
         """Update status display"""
         if bridge_running:
             self.status_label.config(text="Status: Running", foreground="green")
@@ -140,12 +140,12 @@ class BridgeGUI:
             self.start_btn.config(state="normal")
             self.stop_btn.config(state="disabled")
     
-    def show(self):
+    def show(self) -> None:
         """Show the GUI"""
         self.create_gui()
         self.root.mainloop()
 
-def main():
+def main() -> None:
     """Main plugin entry point"""
     try:
         uc.print_to_console("Starting MCP Bridge Plugin...")

@@ -1,9 +1,10 @@
 """
-Utility Handler für Cadwork Bridge
-Verarbeitet Display-Refresh und System-Utilities
+Utility Handler for Cadwork Bridge
+Processes Display-Refresh and System-Utilities
 """
+from typing import Dict, Any
 
-def handle_ping(aParams: dict) -> dict:
+def handle_ping(params: Dict[str, Any]) -> Dict[str, Any]:
     """Ping handler for connection testing"""
     return {
         "status": "ok",
@@ -11,43 +12,43 @@ def handle_ping(aParams: dict) -> dict:
         "operation": "ping"
     }
 
-def handle_get_version_info(aParams: dict) -> dict:
+def handle_get_version_info(params: Dict[str, Any]) -> Dict[str, Any]:
     """Get version info handler"""
-    return handle_get_cadwork_version_info(aParams)
+    return handle_get_cadwork_version_info(params)
 
-def handle_get_model_name(aParams: dict) -> dict:
+def handle_get_model_name(params: Dict[str, Any]) -> Dict[str, Any]:
     """Get model name handler"""
     try:
         import utility_controller as uc
         
-        # Try to get the 3D file path and extract model name
-        lFilePath = uc.get_3d_file_path()
+        # Try to get the file path and extract model name
+        file_path = uc.get_file_path()
         
-        if lFilePath:
+        if file_path:
             import os
-            lModelName = os.path.splitext(os.path.basename(lFilePath))[0]
+            model_name = os.path.splitext(os.path.basename(file_path))[0]
         else:
-            lModelName = "Unknown"
+            model_name = "Unknown"
         
         return {
             "status": "success",
-            "model_name": lModelName,
+            "model_name": model_name,
             "operation": "get_model_name"
         }
         
     except Exception as e:
         return {"status": "error", "message": f"get_model_name failed: {e}"}
 
-def handle_disable_auto_display_refresh(aParams: dict) -> dict:
-    """Deaktiviert automatische Display-Aktualisierung"""
+def handle_disable_auto_display_refresh(params: Dict[str, Any]) -> Dict[str, Any]:
+    """Disable automatic display refresh"""
     try:
         import utility_controller as uc
         
-        # Cadwork API aufrufen
+        # Call Cadwork API
         uc.disable_auto_display_refresh()
         
         return {
-            "status": "success",
+            "status": "success", 
             "message": "Auto display refresh disabled",
             "operation": "disable_auto_display_refresh",
             "note": "Remember to enable it again after batch operations"
@@ -56,123 +57,110 @@ def handle_disable_auto_display_refresh(aParams: dict) -> dict:
     except Exception as e:
         return {"status": "error", "message": f"disable_auto_display_refresh failed: {e}"}
 
-def handle_enable_auto_display_refresh(aParams: dict) -> dict:
-    """Aktiviert automatische Display-Aktualisierung"""
+def handle_enable_auto_display_refresh(params: Dict[str, Any]) -> Dict[str, Any]:
+    """Enable automatic display refresh"""
     try:
         import utility_controller as uc
         
-        # Cadwork API aufrufen
+        # Call Cadwork API
         uc.enable_auto_display_refresh()
         
         return {
             "status": "success",
-            "message": "Auto display refresh enabled",
-            "operation": "enable_auto_display_refresh"
-        }
-        
+            "message": "Auto display refresh enabled"
+        }        
     except Exception as e:
         return {"status": "error", "message": f"enable_auto_display_refresh failed: {e}"}
 
-def handle_print_error(aParams: dict) -> dict:
-    """Gibt Fehlermeldung in Cadwork aus"""
+def handle_print_error(params: Dict[str, Any]) -> Dict[str, Any]:
+    """Display error message in Cadwork"""
     try:
         import utility_controller as uc
         
-        lMessage = aParams.get("message")
+        message = params.get("message")
         
-        if not lMessage:
-            return {"status": "error", "message": "No message provided"}
+        if not isinstance(message, str) or not message.strip():
+            return {"status": "error", "message": "message must be a non-empty string"}
         
-        # Cadwork API aufrufen
-        uc.print_error(lMessage)
+        # Call Cadwork API
+        uc.print_error(message.strip())
         
         return {
             "status": "success",
-            "message": f"Error message displayed in Cadwork: '{lMessage}'",
-            "displayed_message": lMessage,
+            "message": f"Error message displayed: {message}",
             "operation": "print_error"
         }
         
     except Exception as e:
         return {"status": "error", "message": f"print_error failed: {e}"}
 
-def handle_print_warning(aParams: dict) -> dict:
-    """Gibt Warnmeldung in Cadwork aus"""
+def handle_print_warning(params: Dict[str, Any]) -> Dict[str, Any]:
+    """Display warning message in Cadwork"""
     try:
         import utility_controller as uc
         
-        lMessage = aParams.get("message")
+        message = params.get("message")
         
-        if not lMessage:
-            return {"status": "error", "message": "No message provided"}
+        if not isinstance(message, str) or not message.strip():
+            return {"status": "error", "message": "message must be a non-empty string"}
         
-        # Cadwork API aufrufen
-        uc.print_warning(lMessage)
+        # Call Cadwork API
+        uc.print_warning(message.strip())
         
         return {
             "status": "success",
-            "message": f"Warning message displayed in Cadwork: '{lMessage}'",
-            "displayed_message": lMessage,
+            "message": f"Warning message displayed: {message}",
             "operation": "print_warning"
         }
         
     except Exception as e:
         return {"status": "error", "message": f"print_warning failed: {e}"}
 
-def handle_get_3d_file_path(aParams: dict) -> dict:
-    """Ruft Pfad der 3D-Datei ab"""
+def handle_get_3d_file_path(params: Dict[str, Any]) -> Dict[str, Any]:
+    """Get path of currently opened 3D file"""
     try:
         import utility_controller as uc
         
-        # Cadwork API aufrufen
-        lFilePath = uc.get_3d_file_path()
-        
-        # Pfad-Informationen extrahieren
-        import os
-        lFileName = os.path.basename(lFilePath) if lFilePath else ""
-        lDirectory = os.path.dirname(lFilePath) if lFilePath else ""
-        lFileExists = os.path.exists(lFilePath) if lFilePath else False
+        # Call Cadwork API
+        file_path = uc.get_3d_file_path()
         
         return {
             "status": "success",
-            "file_path": lFilePath,
-            "file_name": lFileName,
-            "directory": lDirectory,
-            "file_exists": lFileExists,
+            "file_path": file_path,
             "operation": "get_3d_file_path"
         }
         
     except Exception as e:
         return {"status": "error", "message": f"get_3d_file_path failed: {e}"}
 
-def handle_get_project_data(aParams: dict) -> dict:
-    """Ruft Projektdaten ab"""
+def handle_get_project_data(params: Dict[str, Any]) -> Dict[str, Any]:
+    """Get general project data"""
     try:
         import utility_controller as uc
         
-        # Cadwork API aufrufen
-        lProjectData = uc.get_project_data()
+        # Call Cadwork API
+        project_data = uc.get_project_data()
         
         return {
             "status": "success",
-            "project_data": lProjectData,
+            "project_data": project_data,
             "operation": "get_project_data"
         }
         
     except Exception as e:
         return {"status": "error", "message": f"get_project_data failed: {e}"}
 
-def handle_get_cadwork_version_info(aParams: dict) -> dict:
-    """Ruft Cadwork Versionsinformationen ab"""
+def handle_get_cadwork_version_info(params: Dict[str, Any]) -> Dict[str, Any]:
+    """Get Cadwork version information"""
     try:
         import utility_controller as uc
         
-        # Cadwork API aufrufen
-        lVersionInfo = uc.get_cadwork_version_info()
+        # Call Cadwork API
+        version_info = uc.get_cadwork_version_info()
         
         return {
             "status": "success",
-            "version_info": lVersionInfo,
+            "version_info": version_info,
             "operation": "get_cadwork_version_info"
         }
         

@@ -7,6 +7,7 @@ import os
 import sys
 import tkinter as tk
 from tkinter import messagebox, ttk
+from typing import Optional
 
 # Cadwork imports
 import utility_controller as uc
@@ -64,10 +65,10 @@ class BridgeGUI:
     """Simple GUI for bridge control"""
     
     def __init__(self) -> None:
-        self.root = None
-        self.status_label = None
-        self.start_btn = None
-        self.stop_btn = None
+        self.root: Optional[tk.Tk] = None
+        self.status_label: Optional[ttk.Label] = None
+        self.start_btn: Optional[ttk.Button] = None
+        self.stop_btn: Optional[ttk.Button] = None
     
     def create_gui(self) -> None:
         """Create the GUI"""
@@ -108,6 +109,9 @@ class BridgeGUI:
     
     def center_window(self) -> None:
         """Center window on screen"""
+        if self.root is None:
+            return
+            
         self.root.update_idletasks()
         width, height = 350, 200
         x = (self.root.winfo_screenwidth() // 2) - (width // 2)
@@ -131,6 +135,9 @@ class BridgeGUI:
     
     def update_status(self) -> None:
         """Update status display"""
+        if self.status_label is None or self.start_btn is None or self.stop_btn is None:
+            return
+            
         if bridge_running:
             self.status_label.config(text="Status: Running", foreground="green")
             self.start_btn.config(state="disabled")
@@ -143,7 +150,8 @@ class BridgeGUI:
     def show(self) -> None:
         """Show the GUI"""
         self.create_gui()
-        self.root.mainloop()
+        if self.root is not None:
+            self.root.mainloop()
 
 def main() -> None:
     """Main plugin entry point"""

@@ -1,73 +1,73 @@
 """
-Shop Drawing Controller für Cadwork MCP Server
-Verwaltet Werkstattzeichnungs-spezifische Funktionen für Fertigungsplanung
+Shop Drawing Controller for Cadwork MCP Server
+Manages shop drawing-specific functions for production planning
 """
 from typing import Dict, Any, Optional
 from .base_controller import BaseController
 
 class CShopDrawingController(BaseController):
-    """Controller für Shop Drawing Operationen"""
+    """Controller for shop drawing operations"""
     
     def __init__(self) -> None:
         super().__init__("ShopDrawingController")
     
-    async def add_wall_section_x(self, aWallId: int, aSectionParams: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def add_wall_section_x(self, wall_id: int, section_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Fügt einen Wandschnitt in X-Richtung hinzu
+        Add wall section in X-direction
         
-        Erstellt technische Schnittdarstellungen für Werkstattzeichnungen.
-        X-Richtung bedeutet Schnitt parallel zur X-Achse.
+        Creates technical section views for shop drawings.
+        X-direction means section parallel to X-axis.
         
         Args:
-            aWallId: ID des Wand-Elements für den Schnitt
-            aSectionParams: Optionale Parameter für Schnitt-Konfiguration
-                          (Position, Tiefe, Darstellungsoptionen, etc.)
+            wall_id: ID of wall element for section
+            section_params: Optional parameters for section configuration
+                          (position, depth, display options, etc.)
         
         Returns:
-            dict: Informationen über erstellten Wandschnitt
+            dict: Information about created wall section
         """
         try:
-            # Wall-ID validieren
-            lValidatedId = self.validate_element_id(aWallId)
+            # Validate wall ID
+            validated_id = self.validate_element_id(wall_id)
             
-            # Section-Parameter standardisieren
-            lSectionParams = aSectionParams if aSectionParams is not None else {}
+            # Standardize section parameters
+            final_section_params = section_params if section_params is not None else {}
             
-            # Command senden
+            # Send command
             return self.send_command("add_wall_section_x", {
-                "wall_id": lValidatedId,
-                "section_params": lSectionParams
+                "wall_id": validated_id,
+                "section_params": final_section_params
             })
             
         except Exception as e:
             return {"status": "error", "message": f"add_wall_section_x failed: {e}"}
     
-    async def add_wall_section_y(self, aWallId: int, aSectionParams: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def add_wall_section_y(self, wall_id: int, section_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Fügt einen Wandschnitt in Y-Richtung hinzu
+        Add wall section in Y-direction
         
-        Erstellt technische Schnittdarstellungen für Werkstattzeichnungen.
-        Y-Richtung bedeutet Schnitt parallel zur Y-Achse.
+        Creates technical section views for shop drawings.
+        Y-direction means section parallel to Y-axis.
         
         Args:
-            aWallId: ID des Wand-Elements für den Schnitt
-            aSectionParams: Optionale Parameter für Schnitt-Konfiguration
-                          (Position, Tiefe, Darstellungsoptionen, etc.)
+            wall_id: ID of wall element for section
+            section_params: Optional parameters for section configuration
+                          (position, depth, display options, etc.)
         
         Returns:
-            dict: Informationen über erstellten Wandschnitt
+            dict: Information about created wall section
         """
         try:
-            # Wall-ID validieren
-            lValidatedId = self.validate_element_id(aWallId)
+            # Validate wall ID
+            validated_id = self.validate_element_id(wall_id)
             
-            # Section-Parameter standardisieren
-            lSectionParams = aSectionParams if aSectionParams is not None else {}
+            # Standardize section parameters
+            final_section_params = section_params if section_params is not None else {}
             
-            # Command senden
+            # Send command
             return self.send_command("add_wall_section_y", {
-                "wall_id": lValidatedId,
-                "section_params": lSectionParams
+                "wall_id": validated_id,
+                "section_params": final_section_params
             })
             
         except Exception as e:

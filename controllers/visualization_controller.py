@@ -1,200 +1,201 @@
 """
-Visualization Controller für Cadwork MCP Server
-Verwaltet Farben, Transparenz und Sichtbarkeit von Elementen
+Visualization Controller for Cadwork MCP Server
+Manages colors, transparency and visibility of elements
 """
+from typing import Dict, Any, List
 from .base_controller import BaseController
 
 class CVisualizationController(BaseController):
-    """Controller für Visualization-Operationen"""
+    """Controller for visualization operations"""
     
     def __init__(self) -> None:
         super().__init__("VisualizationController")
     
-    async def set_color(self, aElementIds: list, aColorId: int) -> dict:
+    async def set_color(self, element_ids: List[int], color_id: int) -> Dict[str, Any]:
         """
-        Setzt die Farbe für eine Liste von Elementen
+        Set color for a list of elements
         
         Args:
-            aElementIds: Liste der Element-IDs
-            aColorId: Farb-ID (1-255, siehe Cadwork Farbpalette)
+            element_ids: List of element IDs
+            color_id: Color ID (1-255, see Cadwork color palette)
         
         Returns:
-            dict: Status der Operation
+            dict: Status of operation
         """
         try:
-            # Validierung
-            if not isinstance(aElementIds, list) or not aElementIds:
+            # Validation
+            if not isinstance(element_ids, list) or not element_ids:
                 return {"status": "error", "message": "element_ids must be a non-empty list"}
             
-            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            validated_ids = [self.validate_element_id(eid) for eid in element_ids]
             
-            if not isinstance(aColorId, int) or aColorId < 1 or aColorId > 255:
+            if not isinstance(color_id, int) or color_id < 1 or color_id > 255:
                 return {"status": "error", "message": "color_id must be an integer between 1 and 255"}
             
-            # Command senden
+            # Send command
             return self.send_command("set_color", {
-                "element_ids": lValidatedIds,
-                "color_id": aColorId
+                "element_ids": validated_ids,
+                "color_id": color_id
             })
             
         except Exception as e:
             return {"status": "error", "message": f"set_color failed: {e}"}
     
-    async def set_visibility(self, aElementIds: list, aVisible: bool) -> dict:
+    async def set_visibility(self, element_ids: List[int], visible: bool) -> Dict[str, Any]:
         """
-        Setzt die Sichtbarkeit für eine Liste von Elementen
+        Set visibility for a list of elements
         
         Args:
-            aElementIds: Liste der Element-IDs  
-            aVisible: True = sichtbar, False = ausgeblendet
+            element_ids: List of element IDs  
+            visible: True = visible, False = hidden
         
         Returns:
-            dict: Status der Operation
+            dict: Status of operation
         """
         try:
-            # Validierung
-            if not isinstance(aElementIds, list) or not aElementIds:
+            # Validation
+            if not isinstance(element_ids, list) or not element_ids:
                 return {"status": "error", "message": "element_ids must be a non-empty list"}
             
-            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            validated_ids = [self.validate_element_id(eid) for eid in element_ids]
             
-            if not isinstance(aVisible, bool):
+            if not isinstance(visible, bool):
                 return {"status": "error", "message": "visible must be a boolean (True/False)"}
             
-            # Command senden
+            # Send command
             return self.send_command("set_visibility", {
-                "element_ids": lValidatedIds,
-                "visible": aVisible
+                "element_ids": validated_ids,
+                "visible": visible
             })
             
         except Exception as e:
             return {"status": "error", "message": f"set_visibility failed: {e}"}
     
-    async def set_transparency(self, aElementIds: list, aTransparency: int) -> dict:
+    async def set_transparency(self, element_ids: List[int], transparency: int) -> Dict[str, Any]:
         """
-        Setzt die Transparenz für eine Liste von Elementen
+        Set transparency for a list of elements
         
         Args:
-            aElementIds: Liste der Element-IDs
-            aTransparency: Transparenz-Wert (0-100, 0=undurchsichtig, 100=vollständig transparent)
+            element_ids: List of element IDs
+            transparency: Transparency value (0-100, 0=opaque, 100=fully transparent)
         
         Returns:
-            dict: Status der Operation
+            dict: Status of operation
         """
         try:
-            # Validierung
-            if not isinstance(aElementIds, list) or not aElementIds:
+            # Validation
+            if not isinstance(element_ids, list) or not element_ids:
                 return {"status": "error", "message": "element_ids must be a non-empty list"}
             
-            lValidatedIds = [self.validate_element_id(lId) for lId in aElementIds]
+            validated_ids = [self.validate_element_id(eid) for eid in element_ids]
             
-            if not isinstance(aTransparency, int) or aTransparency < 0 or aTransparency > 100:
+            if not isinstance(transparency, int) or transparency < 0 or transparency > 100:
                 return {"status": "error", "message": "transparency must be an integer between 0 and 100"}
             
-            # Command senden
+            # Send command
             return self.send_command("set_transparency", {
-                "element_ids": lValidatedIds,
-                "transparency": aTransparency
+                "element_ids": validated_ids,
+                "transparency": transparency
             })
             
         except Exception as e:
             return {"status": "error", "message": f"set_transparency failed: {e}"}
     
-    async def get_color(self, aElementId: int) -> dict:
+    async def get_color(self, element_id: int) -> Dict[str, Any]:
         """
-        Ruft die Farbe eines Elements ab
+        Get color of an element
         
         Args:
-            aElementId: Element-ID
+            element_id: Element ID
         
         Returns:
-            dict: Farb-ID und Farb-Information
+            dict: Color ID and color information
         """
         try:
-            # Validierung
-            lValidatedId = self.validate_element_id(aElementId)
+            # Validation
+            validated_id = self.validate_element_id(element_id)
             
-            # Command senden
+            # Send command
             return self.send_command("get_color", {
-                "element_id": lValidatedId
+                "element_id": validated_id
             })
             
         except Exception as e:
             return {"status": "error", "message": f"get_color failed: {e}"}
     
-    async def get_transparency(self, aElementId: int) -> dict:
+    async def get_transparency(self, element_id: int) -> Dict[str, Any]:
         """
-        Ruft die Transparenz eines Elements ab
+        Get transparency of an element
         
         Args:
-            aElementId: Element-ID
+            element_id: Element ID
         
         Returns:
-            dict: Transparenz-Wert (0-100)
+            dict: Transparency value (0-100)
         """
         try:
-            # Validierung
-            lValidatedId = self.validate_element_id(aElementId)
+            # Validation
+            validated_id = self.validate_element_id(element_id)
             
-            # Command senden
+            # Send command
             return self.send_command("get_transparency", {
-                "element_id": lValidatedId
+                "element_id": validated_id
             })
             
         except Exception as e:
             return {"status": "error", "message": f"get_transparency failed: {e}"}
     
-    async def show_all_elements(self) -> dict:
+    async def show_all_elements(self) -> Dict[str, Any]:
         """
-        Macht alle Elemente im Modell sichtbar
+        Make all elements in the model visible
         
         Returns:
-            dict: Status der Operation mit Anzahl betroffener Elemente
+            dict: Status of operation with count of affected elements
         """
         try:
-            # Command senden
+            # Send command
             return self.send_command("show_all_elements", {})
             
         except Exception as e:
             return {"status": "error", "message": f"show_all_elements failed: {e}"}
     
-    async def hide_all_elements(self) -> dict:
+    async def hide_all_elements(self) -> Dict[str, Any]:
         """
-        Blendet alle Elemente im Modell aus
+        Hide all elements in the model
         
         Returns:
-            dict: Status der Operation mit Anzahl betroffener Elemente
+            dict: Status of operation with count of affected elements
         """
         try:
-            # Command senden
+            # Send command
             return self.send_command("hide_all_elements", {})
             
         except Exception as e:
             return {"status": "error", "message": f"hide_all_elements failed: {e}"}
     
-    async def refresh_display(self) -> dict:
+    async def refresh_display(self) -> Dict[str, Any]:
         """
-        Aktualisiert das Display/Viewport nach Änderungen
+        Refresh display/viewport after changes
         
         Returns:
-            dict: Status der Display-Aktualisierung
+            dict: Status of display refresh
         """
         try:
-            # Command senden
+            # Send command
             return self.send_command("refresh_display", {})
             
         except Exception as e:
             return {"status": "error", "message": f"refresh_display failed: {e}"}
     
-    async def get_visible_element_count(self) -> dict:
+    async def get_visible_element_count(self) -> Dict[str, Any]:
         """
-        Ermittelt die Anzahl aktuell sichtbarer Elemente
+        Get count of currently visible elements
         
         Returns:
-            dict: Anzahl sichtbarer Elemente + Statistiken
+            dict: Count of visible elements + statistics
         """
         try:
-            # Command senden
+            # Send command
             return self.send_command("get_visible_element_count", {})
             
         except Exception as e:

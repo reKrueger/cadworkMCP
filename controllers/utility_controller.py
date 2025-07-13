@@ -1,132 +1,133 @@
 """
-Utility Controller für Cadwork MCP Server
-Verwaltet Display-Refresh, Ausgabe-Funktionen und System-Utilities
+Utility Controller for Cadwork MCP Server
+Manages display refresh, output functions and system utilities
 """
+from typing import Dict, Any
 from .base_controller import BaseController
 
 class CUtilityController(BaseController):
-    """Controller für Utility-Operationen"""
+    """Controller for utility operations"""
     
     def __init__(self) -> None:
         super().__init__("UtilityController")
     
-    async def disable_auto_display_refresh(self) -> dict:
+    async def disable_auto_display_refresh(self) -> Dict[str, Any]:
         """
-        Deaktiviert die automatische Display-Aktualisierung
+        Disable automatic display refresh
         
-        Wichtig für Performance bei vielen aufeinanderfolgenden Operationen.
-        Sollte nach den Operationen wieder mit enable_auto_display_refresh() aktiviert werden.
+        Important for performance during many consecutive operations.
+        Should be re-enabled after operations with enable_auto_display_refresh().
         
         Returns:
-            dict: Status der Operation
+            dict: Status of operation
         """
         try:
-            # Command senden
+            # Send command
             return self.send_command("disable_auto_display_refresh", {})
             
         except Exception as e:
             return {"status": "error", "message": f"disable_auto_display_refresh failed: {e}"}
     
-    async def enable_auto_display_refresh(self) -> dict:
+    async def enable_auto_display_refresh(self) -> Dict[str, Any]:
         """
-        Aktiviert die automatische Display-Aktualisierung wieder
+        Re-enable automatic display refresh
         
-        Sollte nach Batch-Operationen aufgerufen werden, um die normale
-        Anzeige-Aktualisierung zu reaktivieren.
+        Should be called after batch operations to reactivate normal
+        display updating.
         
         Returns:
-            dict: Status der Operation
+            dict: Status of operation
         """
         try:
-            # Command senden  
+            # Send command  
             return self.send_command("enable_auto_display_refresh", {})
             
         except Exception as e:
             return {"status": "error", "message": f"enable_auto_display_refresh failed: {e}"}
     
-    async def print_error(self, aMessage: str) -> dict:
+    async def print_error(self, message: str) -> Dict[str, Any]:
         """
-        Gibt eine Fehlermeldung in Cadwork aus
+        Display error message in Cadwork
         
         Args:
-            aMessage: Fehlermeldung die in Cadwork angezeigt werden soll
+            message: Error message to display in Cadwork
         
         Returns:
-            dict: Status der Operation
+            dict: Status of operation
         """
         try:
-            # Validierung
-            if not isinstance(aMessage, str) or not aMessage.strip():
+            # Validation
+            if not isinstance(message, str) or not message.strip():
                 return {"status": "error", "message": "message must be a non-empty string"}
             
-            # Command senden
+            # Send command
             return self.send_command("print_error", {
-                "message": aMessage.strip()
+                "message": message.strip()
             })
             
         except Exception as e:
             return {"status": "error", "message": f"print_error failed: {e}"}
     
-    async def print_warning(self, aMessage: str) -> dict:
+    async def print_warning(self, message: str) -> Dict[str, Any]:
         """
-        Gibt eine Warnmeldung in Cadwork aus
+        Display warning message in Cadwork
         
         Args:
-            aMessage: Warnmeldung die in Cadwork angezeigt werden soll
+            message: Warning message to display in Cadwork
         
         Returns:
-            dict: Status der Operation
+            dict: Status of operation
         """
         try:
-            # Validierung
-            if not isinstance(aMessage, str) or not aMessage.strip():
+            # Validation
+            if not isinstance(message, str) or not message.strip():
                 return {"status": "error", "message": "message must be a non-empty string"}
             
-            # Command senden
+            # Send command
             return self.send_command("print_warning", {
-                "message": aMessage.strip()
+                "message": message.strip()
             })
             
         except Exception as e:
             return {"status": "error", "message": f"print_warning failed: {e}"}
     
-    async def get_3d_file_path(self) -> dict:
+    async def get_3d_file_path(self) -> Dict[str, Any]:
         """
-        Ruft den Pfad der aktuell geöffneten 3D-Datei ab
+        Get path of currently opened 3D file
         
         Returns:
-            dict: Dateipfad und Datei-Informationen
+            dict: File path and file information
         """
         try:
-            # Command senden
+            # Send command
             return self.send_command("get_3d_file_path", {})
             
         except Exception as e:
             return {"status": "error", "message": f"get_3d_file_path failed: {e}"}
     
-    async def get_project_data(self) -> dict:
+    async def get_project_data(self) -> Dict[str, Any]:
         """
-        Ruft allgemeine Projektdaten ab
+        Get general project data
         
         Returns:
-            dict: Projekt-Informationen wie Name, Pfad, etc.
+            dict: Project information like name, path, etc.
         """
         try:
-            # Command senden
+            # Send command
             return self.send_command("get_project_data", {})
             
         except Exception as e:
             return {"status": "error", "message": f"get_project_data failed: {e}"}
     
-    async def get_cadwork_version_info(self) -> dict:
+    async def get_cadwork_version_info(self) -> Dict[str, Any]:
         """
-        Ruft Cadwork Versionsinformationen ab
+        Get Cadwork version information
         
         Returns:
-            dict: Versionsinformationen der Cadwork-Installation
+            dict: Version information of Cadwork installation
         """
         try:
-            # Command senden
+            # Send command
             return self.send_command("get_cadwork_version_info", {})
             
         except Exception as e:

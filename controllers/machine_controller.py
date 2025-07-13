@@ -1,37 +1,38 @@
 """
-Machine Controller für Cadwork MCP Server
-Verwaltet CNC- und fertigungsspezifische Funktionen für Produktionsplanung
+Machine Controller for Cadwork MCP Server
+Manages CNC and production-specific functions for manufacturing planning
 """
+from typing import Dict, Any
 from .base_controller import BaseController
 
 class CMachineController(BaseController):
-    """Controller für Machine/CNC-Operationen"""
+    """Controller for machine/CNC operations"""
     
     def __init__(self) -> None:
         super().__init__("MachineController")
     
-    async def check_production_list_discrepancies(self, aProductionListId: int) -> dict:
+    async def check_production_list_discrepancies(self, production_list_id: int) -> Dict[str, Any]:
         """
-        Überprüft Produktionslisten auf Unstimmigkeiten und Konflikte
+        Check production lists for discrepancies and conflicts
         
-        Analysiert Produktionslisten auf mögliche Probleme wie fehlende Elemente,
-        inkonsistente Maße, Materialfehler oder CNC-Bearbeitungskonflikte.
-        Essentiell für qualitätsgesicherte Fertigung.
+        Analyzes production lists for potential issues like missing elements,
+        inconsistent dimensions, material errors or CNC machining conflicts.
+        Essential for quality-assured manufacturing.
         
         Args:
-            aProductionListId: ID der Produktionsliste die überprüft werden soll
+            production_list_id: ID of production list to check
         
         Returns:
-            dict: Detaillierte Analyse mit gefundenen Unstimmigkeiten und Empfehlungen
+            dict: Detailed analysis with found discrepancies and recommendations
         """
         try:
-            # Production List ID validieren
-            if not isinstance(aProductionListId, int) or aProductionListId <= 0:
+            # Validate production list ID
+            if not isinstance(production_list_id, int) or production_list_id <= 0:
                 return {"status": "error", "message": "Production list ID must be a positive integer"}
             
-            # Command senden
+            # Send command
             return self.send_command("check_production_list_discrepancies", {
-                "production_list_id": aProductionListId
+                "production_list_id": production_list_id
             })
             
         except Exception as e:

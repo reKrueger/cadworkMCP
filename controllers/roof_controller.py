@@ -1,70 +1,71 @@
 """
-Roof Controller für Cadwork MCP Server
-Verwaltet Dach-spezifische CAD-Funktionen für Zimmerei und Dachbau
+Roof Controller for Cadwork MCP Server
+Manages roof-specific CAD functions for carpentry and roof construction
 """
+from typing import Dict, Any, List
 from .base_controller import BaseController
 
 class CRoofController(BaseController):
-    """Controller für Roof/Dach-Operationen"""
+    """Controller for roof operations"""
     
     def __init__(self) -> None:
         super().__init__("RoofController")
     
-    async def get_roof_surfaces(self, aElementIds: list) -> dict:
+    async def get_roof_surfaces(self, element_ids: List[int]) -> Dict[str, Any]:
         """
-        Ruft Dachflächen-Informationen für angegebene Elemente ab
+        Get roof surface information for specified elements
         
-        Analysiert Dach-Elemente und gibt detaillierte Informationen über
-        Dachflächen, Neigungen, Orientierungen und geometrische Eigenschaften zurück.
+        Analyzes roof elements and returns detailed information about
+        roof surfaces, slopes, orientations and geometric properties.
         
         Args:
-            aElementIds: Liste von Element-IDs die als Dach-Elemente analysiert werden sollen
+            element_ids: List of element IDs to analyze as roof elements
         
         Returns:
-            dict: Detaillierte Dachflächen-Informationen (Neigungen, Orientierungen, Flächen)
+            dict: Detailed roof surface information (slopes, orientations, areas)
         """
         try:
-            # Element-IDs validieren
-            lValidatedIds = []
-            for lId in aElementIds:
-                lValidatedIds.append(self.validate_element_id(lId))
+            # Validate element IDs
+            validated_ids = []
+            for eid in element_ids:
+                validated_ids.append(self.validate_element_id(eid))
             
-            if not lValidatedIds:
+            if not validated_ids:
                 return {"status": "error", "message": "No valid element IDs provided"}
             
-            # Command senden
+            # Send command
             return self.send_command("get_roof_surfaces", {
-                "element_ids": lValidatedIds
+                "element_ids": validated_ids
             })
             
         except Exception as e:
             return {"status": "error", "message": f"get_roof_surfaces failed: {e}"}
     
-    async def calculate_roof_area(self, aRoofElementIds: list) -> dict:
+    async def calculate_roof_area(self, roof_element_ids: List[int]) -> Dict[str, Any]:
         """
-        Berechnet die Gesamtdachfläche für angegebene Dach-Elemente
+        Calculate total roof area for specified roof elements
         
-        Führt spezielle Dachflächen-Berechnungen durch, die Neigungen,
-        Überstände und komplexe Dachgeometrien berücksichtigen.
+        Performs specialized roof area calculations considering slopes,
+        overhangs and complex roof geometries.
         
         Args:
-            aRoofElementIds: Liste von Dach-Element-IDs für Flächenberechnung
+            roof_element_ids: List of roof element IDs for area calculation
         
         Returns:
-            dict: Dachflächen-Berechnungen (Grundfläche, geneigte Fläche, Faktoren)
+            dict: Roof area calculations (base area, sloped area, factors)
         """
         try:
-            # Element-IDs validieren
-            lValidatedIds = []
-            for lId in aRoofElementIds:
-                lValidatedIds.append(self.validate_element_id(lId))
+            # Validate element IDs
+            validated_ids = []
+            for eid in roof_element_ids:
+                validated_ids.append(self.validate_element_id(eid))
             
-            if not lValidatedIds:
+            if not validated_ids:
                 return {"status": "error", "message": "No valid roof element IDs provided"}
             
-            # Command senden
+            # Send command
             return self.send_command("calculate_roof_area", {
-                "roof_element_ids": lValidatedIds
+                "roof_element_ids": validated_ids
             })
             
         except Exception as e:

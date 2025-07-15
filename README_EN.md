@@ -10,9 +10,11 @@ A **Model Context Protocol (MCP) Server** for Cadwork 3D software that enables C
 - **Claude Desktop** application
 
 ### 2. Clone repository and install dependencies
+⚠️ **IMPORTANT:** Project MUST be located on C: drive: `C:\cadworkMCP`
+
 ```bash
-git clone <repository-url>
-cd cadworkMCP
+git clone <repository-url> C:\cadworkMCP
+cd C:\cadworkMCP
 pip install -r requirements.txt
 ```
 
@@ -35,7 +37,7 @@ Add the following configuration:
   "mcpServers": {
     "cadwork": {
       "command": "python",
-      "args": ["C:\\path\\to\\cadworkMCP\\main.py"],
+      "args": ["C:\\cadworkMCP\\main.py"],
       "env": {}
     }
   }
@@ -44,10 +46,11 @@ Add the following configuration:
 
 ### 5. Start the server
 ```bash
+cd C:\cadworkMCP
 python main.py
 ```
 
-## 📋 Available Functions
+## 📋 Function Status
 
 ### ✅ Element Operations (38 Functions)
 - **Creation:** `create_beam`, `create_panel`, `create_circular_beam_points`, `create_square_beam_points`, `create_standard_beam_points`, `create_standard_panel_points`, `create_drilling_points`, `create_polygon_beam`, `create_auxiliary_beam_points`
@@ -75,7 +78,7 @@ python main.py
 
 ### ✅ Visualization (10 Functions)
 - **Properties:** `set_color`, `set_visibility`, `set_transparency`, `get_color`, `get_transparency`
-- **Global Control:** `show_all_elements`, `hide_all_elements`, `refresh_display`, `get_visible_element_count`, `get_visible_element_count`
+- **Global Control:** `show_all_elements`, `hide_all_elements`, `refresh_display`, `get_visible_element_count`
 
 ### ✅ Utility Functions (6 Functions)
 - **Display:** `disable_auto_display_refresh`, `enable_auto_display_refresh`
@@ -87,12 +90,69 @@ python main.py
 - **Roof Analysis (2):** `get_roof_surfaces`, `calculate_roof_area`
 - **Machine Integration (1):** `check_production_list_discrepancies`
 
-**Total: 91 available functions**
+**Current Total: 91 available functions**
+
+## ❌ Missing Cadwork API Functions (to be implemented)
+
+### 🔧 Element Creation & Editing
+- `create_solid_wood_panel`, `create_beam_from_points`, `create_auxiliary_line`, `create_surface`
+- `stretch_elements`, `scale_elements`, `mirror_elements`
+- `chamfer_edge`, `round_edge`, `split_element`
+
+### 📐 Advanced Geometry
+- `get_bounding_box`, `get_element_outline`, `get_section_outline`
+- `intersect_elements`, `subtract_elements`, `unite_elements`
+- `project_point_to_element`, `get_closest_point_on_element`
+
+### 🎨 Material & Texture
+- `create_material`, `assign_texture`, `get_material_properties`
+- `set_element_density`, `set_thermal_properties`
+
+### 📏 Advanced Queries
+- `get_elements_in_region`, `get_elements_by_color`, `get_elements_by_layer`
+- `get_nested_elements`, `get_parent_elements`, `get_child_elements`
+- `search_elements_by_property`, `filter_by_dimension_range`
+
+### 🔗 Advanced Connections & Processing
+- `create_dovetail_joint`, `create_mortise_tenon`, `create_finger_joint`
+- `automatic_beam_processing`, `optimize_cutting_list`
+- `create_custom_processing`, `add_drilling_pattern`
+
+### 📊 Export & Import
+- `export_to_btl`, `export_to_hundegger`, `export_to_weinmann`
+- `import_from_cad`, `export_cutting_list`, `export_assembly_instructions`
+- `generate_production_data`, `create_cnc_program`
+
+### 🏠 Building & Structures
+- `create_wall_system`, `create_floor_system`, `create_roof_system`
+- `generate_frame_structure`, `optimize_timber_structure`
+- `calculate_static_properties`, `perform_structural_analysis`
+
+### 📋 Lists & Reports
+- `create_element_list`, `generate_material_list`, `create_cost_calculation`
+- `export_assembly_drawings`, `create_production_schedule`
+- `generate_quality_report`, `create_delivery_note`
+
+### 🎬 Animation & Visualization
+- `create_assembly_animation`, `set_camera_position`, `create_walkthrough`
+- `generate_renderings`, `set_lighting_conditions`, `create_exploded_view`
+
+### ⚙️ System & Configuration
+- `get_system_settings`, `set_user_preferences`, `manage_templates`
+- `backup_project`, `restore_project`, `sync_with_cloud`
+
+### 📐 Measurement & Analysis
+- `measure_distance`, `measure_angle`, `calculate_areas`
+- `check_collisions`, `validate_joints`, `verify_dimensions`
+- `analyze_material_usage`, `optimize_waste_reduction`
+
+**Estimated missing functions: ~80-100**
+**Target total: ~180-200 functions**
 
 ## 🏗️ Project Structure
 
 ```
-cadworkMCP/
+C:\cadworkMCP/              # MUST be on C:\ drive!
 ├── main.py                 # Main MCP server with all tool definitions
 ├── requirements.txt        # Python dependencies
 ├── mypy.ini               # Mypy configuration for type safety
@@ -145,4 +205,4 @@ cadworkMCP/
 
 ---
 
-*Last Update: July 2025 - 91 functions available*
+*Last Update: July 2025 - 91/180-200 functions available (~50% completeness)*

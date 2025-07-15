@@ -327,3 +327,75 @@ class GeometryController(BaseController):
             
         except Exception as e:
             return {"status": "error", "message": f"intersect_elements failed: {e}"}
+    
+    async def subtract_elements(self, target_element_id: int, 
+                              subtract_element_ids: List[int],
+                              keep_originals: bool = False) -> Dict[str, Any]:
+        """Subtract elements from a target element (Boolean difference operation)
+        
+        Args:
+            target_element_id: ID of the element to subtract from
+            subtract_element_ids: List of element IDs to subtract from the target
+            keep_originals: Whether to keep the original elements after subtraction
+        
+        Returns:
+            Dictionary with operation status and resulting element IDs if successful
+        """
+        try:
+            if not isinstance(subtract_element_ids, list) or len(subtract_element_ids) < 1:
+                return {"status": "error", "message": "subtract_element_ids must be a list with at least 1 element ID"}
+            
+            if not isinstance(keep_originals, bool):
+                return {"status": "error", "message": "keep_originals must be a boolean value"}
+            
+            validated_target_id = self.validate_element_id(target_element_id)
+            validated_subtract_ids = [self.validate_element_id(eid) for eid in subtract_element_ids]
+            
+            # Check that target is not in subtract list
+            if validated_target_id in validated_subtract_ids:
+                return {"status": "error", "message": "target_element_id cannot be in subtract_element_ids list"}
+            
+            args = {
+                "target_element_id": validated_target_id,
+                "subtract_element_ids": validated_subtract_ids,
+                "keep_originals": keep_originals
+            }
+            
+            return self.send_command("subtract_elements", args)
+            
+        except Exception as e:
+            return {"status": "error", "message": f"subtract_elements failed: {e}"}
+    
+    async def unite_elements(self, element_ids: List[int], 
+                           keep_originals: bool = False) -> Dict[str, Any]:
+        """Unite/merge multiple elements into one (Boolean union operation)
+        
+        Args:
+            element_ids: List of element IDs to unite (minimum 2 elements)
+            keep_originals: Whether to keep the original elements after union
+        
+        Returns:
+            Dictionary with operation status and resulting element ID if successful
+        """
+        try:
+            if not isinstance(element_ids, list) or len(element_ids) < 2:
+                return {"status": "error", "message": "element_ids must be a list with at least 2 element IDs"}
+            
+            if not isinstance(keep_originals, bool):
+                return {"status": "error", "message": "keep_originals must be a boolean value"}
+            
+            validated_ids = [self.validate_element_id(eid) for eid in element_ids]
+            
+            # Check for duplicate IDs
+            if len(set(validated_ids)) != len(validated_ids):
+                return {"status": "error", "message": "Duplicate element IDs found in unite list"}
+            
+            args = {
+                "element_ids": validated_ids,
+                "keep_originals": keep_originals
+            }
+            
+            return self.send_command("unite_elements", args)
+            
+        except Exception as e:
+            return {"status": "error", "message": f"unite_elements failed: {e}"}

@@ -280,6 +280,48 @@ async def cut_scarf_joint(element_ids: List[int], cut_params: Optional[Dict[str,
 async def cut_shoulder(element_ids: List[int], cut_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     return await element_ctrl.cut_shoulder(element_ids, cut_params)
 
+@mcp.tool(
+    name="create_surface",
+    description="Creates a surface element from vertices. Requires list of vertex points as [x,y,z] coordinates (minimum 3 points) and optional surface_type ('flat', 'curved', 'ruled')."
+)
+async def create_surface(vertices: List[List[float]], surface_type: str = "flat") -> Dict[str, Any]:
+    return await element_ctrl.create_surface(vertices, surface_type)
+
+@mcp.tool(
+    name="chamfer_edge",
+    description="Create a chamfer on element edges. Takes element_id, edge_vertices (list of vertex pairs), chamfer_distance, and optional chamfer_type ('symmetric', 'asymmetric', 'rounded')."
+)
+async def chamfer_edge(element_id: int, edge_vertices: List[List[List[float]]], chamfer_distance: float, chamfer_type: str = "symmetric") -> Dict[str, Any]:
+    return await element_ctrl.chamfer_edge(element_id, edge_vertices, chamfer_distance, chamfer_type)
+
+@mcp.tool(
+    name="round_edge",
+    description="Create a rounded edge on element edges. Takes element_id, edge_vertices (list of vertex pairs), round_radius, and optional round_type ('full', 'quarter', 'half')."
+)
+async def round_edge(element_id: int, edge_vertices: List[List[List[float]]], round_radius: float, round_type: str = "full") -> Dict[str, Any]:
+    return await element_ctrl.round_edge(element_id, edge_vertices, round_radius, round_type)
+
+@mcp.tool(
+    name="split_element",
+    description="Split an element with a cutting plane. Takes element_id, split_plane_point [x,y,z], split_plane_normal [x,y,z], and optional keep_both_parts flag."
+)
+async def split_element(element_id: int, split_plane_point: List[float], split_plane_normal: List[float], keep_both_parts: bool = True) -> Dict[str, Any]:
+    return await element_ctrl.split_element(element_id, split_plane_point, split_plane_normal, keep_both_parts)
+
+@mcp.tool(
+    name="create_beam_from_points",
+    description="Create a beam element from a series of points defining its centerline. Takes points list, cross_section dict, and optional material."
+)
+async def create_beam_from_points(points: List[List[float]], cross_section: Dict[str, Any], material: str = "Wood") -> Dict[str, Any]:
+    return await element_ctrl.create_beam_from_points(points, cross_section, material)
+
+@mcp.tool(
+    name="create_auxiliary_line",
+    description="Create an auxiliary line element for construction purposes. Takes start_point [x,y,z], end_point [x,y,z], and optional line_type."
+)
+async def create_auxiliary_line(start_point: List[float], end_point: List[float], line_type: str = "construction") -> Dict[str, Any]:
+    return await element_ctrl.create_auxiliary_line(start_point, end_point, line_type)
+
 # --- GEOMETRY TOOLS ---
 
 @mcp.tool(
@@ -409,6 +451,20 @@ async def get_section_outline(element_id: int, section_plane_point: List[float],
 )
 async def intersect_elements(element_ids: List[int], keep_originals: bool = True) -> Dict[str, Any]:
     return await geometry_ctrl.intersect_elements(element_ids, keep_originals)
+
+@mcp.tool(
+    name="subtract_elements",
+    description="Subtract elements from a target element (Boolean difference operation). Takes target_element_id, subtract_element_ids list, and optional keep_originals flag."
+)
+async def subtract_elements(target_element_id: int, subtract_element_ids: List[int], keep_originals: bool = False) -> Dict[str, Any]:
+    return await geometry_ctrl.subtract_elements(target_element_id, subtract_element_ids, keep_originals)
+
+@mcp.tool(
+    name="unite_elements",
+    description="Unite/merge multiple elements into one (Boolean union operation). Takes element_ids list (minimum 2) and optional keep_originals flag."
+)
+async def unite_elements(element_ids: List[int], keep_originals: bool = False) -> Dict[str, Any]:
+    return await geometry_ctrl.unite_elements(element_ids, keep_originals)
 
 # --- GEOMETRY ANALYSIS ---
 

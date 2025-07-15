@@ -50,10 +50,10 @@ No manual start required! 🚀
 
 ## 📋 Function Status
 
-### ✅ Element Operations (42 Functions)
-- **Creation:** `create_beam`, `create_panel`, `create_circular_beam_points`, `create_square_beam_points`, `create_standard_beam_points`, `create_standard_panel_points`, `create_drilling_points`, `create_polygon_beam`, `create_auxiliary_beam_points`, `create_solid_wood_panel`
+### ✅ Element Operations (48 Functions)
+- **Creation:** `create_beam`, `create_panel`, `create_surface`, `create_beam_from_points`, `create_auxiliary_line`, `create_circular_beam_points`, `create_square_beam_points`, `create_standard_beam_points`, `create_standard_panel_points`, `create_drilling_points`, `create_polygon_beam`, `create_auxiliary_beam_points`, `create_solid_wood_panel`
 - **Queries:** `get_active_element_ids`, `get_all_element_ids`, `get_visible_element_ids`, `get_element_info`, `get_user_element_ids`
-- **Editing:** `delete_elements`, `copy_elements`, `move_element`, `duplicate_elements`, `stretch_elements`, `scale_elements`, `mirror_elements`
+- **Editing:** `delete_elements`, `copy_elements`, `move_element`, `duplicate_elements`, `stretch_elements`, `scale_elements`, `mirror_elements`, `chamfer_edge`, `round_edge`, `split_element`
 - **Filtering:** `get_elements_by_type`, `filter_elements_by_material`, `get_elements_in_group`
 - **Statistics:** `get_element_count_by_type`, `get_material_statistics`, `get_group_statistics`
 - **Connections:** `join_elements`, `unjoin_elements`
@@ -61,11 +61,11 @@ No manual start required! 🚀
 - **Conversion:** `convert_beam_to_panel`, `convert_panel_to_beam`, `convert_auxiliary_to_beam`
 - **Containers:** `create_auto_container_from_standard`, `get_container_content_elements`
 
-### ✅ Geometry Operations (28 Functions)
+### ✅ Geometry Operations (30 Functions)
 - **Dimensions:** `get_element_width`, `get_element_height`, `get_element_length`, `get_element_volume`, `get_element_weight`
 - **Bounding Box:** `get_bounding_box`
 - **Outlines:** `get_element_outline`, `get_section_outline`
-- **Intersection:** `intersect_elements`
+- **Boolean Operations:** `intersect_elements`, `subtract_elements`, `unite_elements`
 - **Vectors & Points:** `get_element_xl`, `get_element_yl`, `get_element_zl`, `get_element_p1`, `get_element_p2`, `get_element_p3`
 - **Center of Gravity:** `get_center_of_gravity`, `get_center_of_gravity_for_list`
 - **Vertices & Faces:** `get_element_vertices`, `get_element_facets`, `get_element_reference_face_area`, `get_total_area_of_all_faces`
@@ -91,16 +91,13 @@ No manual start required! 🚀
 - **Roof Analysis (2):** `get_roof_surfaces`, `calculate_roof_area`
 - **Machine Integration (1):** `check_production_list_discrepancies`
 
-**Current Total: 99 available functions**
+**Current Total: 107 available functions**
 
 ## ❌ Missing Cadwork API Functions (to be implemented)
 
 ### 🔧 Element Creation & Editing
-- `create_beam_from_points`, `create_auxiliary_line`, `create_surface`
-- `chamfer_edge`, `round_edge`, `split_element`
 
 ### 📐 Advanced Geometry
-- `subtract_elements`, `unite_elements`
 - `project_point_to_element`, `get_closest_point_on_element`
 
 ### 🎨 Material & Texture
@@ -145,7 +142,7 @@ No manual start required! 🚀
 - `check_collisions`, `validate_joints`, `verify_dimensions`
 - `analyze_material_usage`, `optimize_waste_reduction`
 
-**Estimated missing functions: ~80-100**
+**Estimated missing functions: ~72-92**
 **Target total: ~180-200 functions**
 
 ## 🏗️ Project Structure
@@ -204,4 +201,4 @@ C:\cadworkMCP/              # MUST be on C:\ drive!
 
 ---
 
-*Last Update: July 2025 - 99/180-200 functions available (~55% completeness)*
+*Last Update: July 2025 - 107/180-200 functions available (~59% completeness)*

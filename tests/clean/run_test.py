@@ -203,6 +203,137 @@ class CElementTests(CTestSuite):
         self.trackElement(lResult)
         return lResult
     
+    async def testCreateSurface(self) -> Dict[str, Any]:
+        """Test surface creation"""
+        lVertices = [
+            [0, 0, 0],       # Bottom left
+            [1000, 0, 0],    # Bottom right  
+            [1000, 1000, 0], # Top right
+            [0, 1000, 0]     # Top left
+        ]
+        lResult = await self.m_pController.create_surface(
+            vertices=lVertices,
+            surface_type="flat"
+        )
+        self.trackElement(lResult)
+        return lResult
+    
+    async def testChamferEdge(self) -> Dict[str, Any]:
+        """Test chamfering edges of an element"""
+        # First create a test beam for chamfering
+        lCreateResult = await self.m_pController.create_beam(
+            p1=[0, 0, 0],
+            p2=[1000, 0, 0],
+            width=200,
+            height=200
+        )
+        
+        if lCreateResult.get("status") == "ok" and lCreateResult.get("element_ids"):
+            nElementId = lCreateResult["element_ids"][0]
+            self.trackElement(lCreateResult)
+            
+            # Define edge vertices for chamfering (example: top front edge)
+            lEdgeVertices = [
+                [[0, 0, 200], [1000, 0, 200]]  # Top front edge
+            ]
+            
+            return await self.m_pController.chamfer_edge(
+                element_id=nElementId,
+                edge_vertices=lEdgeVertices,
+                chamfer_distance=10.0,
+                chamfer_type="symmetric"
+            )
+        else:
+            return {"status": "skip", "message": "Failed to create test element for chamfer"}
+    
+    async def testRoundEdge(self) -> Dict[str, Any]:
+        """Test rounding edges of an element"""
+        # First create a test beam for rounding
+        lCreateResult = await self.m_pController.create_beam(
+            p1=[0, 0, 0],
+            p2=[1000, 0, 0],
+            width=200,
+            height=200
+        )
+        
+        if lCreateResult.get("status") == "ok" and lCreateResult.get("element_ids"):
+            nElementId = lCreateResult["element_ids"][0]
+            self.trackElement(lCreateResult)
+            
+            # Define edge vertices for rounding (example: top back edge)
+            lEdgeVertices = [
+                [[0, 200, 200], [1000, 200, 200]]  # Top back edge
+            ]
+            
+            return await self.m_pController.round_edge(
+                element_id=nElementId,
+                edge_vertices=lEdgeVertices,
+                round_radius=15.0,
+                round_type="full"
+            )
+        else:
+            return {"status": "skip", "message": "Failed to create test element for rounding"}
+    
+    async def testSplitElement(self) -> Dict[str, Any]:
+        """Test splitting an element with a cutting plane"""
+        # First create a test beam for splitting
+        lCreateResult = await self.m_pController.create_beam(
+            p1=[0, 0, 0],
+            p2=[2000, 0, 0],
+            width=200,
+            height=200
+        )
+        
+        if lCreateResult.get("status") == "ok" and lCreateResult.get("element_ids"):
+            nElementId = lCreateResult["element_ids"][0]
+            self.trackElement(lCreateResult)
+            
+            # Split at middle with a YZ-plane (normal in X-direction)
+            return await self.m_pController.split_element(
+                element_id=nElementId,
+                split_plane_point=[1000.0, 0.0, 0.0],  # Point at middle
+                split_plane_normal=[1.0, 0.0, 0.0],   # Normal in X-direction
+                keep_both_parts=True
+            )
+        else:
+            return {"status": "skip", "message": "Failed to create test element for splitting"}
+    
+    async def testCreateBeamFromPoints(self) -> Dict[str, Any]:
+        """Test creating a beam from multiple points"""
+        # Define a curved path with multiple points
+        lPoints = [
+            [0, 0, 0],       # Start
+            [500, 200, 0],   # Curve point 1
+            [1000, 400, 0],  # Curve point 2
+            [1500, 300, 0],  # Curve point 3
+            [2000, 0, 0]     # End
+        ]
+        
+        # Define rectangular cross-section
+        lCrossSection = {
+            "type": "rectangular",
+            "width": 120.0,
+            "height": 200.0
+        }
+        
+        lResult = await self.m_pController.create_beam_from_points(
+            points=lPoints,
+            cross_section=lCrossSection,
+            material="Spruce"
+        )
+        self.trackElement(lResult)
+        return lResult
+    
+    async def testCreateAuxiliaryLine(self) -> Dict[str, Any]:
+        """Test creating an auxiliary line"""
+        lResult = await self.m_pController.create_auxiliary_line(
+            start_point=[0, 0, 1000],      # Start above existing elements
+            end_point=[2000, 1000, 1000], # End point
+            line_type="construction"
+        )
+        self.trackElement(lResult)
+        return lResult
+    
     def testCreateCircularBeam(self) -> Dict[str, Any]:
         """Test circular beam creation - SKIP (function not available)"""
         return {"status": "skip", "message": "create_circular_beam_points function not available in ElementController"}
@@ -371,6 +502,12 @@ class CElementTests(CTestSuite):
         self.runTest(self.testGetActiveElements, "Get Active Elements") 
         self.runTest(self.testCreateBeam, "Create Beam")
         self.runTest(self.testCreatePanel, "Create Panel")
+        self.runTest(self.testCreateSurface, "Create Surface")
+        self.runTest(self.testChamferEdge, "Chamfer Edge")
+        self.runTest(self.testRoundEdge, "Round Edge")
+        self.runTest(self.testSplitElement, "Split Element")
+        self.runTest(self.testCreateBeamFromPoints, "Create Beam From Points")
+        self.runTest(self.testCreateAuxiliaryLine, "Create Auxiliary Line")
         self.runTest(self.testCreateCircularBeam, "Create Circular Beam")
         self.runTest(self.testGetElementInfo, "Get Element Info")
         self.runTest(self.testDeleteElements, "Delete Elements")
@@ -458,6 +595,74 @@ class CGeometryTests(CTestSuite):
         else:
             return {"status": "skip", "message": "Need at least 2 elements for intersection test"}
     
+    async def testSubtractElements(self) -> Dict[str, Any]:
+        """Test subtracting elements from a target element"""
+        # Create two test beams for subtraction test
+        lElementController = ElementController()
+        
+        # Create target beam (larger)
+        lTargetResult = await lElementController.create_beam(
+            p1=[0, 0, 0],
+            p2=[2000, 0, 0],
+            width=200,
+            height=300
+        )
+        
+        # Create subtract beam (smaller, overlapping)  
+        lSubtractResult = await lElementController.create_beam(
+            p1=[500, 0, 0],
+            p2=[1500, 0, 0],
+            width=100,
+            height=150
+        )
+        
+        if (lTargetResult.get("status") == "ok" and lTargetResult.get("element_ids") and
+            lSubtractResult.get("status") == "ok" and lSubtractResult.get("element_ids")):
+            
+            nTargetId = lTargetResult["element_ids"][0]
+            lSubtractIds = lSubtractResult["element_ids"]
+            
+            return await self.m_pController.subtract_elements(
+                target_element_id=nTargetId,
+                subtract_element_ids=lSubtractIds,
+                keep_originals=True  # Keep original elements for testing
+            )
+        else:
+            return {"status": "skip", "message": "Failed to create test elements for subtraction"}
+    
+    async def testUniteElements(self) -> Dict[str, Any]:
+        """Test uniting/merging multiple elements"""
+        # Create two test beams for union test
+        lElementController = ElementController()
+        
+        # Create first beam
+        lBeam1Result = await lElementController.create_beam(
+            p1=[0, 0, 0],
+            p2=[1000, 0, 0],
+            width=200,
+            height=200
+        )
+        
+        # Create second beam (overlapping)
+        lBeam2Result = await lElementController.create_beam(
+            p1=[500, 0, 0],
+            p2=[1500, 0, 0],
+            width=200,
+            height=200
+        )
+        
+        if (lBeam1Result.get("status") == "ok" and lBeam1Result.get("element_ids") and
+            lBeam2Result.get("status") == "ok" and lBeam2Result.get("element_ids")):
+            
+            lElementIds = lBeam1Result["element_ids"] + lBeam2Result["element_ids"]
+            
+            return await self.m_pController.unite_elements(
+                element_ids=lElementIds,
+                keep_originals=True  # Keep original elements for testing
+            )
+        else:
+            return {"status": "skip", "message": "Failed to create test elements for union"}
+    
     def runAllTests(self) -> Dict[str, Any]:
         """Run all geometry tests"""
         print(f"\n[GEOMETRY] {self.m_aName} Tests")
@@ -475,6 +680,8 @@ class CGeometryTests(CTestSuite):
         self.runTest(self.testGetElementOutline, "Get Element Outline")
         self.runTest(self.testGetSectionOutline, "Get Section Outline")
         self.runTest(self.testIntersectElements, "Intersect Elements")
+        self.runTest(self.testSubtractElements, "Subtract Elements")
+        self.runTest(self.testUniteElements, "Unite Elements")
         
         return self.getSummary()
 

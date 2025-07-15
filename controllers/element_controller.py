@@ -692,3 +692,316 @@ class ElementController(BaseController):
             
         except Exception as e:
             return {"status": "error", "message": f"get_container_content_elements failed: {e}"}
+    
+    async def create_surface(self, vertices: List[List[float]], surface_type: str = "flat") -> Dict[str, Any]:
+        """Create a surface element from vertices
+        
+        Args:
+            vertices: List of vertex points as [x,y,z] coordinates (minimum 3 points)
+            surface_type: Type of surface ("flat", "curved", "ruled") - default "flat"
+        
+        Returns:
+            Dictionary with creation status and surface element ID if successful
+        """
+        try:
+            if not isinstance(vertices, list) or len(vertices) < 3:
+                return {"status": "error", "message": "vertices must be a list of at least 3 points"}
+            
+            # Validate each vertex point
+            validated_vertices = []
+            for i, vertex in enumerate(vertices):
+                validated_point = self.validate_point_3d(vertex, f"vertex_{i}")
+                if validated_point is None:
+                    return {"status": "error", "message": f"Invalid vertex at index {i}: {vertex}"}
+                validated_vertices.append(validated_point)
+            
+            if not isinstance(surface_type, str):
+                return {"status": "error", "message": "surface_type must be a string"}
+            
+            valid_types = ["flat", "curved", "ruled"]
+            if surface_type not in valid_types:
+                return {"status": "error", "message": f"surface_type must be one of {valid_types}, got: {surface_type}"}
+            
+            args = {
+                "vertices": validated_vertices,
+                "surface_type": surface_type
+            }
+            
+            return self.send_command("create_surface", args)
+            
+        except Exception as e:
+            return {"status": "error", "message": f"create_surface failed: {e}"}
+    
+    async def chamfer_edge(self, element_id: int, edge_vertices: List[List[List[float]]], 
+                          chamfer_distance: float, chamfer_type: str = "symmetric") -> Dict[str, Any]:
+        """Create a chamfer on element edges
+        
+        Args:
+            element_id: ID of the element to chamfer
+            edge_vertices: List of edges, each edge is 2 vertices: [[[x1,y1,z1], [x2,y2,z2]], ...]
+            chamfer_distance: Distance of the chamfer in mm
+            chamfer_type: Type of chamfer ("symmetric", "asymmetric", "rounded") - default "symmetric"
+        
+        Returns:
+            Dictionary with operation status and modified element info if successful
+        """
+        try:
+            validated_id = self.validate_element_id(element_id)
+            
+            if not isinstance(edge_vertices, list) or len(edge_vertices) < 1:
+                return {"status": "error", "message": "edge_vertices must be a list with at least 1 edge (2 vertices)"}
+            
+            # Validate edge vertices (each edge should have exactly 2 vertices)
+            validated_edges = []
+            for i, edge in enumerate(edge_vertices):
+                if not isinstance(edge, list) or len(edge) != 2:
+                    return {"status": "error", "message": f"Edge {i} must contain exactly 2 vertices"}
+                
+                # Ensure each vertex is a list of coordinates
+                if not isinstance(edge[0], list) or not isinstance(edge[1], list):
+                    return {"status": "error", "message": f"Edge {i} vertices must be [x,y,z] coordinate lists"}
+                
+                vertex1 = self.validate_point_3d(edge[0], f"edge_{i}_vertex1")
+                vertex2 = self.validate_point_3d(edge[1], f"edge_{i}_vertex2")
+                
+                if vertex1 is None or vertex2 is None:
+                    return {"status": "error", "message": f"Invalid vertices in edge {i}"}
+                
+                validated_edges.append([vertex1, vertex2])
+            
+            if not isinstance(chamfer_distance, (int, float)) or chamfer_distance <= 0:
+                return {"status": "error", "message": "chamfer_distance must be a positive number"}
+            
+            if not isinstance(chamfer_type, str):
+                return {"status": "error", "message": "chamfer_type must be a string"}
+            
+            valid_types = ["symmetric", "asymmetric", "rounded"]
+            if chamfer_type not in valid_types:
+                return {"status": "error", "message": f"chamfer_type must be one of {valid_types}, got: {chamfer_type}"}
+            
+            args = {
+                "element_id": validated_id,
+                "edge_vertices": validated_edges,
+                "chamfer_distance": float(chamfer_distance),
+                "chamfer_type": chamfer_type
+            }
+            
+            return self.send_command("chamfer_edge", args)
+            
+        except Exception as e:
+            return {"status": "error", "message": f"chamfer_edge failed: {e}"}
+    
+    async def round_edge(self, element_id: int, edge_vertices: List[List[List[float]]], 
+                        round_radius: float, round_type: str = "full") -> Dict[str, Any]:
+        """Create a rounded edge on element edges
+        
+        Args:
+            element_id: ID of the element to round
+            edge_vertices: List of edges, each edge is 2 vertices: [[[x1,y1,z1], [x2,y2,z2]], ...]
+            round_radius: Radius of the rounding in mm
+            round_type: Type of rounding ("full", "quarter", "half") - default "full"
+        
+        Returns:
+            Dictionary with operation status and modified element info if successful
+        """
+        try:
+            validated_id = self.validate_element_id(element_id)
+            
+            if not isinstance(edge_vertices, list) or len(edge_vertices) < 1:
+                return {"status": "error", "message": "edge_vertices must be a list with at least 1 edge (2 vertices)"}
+            
+            # Validate edge vertices (each edge should have exactly 2 vertices)
+            validated_edges = []
+            for i, edge in enumerate(edge_vertices):
+                if not isinstance(edge, list) or len(edge) != 2:
+                    return {"status": "error", "message": f"Edge {i} must contain exactly 2 vertices"}
+                
+                # Ensure each vertex is a list of coordinates
+                if not isinstance(edge[0], list) or not isinstance(edge[1], list):
+                    return {"status": "error", "message": f"Edge {i} vertices must be [x,y,z] coordinate lists"}
+                
+                vertex1 = self.validate_point_3d(edge[0], f"edge_{i}_vertex1")
+                vertex2 = self.validate_point_3d(edge[1], f"edge_{i}_vertex2")
+                
+                if vertex1 is None or vertex2 is None:
+                    return {"status": "error", "message": f"Invalid vertices in edge {i}"}
+                
+                validated_edges.append([vertex1, vertex2])
+            
+            if not isinstance(round_radius, (int, float)) or round_radius <= 0:
+                return {"status": "error", "message": "round_radius must be a positive number"}
+            
+            if not isinstance(round_type, str):
+                return {"status": "error", "message": "round_type must be a string"}
+            
+            valid_types = ["full", "quarter", "half"]
+            if round_type not in valid_types:
+                return {"status": "error", "message": f"round_type must be one of {valid_types}, got: {round_type}"}
+            
+            args = {
+                "element_id": validated_id,
+                "edge_vertices": validated_edges,
+                "round_radius": float(round_radius),
+                "round_type": round_type
+            }
+            
+            return self.send_command("round_edge", args)
+            
+        except Exception as e:
+            return {"status": "error", "message": f"round_edge failed: {e}"}
+    
+    async def split_element(self, element_id: int, split_plane_point: List[float], 
+                           split_plane_normal: List[float], keep_both_parts: bool = True) -> Dict[str, Any]:
+        """Split an element with a cutting plane
+        
+        Args:
+            element_id: ID of the element to split
+            split_plane_point: Point on the splitting plane [x,y,z]
+            split_plane_normal: Normal vector of the splitting plane [x,y,z]
+            keep_both_parts: Whether to keep both parts after splitting
+        
+        Returns:
+            Dictionary with operation status and resulting element IDs if successful
+        """
+        try:
+            validated_id = self.validate_element_id(element_id)
+            
+            validated_point = self.validate_point_3d(split_plane_point, "split_plane_point")
+            if validated_point is None:
+                return {"status": "error", "message": "Invalid split_plane_point coordinates"}
+            
+            validated_normal = self.validate_point_3d(split_plane_normal, "split_plane_normal")
+            if validated_normal is None:
+                return {"status": "error", "message": "Invalid split_plane_normal coordinates"}
+            
+            # Check if normal vector is not zero
+            normal_length = sum(coord ** 2 for coord in validated_normal) ** 0.5
+            if normal_length < 1e-10:
+                return {"status": "error", "message": "split_plane_normal cannot be a zero vector"}
+            
+            if not isinstance(keep_both_parts, bool):
+                return {"status": "error", "message": "keep_both_parts must be a boolean value"}
+            
+            args = {
+                "element_id": validated_id,
+                "split_plane_point": validated_point,
+                "split_plane_normal": validated_normal,
+                "keep_both_parts": keep_both_parts
+            }
+            
+            return self.send_command("split_element", args)
+            
+        except Exception as e:
+            return {"status": "error", "message": f"split_element failed: {e}"}
+    
+    async def create_beam_from_points(self, points: List[List[float]], cross_section: Dict[str, Any], 
+                                     material: str = "Wood") -> Dict[str, Any]:
+        """Create a beam element from a series of points defining its centerline
+        
+        Args:
+            points: List of [x,y,z] points defining the beam centerline (minimum 2 points)
+            cross_section: Dictionary defining cross-section properties:
+                          {"type": "rectangular", "width": float, "height": float} or
+                          {"type": "circular", "diameter": float} or
+                          {"type": "standard", "name": str}
+            material: Material name for the beam (default: "Wood")
+        
+        Returns:
+            Dictionary with creation status and beam element ID if successful
+        """
+        try:
+            if not isinstance(points, list) or len(points) < 2:
+                return {"status": "error", "message": "points must be a list with at least 2 points"}
+            
+            # Validate all points
+            validated_points = []
+            for i, point in enumerate(points):
+                validated_point = self.validate_point_3d(point, f"point_{i}")
+                if validated_point is None:
+                    return {"status": "error", "message": f"Invalid point at index {i}: {point}"}
+                validated_points.append(validated_point)
+            
+            if not isinstance(cross_section, dict):
+                return {"status": "error", "message": "cross_section must be a dictionary"}
+            
+            # Validate cross section
+            cs_type = cross_section.get("type")
+            if cs_type not in ["rectangular", "circular", "standard"]:
+                return {"status": "error", "message": "cross_section type must be 'rectangular', 'circular', or 'standard'"}
+            
+            if cs_type == "rectangular":
+                if "width" not in cross_section or "height" not in cross_section:
+                    return {"status": "error", "message": "rectangular cross_section must have 'width' and 'height'"}
+                if not isinstance(cross_section["width"], (int, float)) or cross_section["width"] <= 0:
+                    return {"status": "error", "message": "cross_section width must be a positive number"}
+                if not isinstance(cross_section["height"], (int, float)) or cross_section["height"] <= 0:
+                    return {"status": "error", "message": "cross_section height must be a positive number"}
+            
+            elif cs_type == "circular":
+                if "diameter" not in cross_section:
+                    return {"status": "error", "message": "circular cross_section must have 'diameter'"}
+                if not isinstance(cross_section["diameter"], (int, float)) or cross_section["diameter"] <= 0:
+                    return {"status": "error", "message": "cross_section diameter must be a positive number"}
+            
+            elif cs_type == "standard":
+                if "name" not in cross_section:
+                    return {"status": "error", "message": "standard cross_section must have 'name'"}
+                if not isinstance(cross_section["name"], str) or not cross_section["name"].strip():
+                    return {"status": "error", "message": "cross_section name must be a non-empty string"}
+            
+            if not isinstance(material, str):
+                return {"status": "error", "message": "material must be a string"}
+            
+            args = {
+                "points": validated_points,
+                "cross_section": cross_section,
+                "material": material.strip()
+            }
+            
+            return self.send_command("create_beam_from_points", args)
+            
+        except Exception as e:
+            return {"status": "error", "message": f"create_beam_from_points failed: {e}"}
+    
+    async def create_auxiliary_line(self, start_point: List[float], end_point: List[float], 
+                                   line_type: str = "construction") -> Dict[str, Any]:
+        """Create an auxiliary line element for construction purposes
+        
+        Args:
+            start_point: Start point of the line [x,y,z]
+            end_point: End point of the line [x,y,z]
+            line_type: Type of auxiliary line ("construction", "reference", "dimension") - default "construction"
+        
+        Returns:
+            Dictionary with creation status and auxiliary line element ID if successful
+        """
+        try:
+            validated_start = self.validate_point_3d(start_point, "start_point")
+            if validated_start is None:
+                return {"status": "error", "message": "Invalid start_point coordinates"}
+            
+            validated_end = self.validate_point_3d(end_point, "end_point")
+            if validated_end is None:
+                return {"status": "error", "message": "Invalid end_point coordinates"}
+            
+            # Check that start and end points are different
+            if validated_start == validated_end:
+                return {"status": "error", "message": "start_point and end_point cannot be the same"}
+            
+            if not isinstance(line_type, str):
+                return {"status": "error", "message": "line_type must be a string"}
+            
+            valid_types = ["construction", "reference", "dimension"]
+            if line_type not in valid_types:
+                return {"status": "error", "message": f"line_type must be one of {valid_types}, got: {line_type}"}
+            
+            args = {
+                "start_point": validated_start,
+                "end_point": validated_end,
+                "line_type": line_type
+            }
+            
+            return self.send_command("create_auxiliary_line", args)
+            
+        except Exception as e:
+            return {"status": "error", "message": f"create_auxiliary_line failed: {e}"}

@@ -44,11 +44,9 @@ Add the following configuration:
 }
 ```
 
-### 5. Start the server
-```bash
-cd C:\cadworkMCP
-python main.py
-```
+### 5. Server starts automatically
+The MCP server is automatically started by Claude Desktop when you chat with Claude.
+No manual start required! 🚀
 
 ## 📋 Function Status
 

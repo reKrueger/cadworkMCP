@@ -49,56 +49,56 @@ async def create_panel(p1: List[float], p2: List[float], width: float, thickness
     name="get_active_element_ids",
     description="Retrieves a list of integer IDs for all elements currently active (selected) in Cadwork 3D."
 )
-async def get_active_element_ids() -> dict:
+async def get_active_element_ids() -> Dict[str, Any]:
     return await element_ctrl.get_active_element_ids()
 
 @mcp.tool(
     name="get_all_element_ids", 
     description="Retrieves a list of integer IDs for ALL elements in the Cadwork 3D model, regardless of selection or visibility state."
 )
-async def get_all_element_ids() -> dict:
+async def get_all_element_ids() -> Dict[str, Any]:
     return await element_ctrl.get_all_element_ids()
 
 @mcp.tool(
     name="get_visible_element_ids",
     description="Retrieves a list of integer IDs for all elements that are currently visible in the Cadwork 3D viewport."
 )
-async def get_visible_element_ids() -> dict:
+async def get_visible_element_ids() -> Dict[str, Any]:
     return await element_ctrl.get_visible_element_ids()
 
 @mcp.tool(
     name="get_element_info",
     description="Retrieves detailed geometric information and common attributes for a specific Cadwork element."
 )
-async def get_element_info(element_id: int) -> dict:
+async def get_element_info(element_id: int) -> Dict[str, Any]:
     return await element_ctrl.get_element_info(element_id)
 
 @mcp.tool(
     name="delete_elements",
     description="Deletes a list of elements from the Cadwork 3D model. Takes a list of element IDs to delete. This operation cannot be undone."
 )
-async def delete_elements(element_ids: list) -> dict:
+async def delete_elements(element_ids: List[int]) -> Dict[str, Any]:
     return await element_ctrl.delete_elements(element_ids)
 
 @mcp.tool(
     name="copy_elements", 
     description="Copies elements with a vector offset. Takes element IDs list and copy_vector [x,y,z]. Returns new element IDs of the copied elements."
 )
-async def copy_elements(element_ids: list, copy_vector: list) -> dict:
+async def copy_elements(element_ids: List[int], copy_vector: List[float]) -> Dict[str, Any]:
     return await element_ctrl.copy_elements(element_ids, copy_vector)
 
 @mcp.tool(
     name="move_element",
     description="Moves elements by a vector offset. Takes element IDs list and move_vector [x,y,z]. Modifies the original elements in place."
 )
-async def move_element(element_ids: list, move_vector: list) -> dict:
+async def move_element(element_ids: List[int], move_vector: List[float]) -> Dict[str, Any]:
     return await element_ctrl.move_element(element_ids, move_vector)
 
 @mcp.tool(
     name="duplicate_elements",
     description="Duplicates elements at the same location (no offset). Takes element IDs and returns new element IDs of duplicated elements."
 )
-async def duplicate_elements(element_ids: list) -> dict:
+async def duplicate_elements(element_ids: List[int]) -> Dict[str, Any]:
     return await element_ctrl.duplicate_elements(element_ids)
 
 @mcp.tool(
@@ -142,14 +142,14 @@ async def create_standard_panel_points(standard_element_name: str, p1: List[floa
     name="create_drilling_points",
     description="Creates a drilling element using points. Requires diameter and start point p1 ([x,y,z]), end point p2 ([x,y,z])."
 )
-async def create_drilling_points(diameter: float, p1: list, p2: list) -> dict:
+async def create_drilling_points(diameter: float, p1: List[float], p2: List[float]) -> Dict[str, Any]:
     return await element_ctrl.create_drilling_points(diameter, p1, p2)
 
 @mcp.tool(
     name="create_polygon_beam",
     description="Creates a polygon beam element. Requires polygon_vertices (list of [x,y,z] points), thickness, xl vector ([x,y,z] length direction), and zl vector ([x,y,z] height direction)."
 )
-async def create_polygon_beam(polygon_vertices: list, thickness: float, xl: list, zl: list) -> dict:
+async def create_polygon_beam(polygon_vertices: List[List[float]], thickness: float, xl: List[float], zl: List[float]) -> Dict[str, Any]:
     return await element_ctrl.create_polygon_beam(polygon_vertices, thickness, xl, zl)
 
 # --- ELEMENT QUERY/FILTER TOOLS ---
@@ -158,56 +158,56 @@ async def create_polygon_beam(polygon_vertices: list, thickness: float, xl: list
     name="get_elements_by_type",
     description="Finds all elements of a specific type in the model. Takes element_type string ('beam', 'panel', 'drilling', etc.) and returns list of matching element IDs."
 )
-async def get_elements_by_type(element_type: str) -> dict:
+async def get_elements_by_type(element_type: str) -> Dict[str, Any]:
     return await element_ctrl.get_elements_by_type(element_type)
 
 @mcp.tool(
     name="filter_elements_by_material",
     description="Filters all elements by material name. Takes material_name string and returns list of element IDs with that material."
 )
-async def filter_elements_by_material(material_name: str) -> dict:
+async def filter_elements_by_material(material_name: str) -> Dict[str, Any]:
     return await element_ctrl.filter_elements_by_material(material_name)
 
 @mcp.tool(
     name="get_elements_in_group",
     description="Finds all elements in a specific group. Takes group_name string and returns list of element IDs in that group."
 )
-async def get_elements_in_group(group_name: str) -> dict:
+async def get_elements_in_group(group_name: str) -> Dict[str, Any]:
     return await element_ctrl.get_elements_in_group(group_name)
 
 @mcp.tool(
     name="get_element_count_by_type",
     description="Gets count statistics of all elements by type in the model. Returns total counts and percentages for each element type."
 )
-async def get_element_count_by_type() -> dict:
+async def get_element_count_by_type() -> Dict[str, Any]:
     return await element_ctrl.get_element_count_by_type()
 
 @mcp.tool(
     name="get_material_statistics",
     description="Gets material usage statistics for the entire model. Returns counts and percentages for each material used."
 )
-async def get_material_statistics() -> dict:
+async def get_material_statistics() -> Dict[str, Any]:
     return await element_ctrl.get_material_statistics()
 
 @mcp.tool(
     name="get_group_statistics",
     description="Gets group usage statistics for the entire model. Returns counts and percentages for each group used."
 )
-async def get_group_statistics() -> dict:
+async def get_group_statistics() -> Dict[str, Any]:
     return await element_ctrl.get_group_statistics()
 
 @mcp.tool(
     name="join_elements",
     description="Joins multiple elements together. Takes a list of element IDs (minimum 2 elements) to create connections between them."
 )
-async def join_elements(element_ids: list) -> dict:
+async def join_elements(element_ids: List[int]) -> Dict[str, Any]:
     return await element_ctrl.join_elements(element_ids)
 
 @mcp.tool(
     name="unjoin_elements", 
     description="Unjoins/disconnects previously joined elements. Takes a list of element IDs to remove their connections."
 )
-async def unjoin_elements(element_ids: list) -> dict:
+async def unjoin_elements(element_ids: List[int]) -> Dict[str, Any]:
     return await element_ctrl.unjoin_elements(element_ids)
 
 @mcp.tool(
@@ -258,35 +258,35 @@ async def cut_shoulder(element_ids: List[int], cut_params: Optional[Dict[str, An
     name="get_element_width",
     description="Retrieves the width of a specific Cadwork element in millimeters."
 )
-async def get_element_width(element_id: int) -> dict:
+async def get_element_width(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_width(element_id)
 
 @mcp.tool(
     name="get_element_height", 
     description="Retrieves the height of a specific Cadwork element in millimeters."
 )
-async def get_element_height(element_id: int) -> dict:
+async def get_element_height(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_height(element_id)
 
 @mcp.tool(
     name="get_element_length",
     description="Retrieves the length of a specific Cadwork element in millimeters."
 )
-async def get_element_length(element_id: int) -> dict:
+async def get_element_length(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_length(element_id)
 
 @mcp.tool(
     name="get_element_volume",
     description="Retrieves the volume of a specific Cadwork element in cubic millimeters."
 )
-async def get_element_volume(element_id: int) -> dict:
+async def get_element_volume(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_volume(element_id)
 
 @mcp.tool(
     name="get_element_weight",
     description="Retrieves the weight of a specific Cadwork element in kilograms."
 )
-async def get_element_weight(element_id: int) -> dict:
+async def get_element_weight(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_weight(element_id)
 
 # --- GEOMETRY VECTORS & POINTS ---
@@ -295,63 +295,63 @@ async def get_element_weight(element_id: int) -> dict:
     name="get_element_xl",
     description="Retrieves the XL vector (length direction) of a Cadwork element as [x,y,z]. This defines the element's length axis orientation."
 )
-async def get_element_xl(element_id: int) -> dict:
+async def get_element_xl(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_xl(element_id)
 
 @mcp.tool(
     name="get_element_yl", 
     description="Retrieves the YL vector (width direction) of a Cadwork element as [x,y,z]. This defines the element's width axis orientation."
 )
-async def get_element_yl(element_id: int) -> dict:
+async def get_element_yl(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_yl(element_id)
 
 @mcp.tool(
     name="get_element_zl",
     description="Retrieves the ZL vector (height direction) of a Cadwork element as [x,y,z]. This defines the element's height axis orientation."
 )
-async def get_element_zl(element_id: int) -> dict:
+async def get_element_zl(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_zl(element_id)
 
 @mcp.tool(
     name="get_element_p1",
     description="Retrieves the P1 point (start point) of a Cadwork element as [x,y,z] coordinates in mm."
 )
-async def get_element_p1(element_id: int) -> dict:
+async def get_element_p1(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_p1(element_id)
 
 @mcp.tool(
     name="get_element_p2",
     description="Retrieves the P2 point (end point) of a Cadwork element as [x,y,z] coordinates in mm."
 )
-async def get_element_p2(element_id: int) -> dict:
+async def get_element_p2(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_p2(element_id)
 
 @mcp.tool(
     name="get_element_p3",
     description="Retrieves the P3 point (orientation point) of a Cadwork element as [x,y,z] coordinates in mm. Defines the element's local coordinate system."
 )
-async def get_element_p3(element_id: int) -> dict:
+async def get_element_p3(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_p3(element_id)
 
 @mcp.tool(
     name="get_center_of_gravity",
     description="Retrieves the center of gravity (centroid) of a single Cadwork element as [x,y,z] coordinates in mm."
 )
-async def get_center_of_gravity(element_id: int) -> dict:
+async def get_center_of_gravity(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_center_of_gravity(element_id)
 
 @mcp.tool(
     name="get_center_of_gravity_for_list",
     description="Retrieves the combined center of gravity for multiple Cadwork elements as [x,y,z] coordinates in mm."
 )
-async def get_center_of_gravity_for_list(element_ids: list) -> dict:
+async def get_center_of_gravity_for_list(element_ids: List[int]) -> Dict[str, Any]:
     return await geometry_ctrl.get_center_of_gravity_for_list(element_ids)
 
 @mcp.tool(
     name="get_element_vertices",
     description="Retrieves all corner points (vertices) of a Cadwork element as list of [x,y,z] coordinates in mm."
 )
-async def get_element_vertices(element_id: int) -> dict:
+async def get_element_vertices(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_vertices(element_id)
 
 # --- GEOMETRY ANALYSIS ---
@@ -360,28 +360,28 @@ async def get_element_vertices(element_id: int) -> dict:
     name="get_minimum_distance_between_elements",
     description="Calculates the minimum distance between two Cadwork elements in mm. Useful for collision detection and clearance checks."
 )
-async def get_minimum_distance_between_elements(first_element_id: int, second_element_id: int) -> dict:
+async def get_minimum_distance_between_elements(first_element_id: int, second_element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_minimum_distance_between_elements(first_element_id, second_element_id)
 
 @mcp.tool(
     name="get_element_facets",
     description="Retrieves all facets (faces) of a Cadwork element. Returns geometric face data for detailed mesh analysis."
 )
-async def get_element_facets(element_id: int) -> dict:
+async def get_element_facets(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_facets(element_id)
 
 @mcp.tool(
     name="get_element_reference_face_area", 
     description="Retrieves the reference face area of a Cadwork element in mm². This is typically the main face used for calculations."
 )
-async def get_element_reference_face_area(element_id: int) -> dict:
+async def get_element_reference_face_area(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_reference_face_area(element_id)
 
 @mcp.tool(
     name="get_total_area_of_all_faces",
     description="Retrieves the total surface area of all faces of a Cadwork element in mm². Useful for material calculations."
 )
-async def get_total_area_of_all_faces(element_id: int) -> dict:
+async def get_total_area_of_all_faces(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_total_area_of_all_faces(element_id)
 
 # --- GEOMETRY TRANSFORMATIONS ---
@@ -390,42 +390,42 @@ async def get_total_area_of_all_faces(element_id: int) -> dict:
     name="rotate_elements",
     description="Rotates elements around a specified axis. Takes element IDs, origin point [x,y,z], rotation axis vector [x,y,z], and angle in degrees."
 )
-async def rotate_elements(element_ids: list, origin: list, rotation_axis: list, rotation_angle: float) -> dict:
+async def rotate_elements(element_ids: List[int], origin: List[float], rotation_axis: List[float], rotation_angle: float) -> Dict[str, Any]:
     return await geometry_ctrl.rotate_elements(element_ids, origin, rotation_axis, rotation_angle)
 
 @mcp.tool(
     name="apply_global_scale",
     description="Applies global scaling to elements. Takes element IDs, scale factor (e.g., 2.0 = double size), and origin point [x,y,z] for scaling."
 )
-async def apply_global_scale(element_ids: list, scale: float, origin: list) -> dict:
+async def apply_global_scale(element_ids: List[int], scale: float, origin: List[float]) -> Dict[str, Any]:
     return await geometry_ctrl.apply_global_scale(element_ids, scale, origin)
 
 @mcp.tool(
     name="invert_model",
     description="Inverts/mirrors elements. This flips the element geometry. Useful for creating mirrored versions."
 )
-async def invert_model(element_ids: list) -> dict:
+async def invert_model(element_ids: List[int]) -> Dict[str, Any]:
     return await geometry_ctrl.invert_model(element_ids)
 
 @mcp.tool(
     name="rotate_height_axis_90",
     description="Rotates the height axis of elements by exactly 90 degrees. Quick rotation for standard orientations."
 )
-async def rotate_height_axis_90(element_ids: list) -> dict:
+async def rotate_height_axis_90(element_ids: List[int]) -> Dict[str, Any]:
     return await geometry_ctrl.rotate_height_axis_90(element_ids)
 
 @mcp.tool(
     name="rotate_length_axis_90", 
     description="Rotates the length axis of elements by exactly 90 degrees. Quick rotation for standard orientations."
 )
-async def rotate_length_axis_90(element_ids: list) -> dict:
+async def rotate_length_axis_90(element_ids: List[int]) -> Dict[str, Any]:
     return await geometry_ctrl.rotate_length_axis_90(element_ids)
 
 @mcp.tool(
     name="get_element_type",
     description="Retrieves the type of a Cadwork element (beam, panel, drilling, etc.). Takes element ID and returns type information."
 )
-async def get_element_type(element_id: int) -> dict:
+async def get_element_type(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_type(element_id)
 
 # --- GEOMETRY CALCULATIONS ---
@@ -434,14 +434,14 @@ async def get_element_type(element_id: int) -> dict:
     name="calculate_total_volume",
     description="Calculates the total volume of a list of elements. Takes element IDs and returns total volume in multiple units (mm³, cm³, dm³, m³)."
 )
-async def calculate_total_volume(element_ids: list) -> dict:
+async def calculate_total_volume(element_ids: List[int]) -> Dict[str, Any]:
     return await geometry_ctrl.calculate_total_volume(element_ids)
 
 @mcp.tool(
     name="calculate_total_weight",
     description="Calculates the total weight of a list of elements. Takes element IDs and returns total weight in multiple units (g, kg, t)."
 )
-async def calculate_total_weight(element_ids: list) -> dict:
+async def calculate_total_weight(element_ids: List[int]) -> Dict[str, Any]:
     return await geometry_ctrl.calculate_total_weight(element_ids)
 
 # --- ATTRIBUTE TOOLS ---
@@ -450,21 +450,21 @@ async def calculate_total_weight(element_ids: list) -> dict:
     name="get_standard_attributes",
     description="Retrieves common standard attributes (name, group, subgroup, material, comment) for a list of element IDs."
 )
-async def get_standard_attributes(element_ids: list) -> dict:
+async def get_standard_attributes(element_ids: List[int]) -> Dict[str, Any]:
     return await attribute_ctrl.get_standard_attributes(element_ids)
 
 @mcp.tool(
     name="get_user_attributes", 
     description="Retrieves specific user-defined attributes for a list of element IDs."
 )
-async def get_user_attributes(element_ids: list, attribute_numbers: list) -> dict:
+async def get_user_attributes(element_ids: List[int], attribute_numbers: List[int]) -> Dict[str, Any]:
     return await attribute_ctrl.get_user_attributes(element_ids, attribute_numbers)
 
 @mcp.tool(
     name="list_defined_user_attributes",
     description="Retrieves a list of all user-defined attribute numbers that have names configured."
 )
-async def list_defined_user_attributes() -> dict:
+async def list_defined_user_attributes() -> Dict[str, Any]:
     return await attribute_ctrl.list_defined_user_attributes()
 
 # --- ATTRIBUTE SETTER TOOLS ---
@@ -473,14 +473,14 @@ async def list_defined_user_attributes() -> dict:
     name="set_name",
     description="Sets the name for a list of elements. Takes element IDs and the name string to set."
 )
-async def set_name(element_ids: list, name: str) -> dict:
+async def set_name(element_ids: List[int], name: str) -> Dict[str, Any]:
     return await attribute_ctrl.set_name(element_ids, name)
 
 @mcp.tool(
     name="set_material",
     description="Sets the material for a list of elements. Takes element IDs and the material name string to set."
 )
-async def set_material(element_ids: list, material: str) -> dict:
+async def set_material(element_ids: List[int], material: str) -> Dict[str, Any]:
     return await attribute_ctrl.set_material(element_ids, material)
 
 # --- VISUALIZATION TOOLS ---
@@ -489,21 +489,21 @@ async def set_material(element_ids: list, material: str) -> dict:
     name="set_color",
     description="Sets the color for a list of elements. Takes element IDs and color_id (1-255 from Cadwork color palette)."
 )
-async def set_color(element_ids: list, color_id: int) -> dict:
+async def set_color(element_ids: List[int], color_id: int) -> Dict[str, Any]:
     return await visualization_ctrl.set_color(element_ids, color_id)
 
 @mcp.tool(
     name="set_visibility", 
     description="Sets the visibility for a list of elements. Takes element IDs and visible flag (True=show, False=hide)."
 )
-async def set_visibility(element_ids: list, visible: bool) -> dict:
+async def set_visibility(element_ids: List[int], visible: bool) -> Dict[str, Any]:
     return await visualization_ctrl.set_visibility(element_ids, visible)
 
 @mcp.tool(
     name="set_transparency",
     description="Sets the transparency for a list of elements. Takes element IDs and transparency value (0-100, 0=opaque, 100=fully transparent)."
 )
-async def set_transparency(element_ids: list, transparency: int) -> dict:
+async def set_transparency(element_ids: List[int], transparency: int) -> Dict[str, Any]:
     return await visualization_ctrl.set_transparency(element_ids, transparency)
 
 # --- VISUALIZATION GETTERS ---
@@ -512,14 +512,14 @@ async def set_transparency(element_ids: list, transparency: int) -> dict:
     name="get_color",
     description="Gets the color of an element. Takes element ID and returns color information (color_id and color_name)."
 )
-async def get_color(element_id: int) -> dict:
+async def get_color(element_id: int) -> Dict[str, Any]:
     return await visualization_ctrl.get_color(element_id)
 
 @mcp.tool(
     name="get_transparency",
     description="Gets the transparency of an element. Takes element ID and returns transparency value (0-100) and opacity info."
 )
-async def get_transparency(element_id: int) -> dict:
+async def get_transparency(element_id: int) -> Dict[str, Any]:
     return await visualization_ctrl.get_transparency(element_id)
 
 # --- GLOBAL VISIBILITY TOOLS ---
@@ -528,14 +528,14 @@ async def get_transparency(element_id: int) -> dict:
     name="show_all_elements",
     description="Makes all elements in the model visible. No parameters needed. Returns count of elements made visible."
 )
-async def show_all_elements() -> dict:
+async def show_all_elements() -> Dict[str, Any]:
     return await visualization_ctrl.show_all_elements()
 
 @mcp.tool(
     name="hide_all_elements",
     description="Hides all elements in the model. No parameters needed. Returns count of elements hidden."
 )
-async def hide_all_elements() -> dict:
+async def hide_all_elements() -> Dict[str, Any]:
     return await visualization_ctrl.hide_all_elements()
 
 # --- DISPLAY MANAGEMENT TOOLS ---
@@ -544,14 +544,14 @@ async def hide_all_elements() -> dict:
     name="refresh_display",
     description="Refreshes the display/viewport after changes. No parameters needed. Important for updating view after many operations."
 )
-async def refresh_display() -> dict:
+async def refresh_display() -> Dict[str, Any]:
     return await visualization_ctrl.refresh_display()
 
 @mcp.tool(
     name="get_visible_element_count",
     description="Gets count of currently visible elements in the model. Returns visibility statistics and percentages."
 )
-async def get_visible_element_count() -> dict:
+async def get_visible_element_count() -> Dict[str, Any]:
     return await visualization_ctrl.get_visible_element_count()
 
 # --- EXTENDED ATTRIBUTE TOOLS ---
@@ -560,21 +560,21 @@ async def get_visible_element_count() -> dict:
     name="set_group",
     description="Sets the group for a list of elements. Takes element IDs and group name string."
 )
-async def set_group(element_ids: list, group: str) -> dict:
+async def set_group(element_ids: List[int], group: str) -> Dict[str, Any]:
     return await attribute_ctrl.set_group(element_ids, group)
 
 @mcp.tool(
     name="set_comment",
     description="Sets the comment for a list of elements. Takes element IDs and comment text string."
 )
-async def set_comment(element_ids: list, comment: str) -> dict:
+async def set_comment(element_ids: List[int], comment: str) -> Dict[str, Any]:
     return await attribute_ctrl.set_comment(element_ids, comment)
 
 @mcp.tool(
     name="set_subgroup",
     description="Sets the subgroup for a list of elements. Takes element IDs and subgroup name string."
 )
-async def set_subgroup(element_ids: list, subgroup: str) -> dict:
+async def set_subgroup(element_ids: List[int], subgroup: str) -> Dict[str, Any]:
     return await attribute_ctrl.set_subgroup(element_ids, subgroup)
 
 # --- UTILITY TOOLS ---
@@ -583,42 +583,42 @@ async def set_subgroup(element_ids: list, subgroup: str) -> dict:
     name="disable_auto_display_refresh",
     description="Disables automatic display refresh for performance during batch operations. Important: Remember to enable it again afterwards."
 )
-async def disable_auto_display_refresh() -> dict:
+async def disable_auto_display_refresh() -> Dict[str, Any]:
     return await utility_ctrl.disable_auto_display_refresh()
 
 @mcp.tool(
     name="enable_auto_display_refresh", 
     description="Re-enables automatic display refresh after batch operations. Should be called after disable_auto_display_refresh()."
 )
-async def enable_auto_display_refresh() -> dict:
+async def enable_auto_display_refresh() -> Dict[str, Any]:
     return await utility_ctrl.enable_auto_display_refresh()
 
 @mcp.tool(
     name="print_error",
     description="Displays an error message in Cadwork. Takes a message string to show in the Cadwork interface."
 )
-async def print_error(message: str) -> dict:
+async def print_error(message: str) -> Dict[str, Any]:
     return await utility_ctrl.print_error(message)
 
 @mcp.tool(
     name="print_warning",
     description="Displays a warning message in Cadwork. Takes a message string to show in the Cadwork interface."
 )
-async def print_warning(message: str) -> dict:
+async def print_warning(message: str) -> Dict[str, Any]:
     return await utility_ctrl.print_warning(message)
 
 @mcp.tool(
     name="get_3d_file_path",
     description="Retrieves the file path of the currently opened 3D file in Cadwork. Returns file path and file information."
 )
-async def get_3d_file_path() -> dict:
+async def get_3d_file_path() -> Dict[str, Any]:
     return await utility_ctrl.get_3d_file_path()
 
 @mcp.tool(
     name="get_project_data", 
     description="Retrieves general project data and metadata from the current Cadwork project. Returns project information like name, path, etc."
 )
-async def get_project_data() -> dict:
+async def get_project_data() -> Dict[str, Any]:
     return await utility_ctrl.get_project_data()
 
 # --- VERSION TOOL ---
@@ -627,7 +627,7 @@ async def get_project_data() -> dict:
     name="get_cadwork_version_info",
     description="Retrieves version information from the connected Cadwork application."
 )
-async def get_cadwork_version_info() -> dict:
+async def get_cadwork_version_info() -> Dict[str, Any]:
     from core.connection import get_connection
     try:
         connection = get_connection()
@@ -646,35 +646,35 @@ async def create_auxiliary_beam_points(p1: List[float], p2: List[float], p3: Opt
     name="convert_beam_to_panel", 
     description="Converts beam elements to panel elements. The geometry is adjusted accordingly - width becomes thickness, height becomes width of the resulting panel. Takes a list of element IDs to convert."
 )
-async def convert_beam_to_panel(element_ids: list) -> dict:
+async def convert_beam_to_panel(element_ids: List[int]) -> Dict[str, Any]:
     return await element_ctrl.convert_beam_to_panel(element_ids)
 
 @mcp.tool(
     name="convert_panel_to_beam",
     description="Converts panel elements to beam elements. The geometry is adjusted accordingly - thickness becomes width, width becomes height of the resulting beam. Takes a list of element IDs to convert."
 )
-async def convert_panel_to_beam(element_ids: list) -> dict:
+async def convert_panel_to_beam(element_ids: List[int]) -> Dict[str, Any]:
     return await element_ctrl.convert_panel_to_beam(element_ids)
 
 @mcp.tool(
     name="convert_auxiliary_to_beam",
     description="Converts auxiliary elements to regular beam elements. Auxiliary elements become full-featured beams while preserving their geometry. Takes a list of auxiliary element IDs to convert."
 )
-async def convert_auxiliary_to_beam(element_ids: list) -> dict:
+async def convert_auxiliary_to_beam(element_ids: List[int]) -> Dict[str, Any]:
     return await element_ctrl.convert_auxiliary_to_beam(element_ids)
 
 @mcp.tool(
     name="create_auto_container_from_standard",
     description="Creates an automatic container from standard elements. Containers are groups that organize multiple elements together. Useful for complex structures and assemblies. Takes element IDs and container name."
 )
-async def create_auto_container_from_standard(element_ids: list, container_name: str) -> dict:
+async def create_auto_container_from_standard(element_ids: List[int], container_name: str) -> Dict[str, Any]:
     return await element_ctrl.create_auto_container_from_standard(element_ids, container_name)
 
 @mcp.tool(
     name="get_container_content_elements", 
     description="Retrieves all elements contained within a specific container. Returns list of element IDs and detailed information about each contained element. Takes container ID."
 )
-async def get_container_content_elements(container_id: int) -> dict:
+async def get_container_content_elements(container_id: int) -> Dict[str, Any]:
     return await element_ctrl.get_container_content_elements(container_id)
 
 @mcp.tool(
@@ -695,21 +695,21 @@ async def add_wall_section_y(wall_id: int, section_params: Optional[Dict[str, An
     name="get_roof_surfaces",
     description="Retrieves roof surface information for specified elements. Analyzes roof elements and returns detailed information about roof surfaces, slopes, orientations and geometric properties. Takes list of element IDs to analyze as roof elements."
 )
-async def get_roof_surfaces(element_ids: list) -> dict:
+async def get_roof_surfaces(element_ids: List[int]) -> Dict[str, Any]:
     return await roof_ctrl.get_roof_surfaces(element_ids)
 
 @mcp.tool(
     name="calculate_roof_area",
     description="Calculates total roof area for specified roof elements. Performs specialized roof area calculations considering slopes, overhangs and complex roof geometries. Takes list of roof element IDs for area calculation."
 )
-async def calculate_roof_area(roof_element_ids: list) -> dict:
+async def calculate_roof_area(roof_element_ids: List[int]) -> Dict[str, Any]:
     return await roof_ctrl.calculate_roof_area(roof_element_ids)
 
 @mcp.tool(
     name="check_production_list_discrepancies",
     description="Checks production lists for discrepancies and conflicts. Analyzes production lists for potential issues like missing elements, inconsistent dimensions, material errors or CNC machining conflicts. Essential for quality-assured manufacturing. Takes production list ID."
 )
-async def check_production_list_discrepancies(production_list_id: int) -> dict:
+async def check_production_list_discrepancies(production_list_id: int) -> Dict[str, Any]:
     return await machine_ctrl.check_production_list_discrepancies(production_list_id)
 
 if __name__ == "__main__":

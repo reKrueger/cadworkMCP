@@ -258,6 +258,103 @@ class CElementTests(CTestSuite):
         else:
             return {"status": "skip", "message": "No elements available for copy test"}
     
+    async def testStretchElements(self) -> Dict[str, Any]:
+        """Test stretching elements"""
+        if not self.m_pController:
+            return {"status": "skip", "message": "Controller not available"}
+        
+        # First create a test beam for stretching
+        lCreateResult = await self.m_pController.create_beam(
+            p1=[0, 0, 0],
+            p2=[1000, 0, 0],
+            width=100,
+            height=200
+        )
+        
+        if lCreateResult.get("status") == "ok" and lCreateResult.get("element_ids"):
+            nElementId = lCreateResult["element_ids"][0]
+            self.m_lCreatedElements.append(nElementId)
+            
+            # Test stretching the beam along X-axis with factor 1.5
+            lResult = await self.m_pController.stretch_elements(
+                element_ids=[nElementId],
+                stretch_vector=[1.0, 0.0, 0.0],  # X-direction
+                stretch_factor=1.5
+            )
+            return lResult
+        else:
+            return {"status": "skip", "message": "Could not create test element for stretching"}
+    
+    async def testScaleElements(self) -> Dict[str, Any]:
+        """Test scaling elements"""
+        if not self.m_pController:
+            return {"status": "skip", "message": "Controller not available"}
+        
+        # First create a test beam for scaling
+        lCreateResult = await self.m_pController.create_beam(
+            p1=[0, 0, 0],
+            p2=[1000, 0, 0],
+            width=100,
+            height=200
+        )
+        
+        if lCreateResult.get("status") == "ok" and lCreateResult.get("element_ids"):
+            nElementId = lCreateResult["element_ids"][0]
+            self.m_lCreatedElements.append(nElementId)
+            
+            # Test scaling the beam by factor 2.0 around origin
+            lResult = await self.m_pController.scale_elements(
+                element_ids=[nElementId],
+                scale_factor=2.0,
+                origin_point=[0.0, 0.0, 0.0]  # Scale around origin
+            )
+            return lResult
+        else:
+            return {"status": "skip", "message": "Could not create test element for scaling"}
+    
+    async def testMirrorElements(self) -> Dict[str, Any]:
+        """Test mirroring elements"""
+        if not self.m_pController:
+            return {"status": "skip", "message": "Controller not available"}
+        
+        # First create a test beam for mirroring
+        lCreateResult = await self.m_pController.create_beam(
+            p1=[1000, 0, 0],
+            p2=[2000, 0, 0],
+            width=100,
+            height=200
+        )
+        
+        if lCreateResult.get("status") == "ok" and lCreateResult.get("element_ids"):
+            nElementId = lCreateResult["element_ids"][0]
+            self.m_lCreatedElements.append(nElementId)
+            
+            # Test mirroring the beam across YZ-plane (x=0)
+            lResult = await self.m_pController.mirror_elements(
+                element_ids=[nElementId],
+                mirror_plane_point=[0.0, 0.0, 0.0],  # Point on YZ-plane
+                mirror_plane_normal=[1.0, 0.0, 0.0]  # Normal vector pointing in X-direction
+            )
+            return lResult
+        else:
+            return {"status": "skip", "message": "Could not create test element for mirroring"}
+    
+    async def testCreateSolidWoodPanel(self) -> Dict[str, Any]:
+        """Test creating solid wood panel"""
+        if not self.m_pController:
+            return {"status": "skip", "message": "Controller not available"}
+        
+        # Test creating a solid wood panel with specific wood type
+        lResult = await self.m_pController.create_solid_wood_panel(
+            p1=[0, 0, 0],
+            p2=[1200, 800, 0],  # 1200x800mm panel
+            thickness=18.0,      # 18mm thick
+            wood_type="Oak"      # Oak wood type
+        )
+        
+        self.trackElement(lResult)
+        return lResult
+    
     def runAllTests(self) -> Dict[str, Any]:
         """Run all element tests"""
         print(f"\n[ELEMENTS] {self.m_aName} Tests")
@@ -278,6 +375,10 @@ class CElementTests(CTestSuite):
         self.runTest(self.testGetElementInfo, "Get Element Info")
         self.runTest(self.testDeleteElements, "Delete Elements")
         self.runTest(self.testCopyElements, "Copy Elements")
+        self.runTest(self.testStretchElements, "Stretch Elements")
+        self.runTest(self.testScaleElements, "Scale Elements")
+        self.runTest(self.testMirrorElements, "Mirror Elements")
+        self.runTest(self.testCreateSolidWoodPanel, "Create Solid Wood Panel")
         
         self.cleanup()
         return self.getSummary()
@@ -309,6 +410,54 @@ class CGeometryTests(CTestSuite):
         else:
             return {"status": "skip", "message": "No elements available for volume test"}
     
+    async def testGetBoundingBox(self) -> Dict[str, Any]:
+        """Test getting bounding box of an element"""
+        # First get an element to test with
+        lAllElements = await ElementController().get_all_element_ids()
+        if lAllElements.get("status") == "ok" and lAllElements.get("element_ids"):
+            nElementId = lAllElements["element_ids"][0]
+            return await self.m_pController.get_bounding_box(nElementId)
+        else:
+            return {"status": "skip", "message": "No elements available for bounding box test"}
+    
+    async def testGetElementOutline(self) -> Dict[str, Any]:
+        """Test getting element outline/contour"""
+        # First get an element to test with
+        lAllElements = await ElementController().get_all_element_ids()
+        if lAllElements.get("status") == "ok" and lAllElements.get("element_ids"):
+            nElementId = lAllElements["element_ids"][0]
+            return await self.m_pController.get_element_outline(nElementId)
+        else:
+            return {"status": "skip", "message": "No elements available for outline test"}
+    
+    async def testGetSectionOutline(self) -> Dict[str, Any]:
+        """Test getting section outline of an element"""
+        # First get an element to test with
+        lAllElements = await ElementController().get_all_element_ids()
+        if lAllElements.get("status") == "ok" and lAllElements.get("element_ids"):
+            nElementId = lAllElements["element_ids"][0]
+            # Test section cut through middle of element with YZ-plane (normal in X-direction)
+            return await self.m_pController.get_section_outline(
+                element_id=nElementId,
+                section_plane_point=[500.0, 0.0, 0.0],  # Point on cutting plane
+                section_plane_normal=[1.0, 0.0, 0.0]   # Normal vector (X-direction)
+            )
+        else:
+            return {"status": "skip", "message": "No elements available for section outline test"}
+    
+    async def testIntersectElements(self) -> Dict[str, Any]:
+        """Test intersecting multiple elements"""
+        # Get at least 2 elements to test intersection
+        lAllElements = await ElementController().get_all_element_ids()
+        if lAllElements.get("status") == "ok" and lAllElements.get("element_ids") and len(lAllElements["element_ids"]) >= 2:
+            lElementIds = lAllElements["element_ids"][:2]  # Use first 2 elements
+            return await self.m_pController.intersect_elements(
+                element_ids=lElementIds,
+                keep_originals=True  # Keep original elements
+            )
+        else:
+            return {"status": "skip", "message": "Need at least 2 elements for intersection test"}
+    
     def runAllTests(self) -> Dict[str, Any]:
         """Run all geometry tests"""
         print(f"\n[GEOMETRY] {self.m_aName} Tests")
@@ -322,6 +471,10 @@ class CGeometryTests(CTestSuite):
         
         self.runTest(self.testElementInfo, "Element Info")
         self.runTest(self.testCalculateVolume, "Calculate Volume")
+        self.runTest(self.testGetBoundingBox, "Get Bounding Box")
+        self.runTest(self.testGetElementOutline, "Get Element Outline")
+        self.runTest(self.testGetSectionOutline, "Get Section Outline")
+        self.runTest(self.testIntersectElements, "Intersect Elements")
         
         return self.getSummary()
 

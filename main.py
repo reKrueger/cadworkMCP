@@ -102,6 +102,34 @@ async def duplicate_elements(element_ids: List[int]) -> Dict[str, Any]:
     return await element_ctrl.duplicate_elements(element_ids)
 
 @mcp.tool(
+    name="stretch_elements",
+    description="Stretch/extend elements along a specified vector with given factor. Takes element IDs, stretch vector [x,y,z], and stretch factor."
+)
+async def stretch_elements(element_ids: List[int], stretch_vector: List[float], stretch_factor: float = 1.0) -> Dict[str, Any]:
+    return await element_ctrl.stretch_elements(element_ids, stretch_vector, stretch_factor)
+
+@mcp.tool(
+    name="scale_elements",
+    description="Scale elements by a factor around an origin point. Takes element IDs, scale factor, and optional origin point [x,y,z]."
+)
+async def scale_elements(element_ids: List[int], scale_factor: float, origin_point: Optional[List[float]] = None) -> Dict[str, Any]:
+    return await element_ctrl.scale_elements(element_ids, scale_factor, origin_point)
+
+@mcp.tool(
+    name="mirror_elements",
+    description="Mirror elements across a plane defined by a point and normal vector. Takes element IDs, plane point [x,y,z], and plane normal vector [x,y,z]."
+)
+async def mirror_elements(element_ids: List[int], mirror_plane_point: List[float], mirror_plane_normal: List[float]) -> Dict[str, Any]:
+    return await element_ctrl.mirror_elements(element_ids, mirror_plane_point, mirror_plane_normal)
+
+@mcp.tool(
+    name="create_solid_wood_panel",
+    description="Creates a solid wood panel with specified wood type and grain direction. Takes start point p1 [x,y,z], end point p2 [x,y,z], thickness, wood type, and optional orientation point p3 [x,y,z]."
+)
+async def create_solid_wood_panel(p1: List[float], p2: List[float], thickness: float, wood_type: str = "Generic", p3: Optional[List[float]] = None) -> Dict[str, Any]:
+    return await element_ctrl.create_solid_wood_panel(p1, p2, thickness, wood_type, p3)
+
+@mcp.tool(
     name="get_user_element_ids", 
     description="Prompts user to select elements in Cadwork 3D and returns their IDs. Optional count parameter limits selection to specific number of elements."
 )
@@ -353,6 +381,34 @@ async def get_center_of_gravity_for_list(element_ids: List[int]) -> Dict[str, An
 )
 async def get_element_vertices(element_id: int) -> Dict[str, Any]:
     return await geometry_ctrl.get_element_vertices(element_id)
+
+@mcp.tool(
+    name="get_bounding_box",
+    description="Retrieves the bounding box (min/max coordinates) of a Cadwork element as [min_x, min_y, min_z, max_x, max_y, max_z] in mm."
+)
+async def get_bounding_box(element_id: int) -> Dict[str, Any]:
+    return await geometry_ctrl.get_bounding_box(element_id)
+
+@mcp.tool(
+    name="get_element_outline",
+    description="Retrieves the 2D outline/contour of a Cadwork element projected to a plane. Returns outline coordinates for drawing purposes."
+)
+async def get_element_outline(element_id: int) -> Dict[str, Any]:
+    return await geometry_ctrl.get_element_outline(element_id)
+
+@mcp.tool(
+    name="get_section_outline",
+    description="Retrieves the outline of an element cut by a section plane. Takes element ID, section plane point [x,y,z], and plane normal vector [x,y,z]."
+)
+async def get_section_outline(element_id: int, section_plane_point: List[float], section_plane_normal: List[float]) -> Dict[str, Any]:
+    return await geometry_ctrl.get_section_outline(element_id, section_plane_point, section_plane_normal)
+
+@mcp.tool(
+    name="intersect_elements",
+    description="Intersect multiple elements to create new elements from their common volume. Takes element IDs list and optional keep_originals flag."
+)
+async def intersect_elements(element_ids: List[int], keep_originals: bool = True) -> Dict[str, Any]:
+    return await geometry_ctrl.intersect_elements(element_ids, keep_originals)
 
 # --- GEOMETRY ANALYSIS ---
 

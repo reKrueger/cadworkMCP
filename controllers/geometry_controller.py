@@ -1,7 +1,7 @@
 """
 Geometry controller for geometry operations
 """
-from typing import Dict, Any
+from typing import Dict, Any, List
 from .base_controller import BaseController
 
 class GeometryController(BaseController):
@@ -250,3 +250,80 @@ class GeometryController(BaseController):
             
         except Exception as e:
             return {"status": "error", "message": f"calculate_total_weight failed: {e}"}
+    
+    async def get_bounding_box(self, element_id: int) -> Dict[str, Any]:
+        """Get the bounding box (min/max coordinates) of an element"""
+        try:
+            validated_id = self.validate_element_id(element_id)
+            
+            return self.send_command("get_bounding_box", {
+                "element_id": validated_id
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"get_bounding_box failed: {e}"}
+    
+    async def get_element_outline(self, element_id: int) -> Dict[str, Any]:
+        """Get the 2D outline/contour of an element projected to a plane"""
+        try:
+            validated_id = self.validate_element_id(element_id)
+            
+            return self.send_command("get_element_outline", {
+                "element_id": validated_id
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"get_element_outline failed: {e}"}
+    
+    async def get_section_outline(self, element_id: int, section_plane_point: List[float], 
+                                section_plane_normal: List[float]) -> Dict[str, Any]:
+        """Get the outline of an element cut by a section plane"""
+        try:
+            validated_id = self.validate_element_id(element_id)
+            
+            if not isinstance(section_plane_point, list) or len(section_plane_point) != 3:
+                return {"status": "error", "message": "section_plane_point must be a list of 3 coordinates [x,y,z]"}
+            
+            if not isinstance(section_plane_normal, list) or len(section_plane_normal) != 3:
+                return {"status": "error", "message": "section_plane_normal must be a list of 3 coordinates [x,y,z]"}
+            
+            validated_point = [float(coord) for coord in section_plane_point]
+            validated_normal = [float(coord) for coord in section_plane_normal]
+            
+            # Check if normal vector is not zero
+            normal_length = sum(coord ** 2 for coord in validated_normal) ** 0.5
+            if normal_length < 1e-10:
+                return {"status": "error", "message": "section_plane_normal cannot be a zero vector"}
+            
+            args = {
+                "element_id": validated_id,
+                "section_plane_point": validated_point,
+                "section_plane_normal": validated_normal
+            }
+            
+            return self.send_command("get_section_outline", args)
+            
+        except Exception as e:
+            return {"status": "error", "message": f"get_section_outline failed: {e}"}
+    
+    async def intersect_elements(self, element_ids: List[int], 
+                               keep_originals: bool = True) -> Dict[str, Any]:
+        """Intersect multiple elements to create new elements from their common volume"""
+        try:
+            if not isinstance(element_ids, list) or len(element_ids) < 2:
+                return {"status": "error", "message": "element_ids must be a list with at least 2 element IDs"}
+            
+            if not isinstance(keep_originals, bool):
+                return {"status": "error", "message": "keep_originals must be a boolean value"}
+            
+            validated_ids = [self.validate_element_id(eid) for eid in element_ids]
+            
+            args = {
+                "element_ids": validated_ids,
+                "keep_originals": keep_originals
+            }
+            
+            return self.send_command("intersect_elements", args)
+            
+        except Exception as e:
+            return {"status": "error", "message": f"intersect_elements failed: {e}"}

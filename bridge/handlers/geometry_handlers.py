@@ -825,3 +825,68 @@ def handle_calculate_total_weight(aParams: dict) -> dict:
         
     except Exception as e:
         return {"status": "error", "message": f"calculate_total_weight failed: {e}"}
+
+
+def handle_get_bounding_box(aParams: dict) -> dict:
+    """Get bounding box (min/max coordinates) of a Cadwork element"""
+    try:
+        import geometry_controller as gc
+        
+        lElementId = aParams.get("element_id")
+        
+        if lElementId is None:
+            return {"status": "error", "message": "No element ID provided"}
+        
+        if not isinstance(lElementId, int) or lElementId < 0:
+            return {"status": "error", "message": "Invalid element ID"}
+        
+        # Get bounding box using Cadwork API
+        # Try different possible function names
+        lBoundingBox = None
+        try:
+            if hasattr(gc, 'get_bounding_box'):
+                lBoundingBox = gc.get_bounding_box(lElementId)
+            elif hasattr(gc, 'get_element_bounding_box'):
+                lBoundingBox = gc.get_element_bounding_box(lElementId)
+            elif hasattr(gc, 'get_envelope'):
+                lBoundingBox = gc.get_envelope(lElementId)
+            else:
+                # Fallback: use element vertices to calculate bounding box
+                if hasattr(gc, 'get_element_vertices'):
+                    lVertices = gc.get_element_vertices(lElementId)
+                    if lVertices:
+                        lXCoords = [v[0] for v in lVertices]
+                        lYCoords = [v[1] for v in lVertices]
+                        lZCoords = [v[2] for v in lVertices]
+                        lBoundingBox = [
+                            min(lXCoords), min(lYCoords), min(lZCoords),
+                            max(lXCoords), max(lYCoords), max(lZCoords)
+                        ]
+                    else:
+                        return {"status": "error", "message": "Could not get element vertices for bounding box calculation"}
+                else:
+                    return {"status": "error", "message": "No bounding box function available in geometry_controller"}
+        except Exception as e:
+            return {"status": "error", "message": f"Error getting bounding box: {e}"}
+        
+        # Expected format: [min_x, min_y, min_z, max_x, max_y, max_z]
+        if isinstance(lBoundingBox, (list, tuple)) and len(lBoundingBox) == 6:
+            return {
+                "status": "ok",
+                "element_id": lElementId,
+                "bounding_box": list(lBoundingBox),
+                "min_x": lBoundingBox[0],
+                "min_y": lBoundingBox[1], 
+                "min_z": lBoundingBox[2],
+                "max_x": lBoundingBox[3],
+                "max_y": lBoundingBox[4],
+                "max_z": lBoundingBox[5],
+                "width": lBoundingBox[3] - lBoundingBox[0],
+                "height": lBoundingBox[4] - lBoundingBox[1], 
+                "depth": lBoundingBox[5] - lBoundingBox[2]
+            }
+        else:
+            return {"status": "error", "message": f"Invalid bounding box format: {lBoundingBox}"}
+            
+    except Exception as e:
+        return {"status": "error", "message": f"get_bounding_box failed: {e}"}

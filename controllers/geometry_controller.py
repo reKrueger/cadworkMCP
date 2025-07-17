@@ -10,6 +10,12 @@ class GeometryController(BaseController):
     def __init__(self) -> None:
         super().__init__("GeometryController")
     
+    async def get_element_info(self, element_id: int) -> Dict[str, Any]:
+        """Get detailed element information - proxy to ElementController"""
+        from .element_controller import ElementController
+        element_controller = ElementController()
+        return await element_controller.get_element_info(element_id)
+    
     async def get_element_width(self, element_id: int) -> Dict[str, Any]:
         """Get element width"""
         element_id = self.validate_element_id(element_id)
@@ -94,6 +100,25 @@ class GeometryController(BaseController):
             "first_element_id": first_element_id,
             "second_element_id": second_element_id
         })
+
+    async def get_closest_point_on_element(self, element_id: int, reference_point: List[float]) -> Dict[str, Any]:
+        """Get the closest point on an element to a reference point"""
+        try:
+            element_id = self.validate_element_id(element_id)
+            validated_point = self.validate_point_3d(reference_point, "reference_point")
+            
+            if validated_point is None:
+                return {"status": "error", "message": "reference_point must be valid 3D coordinates"}
+            
+            return self.send_command("get_closest_point_on_element", {
+                "element_id": element_id,
+                "reference_point": validated_point
+            })
+            
+        except ValueError as e:
+            return {"status": "error", "message": f"Invalid input: {e}"}
+        except Exception as e:
+            return {"status": "error", "message": f"get_closest_point_on_element failed: {e}"}
     
     async def get_element_facets(self, element_id: int) -> Dict[str, Any]:
         """Get all facets (faces) of an element"""
@@ -399,3 +424,49 @@ class GeometryController(BaseController):
             
         except Exception as e:
             return {"status": "error", "message": f"unite_elements failed: {e}"}
+    
+    async def project_point_to_element(self, point: List[float], element_id: int) -> Dict[str, Any]:
+        """Project a 3D point onto an element surface and find closest point"""
+        try:
+            # Validate input parameters
+            validated_point = self.validate_point_3d(point, "point")
+            if validated_point is None:
+                return {"status": "error", "message": "Point coordinates are required"}
+                
+            validated_element_id = self.validate_element_id(element_id)
+            
+            args = {
+                "point": validated_point,
+                "element_id": validated_element_id
+            }
+            
+            return self.send_command("project_point_to_element", args)
+            
+        except Exception as e:
+            return {"status": "error", "message": f"project_point_to_element failed: {e}"}
+
+    async def calculate_center_of_mass(self, element_ids: List[int], include_material_properties: bool = True) -> Dict[str, Any]:
+        """Calculate center of mass for a list of elements considering their material properties"""
+        try:
+            # Validate element IDs
+            if not isinstance(element_ids, list) or len(element_ids) == 0:
+                return {"status": "error", "message": "element_ids must be a non-empty list"}
+            
+            validated_ids = []
+            for element_id in element_ids:
+                validated_id = self.validate_element_id(element_id)
+                validated_ids.append(validated_id)
+            
+            # Validate include_material_properties parameter
+            if not isinstance(include_material_properties, bool):
+                include_material_properties = True
+            
+            return self.send_command("calculate_center_of_mass", {
+                "element_ids": validated_ids,
+                "include_material_properties": include_material_properties
+            })
+            
+        except ValueError as e:
+            return {"status": "error", "message": f"Invalid input: {e}"}
+        except Exception as e:
+            return {"status": "error", "message": f"calculate_center_of_mass failed: {e}"}

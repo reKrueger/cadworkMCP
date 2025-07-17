@@ -6,7 +6,7 @@ from typing import Dict, Any
 def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
     """Dispatch command to appropriate handler"""
     # Import handlers here to avoid circular imports
-    from .handlers import element_handlers, geometry_handlers, attribute_handlers, utility_handlers, visualization_handlers, shop_drawing_handlers, roof_handlers, machine_handlers
+    from .handlers import element_handlers, geometry_handlers, attribute_handlers, utility_handlers, visualization_handlers, shop_drawing_handlers, roof_handlers, machine_handlers, export_handlers, import_handlers
     
     # Map operations to their handlers
     OPERATION_HANDLERS = {
@@ -18,6 +18,11 @@ def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
         # Element operations
         "create_beam": element_handlers.handle_create_beam,
         "create_panel": element_handlers.handle_create_panel,
+        "create_surface": element_handlers.handle_create_surface,
+        "create_beam_from_points": element_handlers.handle_create_beam_from_points,
+        "create_auxiliary_line": element_handlers.handle_create_auxiliary_line,
+        "create_solid_wood_panel": element_handlers.handle_create_solid_wood_panel,
+        "get_elements_in_region": element_handlers.handle_get_elements_in_region,
         "get_active_element_ids": element_handlers.handle_get_active_element_ids,
         "get_all_element_ids": element_handlers.handle_get_all_element_ids,
         "get_visible_element_ids": element_handlers.handle_get_visible_element_ids,
@@ -89,6 +94,7 @@ def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
         "get_element_type": geometry_handlers.handle_get_element_type,
         "calculate_total_volume": geometry_handlers.handle_calculate_total_volume,
         "calculate_total_weight": geometry_handlers.handle_calculate_total_weight,
+        "get_bounding_box": geometry_handlers.handle_get_bounding_box,
         
         # Attribute operations
         "get_standard_attributes": attribute_handlers.handle_get_standard_attributes,
@@ -125,6 +131,8 @@ def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
         # Shop drawing operations
         "add_wall_section_x": shop_drawing_handlers.handle_add_wall_section_x,
         "add_wall_section_y": shop_drawing_handlers.handle_add_wall_section_y,
+        "add_wall_section_vertical": shop_drawing_handlers.handle_add_wall_section_vertical,
+        "export_2d_wireframe": shop_drawing_handlers.handle_export_2d_wireframe,
         
         # Roof operations
         "get_roof_surfaces": roof_handlers.handle_get_roof_surfaces,
@@ -132,6 +140,28 @@ def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
         
         # Machine/CNC operations
         "check_production_list_discrepancies": machine_handlers.handle_check_production_list_discrepancies,
+        
+        # Export operations
+        "export_to_step": export_handlers.handle_export_to_step,
+        "export_to_3dm": export_handlers.handle_export_to_3dm,
+        "export_to_obj": export_handlers.handle_export_to_obj,
+        "export_to_ply": export_handlers.handle_export_to_ply,
+        "export_to_stl": export_handlers.handle_export_to_stl,
+        "export_to_gltf": export_handlers.handle_export_to_gltf,
+        "export_to_x3d": export_handlers.handle_export_to_x3d,
+        "export_production_data": export_handlers.handle_export_production_data,
+        "export_to_fbx": export_handlers.handle_export_to_fbx,
+        "export_to_webgl": export_handlers.handle_export_to_webgl,
+        "export_to_sat": export_handlers.handle_export_to_sat,
+        "export_to_dstv": export_handlers.handle_export_to_dstv,
+        "export_step_with_drillings": export_handlers.handle_export_step_with_drillings,
+        "export_btl_for_nesting": export_handlers.handle_export_btl_for_nesting,
+        
+        # Import operations
+        "import_from_step": import_handlers.handle_import_from_step,
+        "import_from_sat": import_handlers.handle_import_from_sat,
+        "import_from_rhino": import_handlers.handle_import_from_rhino,
+        "import_from_btl": import_handlers.handle_import_from_btl,
     }
     if operation not in OPERATION_HANDLERS:
         return {

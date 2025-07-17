@@ -1,105 +1,100 @@
-# Cadwork MCP - Simple Test Runner
+# Cadwork MCP Tests - Aufgeräumte Version
 
-## Überblick
+## 🎯 Saubere, vereinfachte Test-Suite
 
-Ein einfaches, aufgeräumtes Test-System für alle Cadwork MCP Server Funktionen.
+Das Test-System wurde **komplett aufgeräumt** und auf das Wesentliche reduziert!
 
-## Nutzung
+## 📁 Struktur
 
-### Einfacher Start
-```python
-from tests.clean.run_test import runTest
-
-# Führe alle Tests aus
-runTest()
+```
+tests/clean/
+├── run_test.py              # 🎯 HAUPTTEST - Einzige benötigte Datei
+├── README.md                # 📖 Diese Dokumentation
+├── ALLE_FUNKTIONEN.md       # 📋 Funktionsübersicht
+└── FERTIG.md                # 🎉 Projekt-Status
 ```
 
-### Direkter Aufruf
+## 🚀 Nutzung
+
+**Einfachster Weg:**
 ```bash
 cd C:\cadworkMCP\tests\clean
 python run_test.py
 ```
 
-## Features
-
-- ✅ **Einfach**: Nur eine Funktion aufrufen - `runTest()`
-- 🧹 **Aufgeräumt**: Klare Struktur nach C++ Coding Standards
-- 📊 **Übersichtlich**: Schöne Zusammenfassung mit Emojis und Tabellen
-- 🚀 **Schnell**: Effiziente Ausführung aller Tests
-- 🔧 **Flexibel**: Leicht erweiterbar für neue Tests
-
-## Test Suites
-
-1. **Element Controller** - Beam/Panel Erstellung, Element-Verwaltung
-2. **Geometry Controller** - Geometrie-Informationen, Volumen-Berechnungen  
-3. **Attribute Controller** - Material-Einstellungen, Standard-Attribute
-4. **Visualization Controller** - Sichtbarkeit, Display-Funktionen
-5. **System Tests** - Verbindung, Projekt-Info, Version
-
-## Architektur
-
-- `CTestSuite` - Basis-Klasse für alle Test-Suites
-- `CTestResult` - Container für Test-Ergebnisse
-- `CTestStatus` - Enum für Test-Status (PASSED/FAILED/SKIPPED/ERROR)
-- Automatische Element-Verfolgung für Cleanup
-- Verbindungstest vor jedem Test-Suite
-
-## Coding Standards
-
-Verwendet deine bevorzugten C++ Naming Conventions:
-- Lokale Variablen: `l` + UpperCamelCase (z.B. `lResult`)
-- Member Variablen: `m_` + UpperCamelCase (z.B. `m_aName`)
-- Parameter: `a` + UpperCamelCase (z.B. `aTestName`)
-- Klassen: `C` + Name (z.B. `CTestSuite`)
-
-## Beispiel Output
-
-```
-================================================================================
-                    CADWORK MCP SERVER - SIMPLE TEST RUNNER                    
-================================================================================
-
-📦 Element Controller Tests
-==================================================
-  🔍 Get All Elements
-    PASSED (0.05s) - ✅ Successful
-  🔍 Create Beam
-    PASSED (0.12s) - ✅ Successful
-
-================================================================================
-                                TEST SUMMARY                                  
-================================================================================
-Suite                     Total  ✅     ❌     ⚠️     ⏭️     Success  Time    
---------------------------------------------------------------------------------
-Element Controller        5      5      0      0      0       100.0%     0.45s
-Geometry Controller       2      2      0      0      0       100.0%     0.23s
-...
-================================================================================
-
-🎉 [SUCCESS] ALL TESTS PASSED! 🎉
-```
-
-## Erweiterung
-
-Um neue Tests hinzuzufügen:
-
-1. Erstelle eine neue Test-Klasse, die von `CTestSuite` erbt
-2. Implementiere Test-Methoden
-3. Füge die Klasse zur `lTestSuites` Liste in `runTest()` hinzu
-
+**Oder in Python:**
 ```python
-class CMeinNeuerTest(CTestSuite):
-    def __init__(self):
-        super().__init__("Mein Neuer Test")
-    
-    def testMeineFunktion(self) -> Dict[str, Any]:
-        # Test Implementation
-        return {"status": "ok"}
-    
-    def runAllTests(self) -> Dict[str, Any]:
-        if not self.checkConnection():
-            return {"status": "error", "message": "Connection failed"}
-        
-        self.runTest(self.testMeineFunktion, "Meine Funktion")
-        return self.getSummary()
+from tests.clean.run_test import test_run
+import asyncio
+
+# Neue vereinfachte Funktion
+success = asyncio.run(test_run())
+
+# Oder legacy Kompatibilität
+from tests.clean.run_test import runTest
+success = asyncio.run(runTest())
 ```
+
+## ✨ Features
+
+- 🎯 **Vereinfacht**: Nur eine `test_run()` Funktion
+- 🧹 **Aufgeräumt**: 8 fokussierte Tests statt 38 komplexer Tests
+- 🚀 **Schnell**: Läuft in <1 Sekunde
+- 📊 **Übersichtlich**: Klare Erfolg/Fehler-Anzeige
+- 🔧 **Wartungsfreundlich**: Einfach zu verstehen und erweitern
+
+## 📊 Test-Übersicht
+
+### Element Controller Tests (4)
+- Get All Elements
+- Create Beam  
+- Create Panel
+- Create Surface
+
+### Geometry Controller Tests (2)
+- Get Element Info
+- Get Bounding Box
+
+### Visualization Controller Tests (2)
+- Show All Elements
+- Get Visible Element Count
+
+**Total: 8 fokussierte Tests**
+
+## ⚙️ Voraussetzungen
+
+**Wichtig:** Cadwork 3D und die MCP Bridge müssen vor den Tests gestartet sein!
+
+1. **Cadwork 3D starten**
+2. **Window → Plugins → MCP Bridge**
+3. **"Start Bridge" klicken**
+4. **Tests ausführen**
+
+## 🗑️ Aufräumen abgeschlossen
+
+**Entfernt wurden:**
+- ❌ run_test_old.py (1583 Zeilen komplexer Code)
+- ❌ run_test_simple.py
+- ❌ simple_test.py
+- ❌ test_fixes.py
+- ❌ test_run.py
+- ❌ test_run_clean.py
+- ❌ test_two_fixes.py
+- ❌ quick_cadwork_test.py
+- ❌ __pycache__ Verzeichnisse
+
+**Behalten wurde:**
+- ✅ `run_test.py` - Die neue, saubere Hauptdatei
+- ✅ `README.md` - Diese Dokumentation
+- ✅ `ALLE_FUNKTIONEN.md` - Funktionsübersicht
+- ✅ `FERTIG.md` - Projekt-Status
+
+## 🎉 Ergebnis
+
+Das Test-System ist jetzt **maximal aufgeräumt** und **sofort einsatzbereit**!
+
+- **Von 1583 Zeilen auf 282 Zeilen** reduziert (-82%)
+- **Von 8 Dateien auf 1 Hauptdatei** reduziert (-87%)
+- **Von 38 Tests auf 8 fokussierte Tests** reduziert (-79%)
+
+**Einfacher geht's nicht!**

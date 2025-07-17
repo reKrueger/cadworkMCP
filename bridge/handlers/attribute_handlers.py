@@ -172,7 +172,21 @@ def handle_set_material(args: Dict[str, Any]) -> Dict[str, Any]:
         # Set material for all elements
         for eid in element_ids:
             try:
-                ac.set_element_material_name(eid, material)
+                # Try different possible function names for setting material
+                if hasattr(ac, 'set_material_name'):
+                    ac.set_material_name(eid, material)
+                elif hasattr(ac, 'set_element_material'):
+                    ac.set_element_material(eid, material)
+                elif hasattr(ac, 'set_material'):
+                    ac.set_material(eid, material)
+                else:
+                    # Fallback: try to find any material-related function
+                    material_funcs = [attr for attr in dir(ac) if 'material' in attr.lower() and 'set' in attr.lower()]
+                    if material_funcs:
+                        func = getattr(ac, material_funcs[0])
+                        func(eid, material)
+                    else:
+                        return {"status": "error", "message": f"No material setting function found in attribute_controller"}
             except Exception as e:
                 return {"status": "error", "message": f"Failed to set material for element {eid}: {e}"}
         

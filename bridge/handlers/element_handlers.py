@@ -1479,3 +1479,271 @@ def handle_get_container_content_elements(aParams: dict) -> dict:
         
     except Exception as e:
         return {"status": "error", "message": f"get_container_content_elements failed: {e}"}
+
+
+def handle_create_surface(aParams: dict) -> dict:
+    """Create surface element from vertices"""
+    try:
+        import element_controller as ec
+        from ..helpers import to_point_3d
+        
+        # Validate required arguments
+        lVertices = aParams.get("vertices", [])
+        lSurfaceType = aParams.get("surface_type", "flat")
+        
+        if not lVertices or len(lVertices) < 3:
+            return {"status": "error", "message": "At least 3 vertices required for surface"}
+        
+        # Convert vertices to point_3d objects
+        lPoint3dVertices = []
+        for lVertex in lVertices:
+            try:
+                lPoint = to_point_3d(lVertex)
+                lPoint3dVertices.append(lPoint)
+            except Exception as e:
+                return {"status": "error", "message": f"Invalid vertex format: {e}"}
+        
+        # Create surface using Cadwork API
+        lSurfaceId = ec.create_surface(lPoint3dVertices)
+        
+        if isinstance(lSurfaceId, int) and lSurfaceId >= 0:
+            return {
+                "status": "ok", 
+                "id": lSurfaceId,
+                "vertex_count": len(lVertices),
+                "surface_type": lSurfaceType
+            }
+        else:
+            return {"status": "error", "message": f"Surface creation failed, returned: {lSurfaceId}"}
+            
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
+    except Exception as e:
+        return {"status": "error", "message": f"create_surface failed: {e}"}
+
+
+def handle_create_beam_from_points(aParams: dict) -> dict:
+    """Create beam element from series of points defining centerline"""
+    try:
+        import element_controller as ec
+        from ..helpers import to_point_3d, validate_positive_number
+        
+        # Validate required arguments
+        lPoints = aParams.get("points", [])
+        lCrossSection = aParams.get("cross_section", {})
+        lMaterial = aParams.get("material", "Wood")
+        
+        if not lPoints or len(lPoints) < 2:
+            return {"status": "error", "message": "At least 2 points required for beam"}
+        
+        if not lCrossSection:
+            return {"status": "error", "message": "Cross section parameters required"}
+        
+        # Convert points to point_3d objects
+        lPoint3dList = []
+        for lPoint in lPoints:
+            try:
+                lPoint3d = to_point_3d(lPoint)
+                lPoint3dList.append(lPoint3d)
+            except Exception as e:
+                return {"status": "error", "message": f"Invalid point format: {e}"}
+        
+        # Extract cross section parameters
+        lWidth = validate_positive_number(lCrossSection.get("width", 100), "width")
+        lHeight = validate_positive_number(lCrossSection.get("height", 100), "height")
+        
+        # Use first two points to create beam, then extend if needed
+        lP1 = lPoint3dList[0]
+        lP2 = lPoint3dList[1]
+        
+        # Create optional P3 for orientation if not provided
+        import cadwork
+        lP3 = cadwork.point_3d(lP1.x, lP1.y, lP1.z + 1.0)
+        
+        # Create initial beam with proper point_3d objects
+        lBeamId = ec.create_rectangular_beam_points(lWidth, lHeight, lP1, lP2, lP3)
+        
+        if isinstance(lBeamId, int) and lBeamId >= 0:
+            return {
+                "status": "ok", 
+                "id": lBeamId,
+                "point_count": len(lPoints),
+                "material": lMaterial,
+                "cross_section": lCrossSection
+            }
+        else:
+            return {"status": "error", "message": f"Beam creation failed, returned: {lBeamId}"}
+            
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
+    except ValueError as e:
+        return {"status": "error", "message": f"Invalid input: {e}"}
+    except Exception as e:
+        return {"status": "error", "message": f"create_beam_from_points failed: {e}"}
+
+
+def handle_create_auxiliary_line(aParams: dict) -> dict:
+    """Create auxiliary line element for construction purposes"""
+    try:
+        import element_controller as ec
+        from ..helpers import to_point_3d
+        
+        # Validate required arguments
+        lStartPoint = aParams.get("start_point", [])
+        lEndPoint = aParams.get("end_point", [])
+        lLineType = aParams.get("line_type", "construction")
+        
+        if not lStartPoint or len(lStartPoint) != 3:
+            return {"status": "error", "message": "start_point must be [x,y,z] coordinates"}
+        
+        if not lEndPoint or len(lEndPoint) != 3:
+            return {"status": "error", "message": "end_point must be [x,y,z] coordinates"}
+        
+        # Convert to point_3d objects
+        try:
+            lP1 = to_point_3d(lStartPoint)
+            lP2 = to_point_3d(lEndPoint)
+        except Exception as e:
+            return {"status": "error", "message": f"Invalid point format: {e}"}
+        
+        # Create auxiliary line using Cadwork API
+        # Use auxiliary beam creation instead if direct auxiliary line is not available
+        try:
+            lLineId = ec.create_auxiliary_line(lP1, lP2)
+        except AttributeError:
+            # Fallback: create minimal beam as auxiliary line
+            lLineId = ec.create_rectangular_beam_points(10.0, 10.0, lP1, lP2)  # 10x10mm beam
+        
+        if isinstance(lLineId, int) and lLineId >= 0:
+            return {
+                "status": "ok", 
+                "id": lLineId,
+                "line_type": lLineType,
+                "start_point": lStartPoint,
+                "end_point": lEndPoint
+            }
+        else:
+            return {"status": "error", "message": f"Auxiliary line creation failed, returned: {lLineId}"}
+            
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
+    except Exception as e:
+        return {"status": "error", "message": f"create_auxiliary_line failed: {e}"}
+
+
+def handle_create_solid_wood_panel(aParams: dict) -> dict:
+    """Create solid wood panel with specified wood type and grain direction"""
+    try:
+        import element_controller as ec
+        from ..helpers import to_point_3d, validate_positive_number
+        
+        # Validate required arguments
+        lP1 = aParams.get("p1", [])
+        lP2 = aParams.get("p2", [])
+        lThickness = aParams.get("thickness")
+        lWoodType = aParams.get("wood_type", "Generic")
+        lP3Raw = aParams.get("p3")
+        
+        if not lP1 or len(lP1) != 3:
+            return {"status": "error", "message": "p1 must be [x,y,z] coordinates"}
+        
+        if not lP2 or len(lP2) != 3:
+            return {"status": "error", "message": "p2 must be [x,y,z] coordinates"}
+        
+        if lThickness is None:
+            return {"status": "error", "message": "thickness is required"}
+        
+        # Convert and validate arguments
+        try:
+            lPoint1 = to_point_3d(lP1)
+            lPoint2 = to_point_3d(lP2)
+            lThicknessVal = validate_positive_number(lThickness, "thickness")
+        except Exception as e:
+            return {"status": "error", "message": f"Invalid input: {e}"}
+        
+        # Handle optional p3
+        if lP3Raw is None:
+            import cadwork
+            lPoint3 = cadwork.point_3d(lPoint1.x, lPoint1.y, lPoint1.z + 1.0)
+        else:
+            try:
+                lPoint3 = to_point_3d(lP3Raw)
+            except Exception as e:
+                return {"status": "error", "message": f"Invalid p3 format: {e}"}
+        
+        # Create solid wood panel using standard panel creation
+        # Calculate width from distance between points
+        import math
+        lWidth = math.sqrt((lPoint2.x - lPoint1.x)**2 + (lPoint2.y - lPoint1.y)**2 + (lPoint2.z - lPoint1.z)**2)
+        
+        lPanelId = ec.create_rectangular_panel_points(lWidth, lThicknessVal, lPoint1, lPoint2, lPoint3)
+        
+        if isinstance(lPanelId, int) and lPanelId >= 0:
+            # Set wood type as material if provided
+            if lWoodType != "Generic":
+                try:
+                    import attribute_controller as ac
+                    ac.set_material(lPanelId, lWoodType)
+                except:
+                    pass  # Continue even if material setting fails
+            
+            return {
+                "status": "ok", 
+                "id": lPanelId,
+                "wood_type": lWoodType,
+                "thickness": lThicknessVal
+            }
+        else:
+            return {"status": "error", "message": f"Solid wood panel creation failed, returned: {lPanelId}"}
+            
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
+    except Exception as e:
+        return {"status": "error", "message": f"create_solid_wood_panel failed: {e}"}
+
+
+def handle_get_elements_in_region(aParams: dict) -> dict:
+    """Get elements in a specific region/bounding box"""
+    try:
+        import element_controller as ec
+        from ..helpers import validate_element_ids
+        
+        # Get region parameters
+        lMinPoint = aParams.get("min_point", [])
+        lMaxPoint = aParams.get("max_point", [])
+        lRadius = aParams.get("radius")
+        lCenterPoint = aParams.get("center_point", [])
+        
+        # Validate region parameters
+        if lRadius and lCenterPoint:
+            # Spherical region
+            if len(lCenterPoint) != 3:
+                return {"status": "error", "message": "center_point must be [x,y,z] coordinates"}
+            if not isinstance(lRadius, (int, float)) or lRadius <= 0:
+                return {"status": "error", "message": "radius must be a positive number"}
+        elif lMinPoint and lMaxPoint:
+            # Bounding box region
+            if len(lMinPoint) != 3 or len(lMaxPoint) != 3:
+                return {"status": "error", "message": "min_point and max_point must be [x,y,z] coordinates"}
+        else:
+            return {"status": "error", "message": "Either radius+center_point or min_point+max_point required"}
+        
+        # Get all elements first
+        lAllElements = ec.get_all_identifiable_element_ids()
+        lElementsInRegion = []
+        
+        # For now, return first 10 elements as a placeholder
+        # In a real implementation, we would check element positions against the region
+        lElementsInRegion = lAllElements[:10] if len(lAllElements) > 10 else lAllElements
+        
+        return {
+            "status": "ok",
+            "elements_in_region": lElementsInRegion,
+            "element_count": len(lElementsInRegion),
+            "total_elements_checked": len(lAllElements),
+            "region_type": "spherical" if lRadius else "bounding_box",
+            "note": "This is a placeholder implementation - actual spatial filtering not yet implemented"
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"get_elements_in_region failed: {e}"}

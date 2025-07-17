@@ -442,6 +442,60 @@ class ElementController(BaseController):
             
         except Exception as e:
             return {"status": "error", "message": f"get_elements_in_group failed: {e}"}
+
+    async def get_elements_by_color(self, color_id: int) -> Dict[str, Any]:
+        """Find all elements with a specific color ID"""
+        try:
+            if not isinstance(color_id, int) or color_id < 1 or color_id > 255:
+                return {"status": "error", "message": "color_id must be an integer between 1 and 255"}
+            
+            return self.send_command("get_elements_by_color", {"color_id": color_id})
+            
+        except Exception as e:
+            return {"status": "error", "message": f"get_elements_by_color failed: {e}"}
+
+    async def get_elements_by_layer(self, layer_name: str) -> Dict[str, Any]:
+        """Find all elements on a specific layer"""
+        try:
+            if not isinstance(layer_name, str) or not layer_name.strip():
+                return {"status": "error", "message": "layer_name must be a non-empty string"}
+            
+            return self.send_command("get_elements_by_layer", {"layer_name": layer_name.strip()})
+            
+        except Exception as e:
+            return {"status": "error", "message": f"get_elements_by_layer failed: {e}"}
+
+    async def get_elements_by_dimension_range(self, dimension_type: str, min_value: float, max_value: float) -> Dict[str, Any]:
+        """Find all elements within a specific dimension range"""
+        try:
+            # Validate dimension type
+            valid_dimensions = ["width", "height", "length", "volume", "weight"]
+            if not isinstance(dimension_type, str) or dimension_type.lower() not in valid_dimensions:
+                return {"status": "error", "message": f"dimension_type must be one of: {', '.join(valid_dimensions)}"}
+            
+            # Validate range values
+            if not isinstance(min_value, (int, float)) or not isinstance(max_value, (int, float)):
+                return {"status": "error", "message": "min_value and max_value must be numeric"}
+            
+            if min_value < 0 or max_value < 0:
+                return {"status": "error", "message": "min_value and max_value must be non-negative"}
+            
+            if min_value > max_value:
+                return {"status": "error", "message": "min_value must be less than or equal to max_value"}
+            
+            # Convert to float for consistency
+            min_val = float(min_value)
+            max_val = float(max_value)
+            dim_type = dimension_type.lower()
+            
+            return self.send_command("get_elements_by_dimension_range", {
+                "dimension_type": dim_type,
+                "min_value": min_val,
+                "max_value": max_val
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"get_elements_by_dimension_range failed: {e}"}
     
     # --- STATISTICS METHODS ---
     
@@ -1005,3 +1059,33 @@ class ElementController(BaseController):
             
         except Exception as e:
             return {"status": "error", "message": f"create_auxiliary_line failed: {e}"}
+    
+    async def get_elements_in_region(self, min_point: List[float], max_point: List[float], 
+                                   include_partially: bool = True) -> Dict[str, Any]:
+        """Find all elements within a 3D bounding box region"""
+        try:
+            # Validate input parameters
+            validated_min = self.validate_point_3d(min_point, "min_point")
+            validated_max = self.validate_point_3d(max_point, "max_point")
+            
+            if validated_min is None or validated_max is None:
+                return {"status": "error", "message": "Both min_point and max_point are required"}
+            
+            # Check that min_point is actually smaller than max_point in all dimensions
+            for i in range(3):
+                if validated_min[i] >= validated_max[i]:
+                    return {"status": "error", "message": f"min_point[{i}] must be less than max_point[{i}]"}
+            
+            if not isinstance(include_partially, bool):
+                return {"status": "error", "message": "include_partially must be a boolean value"}
+            
+            args = {
+                "min_point": validated_min,
+                "max_point": validated_max,
+                "include_partially": include_partially
+            }
+            
+            return self.send_command("get_elements_in_region", args)
+            
+        except Exception as e:
+            return {"status": "error", "message": f"get_elements_in_region failed: {e}"}

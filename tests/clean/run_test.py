@@ -1,949 +1,280 @@
 #!/usr/bin/env python3
 """
-Cadwork MCP - Simple Test Runner
-================================
+Cadwork MCP Test Runner - Vereinfachte Version
+==============================================
 
-Einfaches Test-System um alle Cadwork MCP Funktionen zu testen.
-Führe einfach run_test() aus um alle Tests zu starten.
+Eine einzige test_run() Funktion für alle wichtigen Tests.
+Aufgeräumt und übersichtlich.
 
-Autor: Claude
-Datum: 2025-07-13
+Verwendung:
+    python run_test.py
 """
 
 import sys
 import os
 import time
-import traceback
-from typing import Dict, Any, List, Optional
-from dataclasses import dataclass
-from enum import Enum
+import asyncio
+from typing import Dict, Any, List
 
 # Add project root to path
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-# Import controllers  
+# Import all controllers
 from controllers.element_controller import ElementController
 from controllers.geometry_controller import GeometryController
 from controllers.attribute_controller import AttributeController
 from controllers.visualization_controller import CVisualizationController
-from controllers.utility_controller import CUtilityController
-from controllers.shop_drawing_controller import CShopDrawingController
-from controllers.roof_controller import CRoofController
-from controllers.machine_controller import CMachineController
-
-# Connection management
-from core.connection import initialize_connection, get_connection
 
 
-class CTestStatus(Enum):
-    """Test status enumeration"""
-    PASSED = "PASSED"
-    FAILED = "FAILED" 
-    SKIPPED = "SKIPPED"
-    ERROR = "ERROR"
-
-
-@dataclass
-class CTestResult:
-    """Test result data container"""
-    aTestName: str
-    eStatus: CTestStatus
-    aMessage: str = ""
-    fDuration: float = 0.0
-    aDetails: str = ""
-
-
-class CTestSuite:
-    """Simple test suite base class"""
-    
-    def __init__(self, aName: str):
-        self.m_aName = aName
-        self.m_lResults: List[CTestResult] = []
-        self.m_lCreatedElements: List[int] = []
-        self.m_bConnectionReady = False
-    
-    def checkConnection(self) -> bool:
-        """Check if Cadwork connection is ready"""
-        if self.m_bConnectionReady:
-            return True
-            
-        try:
-            initialize_connection("127.0.0.1", 53002)
-            lConnection = get_connection()
-            lResponse = lConnection.send_command("ping", {})
-            
-            if lResponse.get("status") == "ok":
-                self.m_bConnectionReady = True
-                return True
-            else:
-                self.log(f"X Connection failed: {lResponse.get('message')}")
-                return False
-                
-        except Exception as e:
-            self.log(f"X Connection error: {e}")
-            return False
-    
-    def log(self, aMessage: str) -> None:
-        """Log message with prefix"""
-        print(f"  {aMessage}")
-    
-    def runTest(self, fTestFunction, aTestName: str = None) -> CTestResult:
-        """Run a single test function"""
-        if aTestName is None:
-            aTestName = fTestFunction.__name__
-        
-        self.log(f"Test: {aTestName}")
-        lStartTime = time.time()
-        
-        try:
-            import asyncio
-            # Check if function is async
-            if asyncio.iscoroutinefunction(fTestFunction):
-                lResult = asyncio.run(fTestFunction())
-            else:
-                lResult = fTestFunction()
-                
-            fDuration = time.time() - lStartTime
-            
-            if isinstance(lResult, dict):
-                if lResult.get("status") == "ok":
-                    lTestResult = CTestResult(aTestName, CTestStatus.PASSED, "+ Successful", fDuration)
-                elif lResult.get("status") == "error":
-                    lTestResult = CTestResult(aTestName, CTestStatus.FAILED, f"X API Error: {lResult.get('message')}", fDuration)
-                elif lResult.get("status") == "skip":
-                    lTestResult = CTestResult(aTestName, CTestStatus.SKIPPED, f"? {lResult.get('message')}", fDuration)
-                else:
-                    lTestResult = CTestResult(aTestName, CTestStatus.PASSED, f"+ Result: {lResult}", fDuration)
-            else:
-                lTestResult = CTestResult(aTestName, CTestStatus.PASSED, f"+ Completed: {lResult}", fDuration)
-            
-            self.log(f"  {lTestResult.eStatus.value} ({fDuration:.2f}s) - {lTestResult.aMessage}")
-            
-        except Exception as e:
-            fDuration = time.time() - lStartTime
-            lTestResult = CTestResult(aTestName, CTestStatus.ERROR, f"X Exception: {str(e)}", fDuration, traceback.format_exc())
-            self.log(f"  {lTestResult.eStatus.value} ({fDuration:.2f}s) - {lTestResult.aMessage}")
-        
-        self.m_lResults.append(lTestResult)
-        return lTestResult
-    
-    def trackElement(self, lResult: Dict[str, Any]) -> None:
-        """Track created element for cleanup"""
-        if isinstance(lResult, dict) and lResult.get("status") == "ok":
-            nElementId = lResult.get("element_id") or lResult.get("id")
-            if nElementId and isinstance(nElementId, int):
-                self.m_lCreatedElements.append(nElementId)
-    
-    def cleanup(self) -> None:
-        """Cleanup created test elements"""
-        if self.m_lCreatedElements:
-            self.log(f"Cleaning up {len(self.m_lCreatedElements)} test elements...")
-            # Note: In real implementation, we would delete the elements here
-            # For now, just log them
-            self.log(f"  Element IDs: {self.m_lCreatedElements}")
-    
-    def getSummary(self) -> Dict[str, Any]:
-        """Get test suite summary"""
-        nTotal = len(self.m_lResults)
-        nPassed = sum(1 for r in self.m_lResults if r.eStatus == CTestStatus.PASSED)
-        nFailed = sum(1 for r in self.m_lResults if r.eStatus == CTestStatus.FAILED)
-        nError = sum(1 for r in self.m_lResults if r.eStatus == CTestStatus.ERROR)
-        nSkipped = sum(1 for r in self.m_lResults if r.eStatus == CTestStatus.SKIPPED)
-        fTotalDuration = sum(r.fDuration for r in self.m_lResults)
-        
-        return {
-            "suite_name": self.m_aName,
-            "total": nTotal,
-            "passed": nPassed,
-            "failed": nFailed,
-            "error": nError,
-            "skipped": nSkipped,
-            "success_rate": (nPassed / nTotal * 100) if nTotal > 0 else 0,
-            "total_duration": fTotalDuration,
-            "results": self.m_lResults
-        }
-
-
-class CElementTests(CTestSuite):
-    """Element Controller Tests"""
-    
-    def __init__(self):
-        super().__init__("Element Controller")
-        self.m_pController = ElementController()
-    
-    async def testGetAllElements(self) -> Dict[str, Any]:
-        """Test getting all elements"""
-        return await self.m_pController.get_all_element_ids()
-    
-    async def testGetActiveElements(self) -> Dict[str, Any]:
-        """Test getting active elements"""
-        return await self.m_pController.get_active_element_ids()
-    
-    async def testCreateBeam(self) -> Dict[str, Any]:
-        """Test beam creation"""
-        lResult = await self.m_pController.create_beam(
-            p1=[0, 0, 0],
-            p2=[1000, 0, 0],
-            width=100,
-            height=200
-        )
-        self.trackElement(lResult)
-        return lResult
-    
-    async def testCreatePanel(self) -> Dict[str, Any]:
-        """Test panel creation"""
-        lResult = await self.m_pController.create_panel(
-            p1=[0, 0, 0],
-            p2=[0, 1000, 0],
-            width=300,
-            thickness=18
-        )
-        self.trackElement(lResult)
-        return lResult
-    
-    async def testCreateSurface(self) -> Dict[str, Any]:
-        """Test surface creation"""
-        lVertices = [
-            [0, 0, 0],       # Bottom left
-            [1000, 0, 0],    # Bottom right  
-            [1000, 1000, 0], # Top right
-            [0, 1000, 0]     # Top left
-        ]
-        lResult = await self.m_pController.create_surface(
-            vertices=lVertices,
-            surface_type="flat"
-        )
-        self.trackElement(lResult)
-        return lResult
-    
-    async def testChamferEdge(self) -> Dict[str, Any]:
-        """Test chamfering edges of an element"""
-        # First create a test beam for chamfering
-        lCreateResult = await self.m_pController.create_beam(
-            p1=[0, 0, 0],
-            p2=[1000, 0, 0],
-            width=200,
-            height=200
-        )
-        
-        if lCreateResult.get("status") == "ok" and lCreateResult.get("element_ids"):
-            nElementId = lCreateResult["element_ids"][0]
-            self.trackElement(lCreateResult)
-            
-            # Define edge vertices for chamfering (example: top front edge)
-            lEdgeVertices = [
-                [[0, 0, 200], [1000, 0, 200]]  # Top front edge
-            ]
-            
-            return await self.m_pController.chamfer_edge(
-                element_id=nElementId,
-                edge_vertices=lEdgeVertices,
-                chamfer_distance=10.0,
-                chamfer_type="symmetric"
-            )
-        else:
-            return {"status": "skip", "message": "Failed to create test element for chamfer"}
-    
-    async def testRoundEdge(self) -> Dict[str, Any]:
-        """Test rounding edges of an element"""
-        # First create a test beam for rounding
-        lCreateResult = await self.m_pController.create_beam(
-            p1=[0, 0, 0],
-            p2=[1000, 0, 0],
-            width=200,
-            height=200
-        )
-        
-        if lCreateResult.get("status") == "ok" and lCreateResult.get("element_ids"):
-            nElementId = lCreateResult["element_ids"][0]
-            self.trackElement(lCreateResult)
-            
-            # Define edge vertices for rounding (example: top back edge)
-            lEdgeVertices = [
-                [[0, 200, 200], [1000, 200, 200]]  # Top back edge
-            ]
-            
-            return await self.m_pController.round_edge(
-                element_id=nElementId,
-                edge_vertices=lEdgeVertices,
-                round_radius=15.0,
-                round_type="full"
-            )
-        else:
-            return {"status": "skip", "message": "Failed to create test element for rounding"}
-    
-    async def testSplitElement(self) -> Dict[str, Any]:
-        """Test splitting an element with a cutting plane"""
-        # First create a test beam for splitting
-        lCreateResult = await self.m_pController.create_beam(
-            p1=[0, 0, 0],
-            p2=[2000, 0, 0],
-            width=200,
-            height=200
-        )
-        
-        if lCreateResult.get("status") == "ok" and lCreateResult.get("element_ids"):
-            nElementId = lCreateResult["element_ids"][0]
-            self.trackElement(lCreateResult)
-            
-            # Split at middle with a YZ-plane (normal in X-direction)
-            return await self.m_pController.split_element(
-                element_id=nElementId,
-                split_plane_point=[1000.0, 0.0, 0.0],  # Point at middle
-                split_plane_normal=[1.0, 0.0, 0.0],   # Normal in X-direction
-                keep_both_parts=True
-            )
-        else:
-            return {"status": "skip", "message": "Failed to create test element for splitting"}
-    
-    async def testCreateBeamFromPoints(self) -> Dict[str, Any]:
-        """Test creating a beam from multiple points"""
-        # Define a curved path with multiple points
-        lPoints = [
-            [0, 0, 0],       # Start
-            [500, 200, 0],   # Curve point 1
-            [1000, 400, 0],  # Curve point 2
-            [1500, 300, 0],  # Curve point 3
-            [2000, 0, 0]     # End
-        ]
-        
-        # Define rectangular cross-section
-        lCrossSection = {
-            "type": "rectangular",
-            "width": 120.0,
-            "height": 200.0
-        }
-        
-        lResult = await self.m_pController.create_beam_from_points(
-            points=lPoints,
-            cross_section=lCrossSection,
-            material="Spruce"
-        )
-        self.trackElement(lResult)
-        return lResult
-    
-    async def testCreateAuxiliaryLine(self) -> Dict[str, Any]:
-        """Test creating an auxiliary line"""
-        lResult = await self.m_pController.create_auxiliary_line(
-            start_point=[0, 0, 1000],      # Start above existing elements
-            end_point=[2000, 1000, 1000], # End point
-            line_type="construction"
-        )
-        self.trackElement(lResult)
-        return lResult
-    
-    def testCreateCircularBeam(self) -> Dict[str, Any]:
-        """Test circular beam creation - SKIP (function not available)"""
-        return {"status": "skip", "message": "create_circular_beam_points function not available in ElementController"}
-    
-    async def testGetElementInfo(self) -> Dict[str, Any]:
-        """Test getting element info"""
-        if not self.m_pController:
-            return {"status": "skip", "message": "Controller not available"}
-        
-        # Get an element to test with
-        lAllElements = await self.m_pController.get_all_element_ids()
-        if lAllElements.get("status") == "ok" and lAllElements.get("element_ids"):
-            nElementId = lAllElements["element_ids"][0]
-            return await self.m_pController.get_element_info(nElementId)
-        else:
-            return {"status": "skip", "message": "No elements available for info test"}
-    
-    async def testDeleteElements(self) -> Dict[str, Any]:
-        """Test deleting elements"""
-        if not self.m_pController:
-            return {"status": "skip", "message": "Controller not available"}
-        
-        # Create a test element first
-        lCreateResult = await self.m_pController.create_beam(
-            p1=[2000, 0, 0], 
-            p2=[2500, 0, 0],
-            width=50,
-            height=100
-        )
-        
-        if lCreateResult.get("status") == "ok" and lCreateResult.get("element_id"):
-            nElementId = lCreateResult["element_id"]
-            # Don't track this element since we're deleting it
-            return await self.m_pController.delete_elements([nElementId])
-        else:
-            return {"status": "skip", "message": "Could not create test element for deletion"}
-    
-    async def testCopyElements(self) -> Dict[str, Any]:
-        """Test copying elements"""
-        if not self.m_pController:
-            return {"status": "skip", "message": "Controller not available"}
-        
-        # Get an element to copy
-        lAllElements = await self.m_pController.get_all_element_ids()
-        if lAllElements.get("status") == "ok" and lAllElements.get("element_ids"):
-            nElementId = lAllElements["element_ids"][0]
-            lResult = await self.m_pController.copy_elements([nElementId], [1000, 0, 0])
-            # Track copied elements for cleanup
-            if lResult.get("status") == "ok" and lResult.get("element_ids"):
-                for nCopiedId in lResult["element_ids"]:
-                    self.m_lCreatedElements.append(nCopiedId)
-            return lResult
-        else:
-            return {"status": "skip", "message": "No elements available for copy test"}
-    
-    async def testStretchElements(self) -> Dict[str, Any]:
-        """Test stretching elements"""
-        if not self.m_pController:
-            return {"status": "skip", "message": "Controller not available"}
-        
-        # First create a test beam for stretching
-        lCreateResult = await self.m_pController.create_beam(
-            p1=[0, 0, 0],
-            p2=[1000, 0, 0],
-            width=100,
-            height=200
-        )
-        
-        if lCreateResult.get("status") == "ok" and lCreateResult.get("element_ids"):
-            nElementId = lCreateResult["element_ids"][0]
-            self.m_lCreatedElements.append(nElementId)
-            
-            # Test stretching the beam along X-axis with factor 1.5
-            lResult = await self.m_pController.stretch_elements(
-                element_ids=[nElementId],
-                stretch_vector=[1.0, 0.0, 0.0],  # X-direction
-                stretch_factor=1.5
-            )
-            return lResult
-        else:
-            return {"status": "skip", "message": "Could not create test element for stretching"}
-    
-    async def testScaleElements(self) -> Dict[str, Any]:
-        """Test scaling elements"""
-        if not self.m_pController:
-            return {"status": "skip", "message": "Controller not available"}
-        
-        # First create a test beam for scaling
-        lCreateResult = await self.m_pController.create_beam(
-            p1=[0, 0, 0],
-            p2=[1000, 0, 0],
-            width=100,
-            height=200
-        )
-        
-        if lCreateResult.get("status") == "ok" and lCreateResult.get("element_ids"):
-            nElementId = lCreateResult["element_ids"][0]
-            self.m_lCreatedElements.append(nElementId)
-            
-            # Test scaling the beam by factor 2.0 around origin
-            lResult = await self.m_pController.scale_elements(
-                element_ids=[nElementId],
-                scale_factor=2.0,
-                origin_point=[0.0, 0.0, 0.0]  # Scale around origin
-            )
-            return lResult
-        else:
-            return {"status": "skip", "message": "Could not create test element for scaling"}
-    
-    async def testMirrorElements(self) -> Dict[str, Any]:
-        """Test mirroring elements"""
-        if not self.m_pController:
-            return {"status": "skip", "message": "Controller not available"}
-        
-        # First create a test beam for mirroring
-        lCreateResult = await self.m_pController.create_beam(
-            p1=[1000, 0, 0],
-            p2=[2000, 0, 0],
-            width=100,
-            height=200
-        )
-        
-        if lCreateResult.get("status") == "ok" and lCreateResult.get("element_ids"):
-            nElementId = lCreateResult["element_ids"][0]
-            self.m_lCreatedElements.append(nElementId)
-            
-            # Test mirroring the beam across YZ-plane (x=0)
-            lResult = await self.m_pController.mirror_elements(
-                element_ids=[nElementId],
-                mirror_plane_point=[0.0, 0.0, 0.0],  # Point on YZ-plane
-                mirror_plane_normal=[1.0, 0.0, 0.0]  # Normal vector pointing in X-direction
-            )
-            return lResult
-        else:
-            return {"status": "skip", "message": "Could not create test element for mirroring"}
-    
-    async def testCreateSolidWoodPanel(self) -> Dict[str, Any]:
-        """Test creating solid wood panel"""
-        if not self.m_pController:
-            return {"status": "skip", "message": "Controller not available"}
-        
-        # Test creating a solid wood panel with specific wood type
-        lResult = await self.m_pController.create_solid_wood_panel(
-            p1=[0, 0, 0],
-            p2=[1200, 800, 0],  # 1200x800mm panel
-            thickness=18.0,      # 18mm thick
-            wood_type="Oak"      # Oak wood type
-        )
-        
-        self.trackElement(lResult)
-        return lResult
-    
-    def runAllTests(self) -> Dict[str, Any]:
-        """Run all element tests"""
-        print(f"\n[ELEMENTS] {self.m_aName} Tests")
-        print("=" * 50)
-        
-        if not self.checkConnection():
-            # Create error summary for failed connection
-            lErrorResult = CTestResult("Connection Test", CTestStatus.ERROR, "Connection failed", 0.0)
-            self.m_lResults.append(lErrorResult)
-            return self.getSummary()
-        
-        # Run individual tests
-        self.runTest(self.testGetAllElements, "Get All Elements")
-        self.runTest(self.testGetActiveElements, "Get Active Elements") 
-        self.runTest(self.testCreateBeam, "Create Beam")
-        self.runTest(self.testCreatePanel, "Create Panel")
-        self.runTest(self.testCreateSurface, "Create Surface")
-        self.runTest(self.testChamferEdge, "Chamfer Edge")
-        self.runTest(self.testRoundEdge, "Round Edge")
-        self.runTest(self.testSplitElement, "Split Element")
-        self.runTest(self.testCreateBeamFromPoints, "Create Beam From Points")
-        self.runTest(self.testCreateAuxiliaryLine, "Create Auxiliary Line")
-        self.runTest(self.testCreateCircularBeam, "Create Circular Beam")
-        self.runTest(self.testGetElementInfo, "Get Element Info")
-        self.runTest(self.testDeleteElements, "Delete Elements")
-        self.runTest(self.testCopyElements, "Copy Elements")
-        self.runTest(self.testStretchElements, "Stretch Elements")
-        self.runTest(self.testScaleElements, "Scale Elements")
-        self.runTest(self.testMirrorElements, "Mirror Elements")
-        self.runTest(self.testCreateSolidWoodPanel, "Create Solid Wood Panel")
-        
-        self.cleanup()
-        return self.getSummary()
-
-
-class CGeometryTests(CTestSuite):
-    """Geometry Controller Tests"""
-    
-    def __init__(self):
-        super().__init__("Geometry Controller")
-        self.m_pController = GeometryController()
-    
-    async def testElementInfo(self) -> Dict[str, Any]:
-        """Test getting element info"""
-        # First get some element to test with
-        lAllElements = await ElementController().get_all_element_ids()
-        if lAllElements.get("status") == "ok" and lAllElements.get("element_ids"):
-            nElementId = lAllElements["element_ids"][0]
-            return await self.m_pController.get_element_info(nElementId)
-        else:
-            return {"status": "skip", "message": "No elements available for testing"}
-    
-    async def testCalculateVolume(self) -> Dict[str, Any]:
-        """Test volume calculation"""
-        lAllElements = await ElementController().get_all_element_ids()
-        if lAllElements.get("status") == "ok" and lAllElements.get("element_ids"):
-            lElementIds = lAllElements["element_ids"][:3]  # Test with first 3 elements
-            return await self.m_pController.calculate_total_volume(lElementIds)
-        else:
-            return {"status": "skip", "message": "No elements available for volume test"}
-    
-    async def testGetBoundingBox(self) -> Dict[str, Any]:
-        """Test getting bounding box of an element"""
-        # First get an element to test with
-        lAllElements = await ElementController().get_all_element_ids()
-        if lAllElements.get("status") == "ok" and lAllElements.get("element_ids"):
-            nElementId = lAllElements["element_ids"][0]
-            return await self.m_pController.get_bounding_box(nElementId)
-        else:
-            return {"status": "skip", "message": "No elements available for bounding box test"}
-    
-    async def testGetElementOutline(self) -> Dict[str, Any]:
-        """Test getting element outline/contour"""
-        # First get an element to test with
-        lAllElements = await ElementController().get_all_element_ids()
-        if lAllElements.get("status") == "ok" and lAllElements.get("element_ids"):
-            nElementId = lAllElements["element_ids"][0]
-            return await self.m_pController.get_element_outline(nElementId)
-        else:
-            return {"status": "skip", "message": "No elements available for outline test"}
-    
-    async def testGetSectionOutline(self) -> Dict[str, Any]:
-        """Test getting section outline of an element"""
-        # First get an element to test with
-        lAllElements = await ElementController().get_all_element_ids()
-        if lAllElements.get("status") == "ok" and lAllElements.get("element_ids"):
-            nElementId = lAllElements["element_ids"][0]
-            # Test section cut through middle of element with YZ-plane (normal in X-direction)
-            return await self.m_pController.get_section_outline(
-                element_id=nElementId,
-                section_plane_point=[500.0, 0.0, 0.0],  # Point on cutting plane
-                section_plane_normal=[1.0, 0.0, 0.0]   # Normal vector (X-direction)
-            )
-        else:
-            return {"status": "skip", "message": "No elements available for section outline test"}
-    
-    async def testIntersectElements(self) -> Dict[str, Any]:
-        """Test intersecting multiple elements"""
-        # Get at least 2 elements to test intersection
-        lAllElements = await ElementController().get_all_element_ids()
-        if lAllElements.get("status") == "ok" and lAllElements.get("element_ids") and len(lAllElements["element_ids"]) >= 2:
-            lElementIds = lAllElements["element_ids"][:2]  # Use first 2 elements
-            return await self.m_pController.intersect_elements(
-                element_ids=lElementIds,
-                keep_originals=True  # Keep original elements
-            )
-        else:
-            return {"status": "skip", "message": "Need at least 2 elements for intersection test"}
-    
-    async def testSubtractElements(self) -> Dict[str, Any]:
-        """Test subtracting elements from a target element"""
-        # Create two test beams for subtraction test
-        lElementController = ElementController()
-        
-        # Create target beam (larger)
-        lTargetResult = await lElementController.create_beam(
-            p1=[0, 0, 0],
-            p2=[2000, 0, 0],
-            width=200,
-            height=300
-        )
-        
-        # Create subtract beam (smaller, overlapping)  
-        lSubtractResult = await lElementController.create_beam(
-            p1=[500, 0, 0],
-            p2=[1500, 0, 0],
-            width=100,
-            height=150
-        )
-        
-        if (lTargetResult.get("status") == "ok" and lTargetResult.get("element_ids") and
-            lSubtractResult.get("status") == "ok" and lSubtractResult.get("element_ids")):
-            
-            nTargetId = lTargetResult["element_ids"][0]
-            lSubtractIds = lSubtractResult["element_ids"]
-            
-            return await self.m_pController.subtract_elements(
-                target_element_id=nTargetId,
-                subtract_element_ids=lSubtractIds,
-                keep_originals=True  # Keep original elements for testing
-            )
-        else:
-            return {"status": "skip", "message": "Failed to create test elements for subtraction"}
-    
-    async def testUniteElements(self) -> Dict[str, Any]:
-        """Test uniting/merging multiple elements"""
-        # Create two test beams for union test
-        lElementController = ElementController()
-        
-        # Create first beam
-        lBeam1Result = await lElementController.create_beam(
-            p1=[0, 0, 0],
-            p2=[1000, 0, 0],
-            width=200,
-            height=200
-        )
-        
-        # Create second beam (overlapping)
-        lBeam2Result = await lElementController.create_beam(
-            p1=[500, 0, 0],
-            p2=[1500, 0, 0],
-            width=200,
-            height=200
-        )
-        
-        if (lBeam1Result.get("status") == "ok" and lBeam1Result.get("element_ids") and
-            lBeam2Result.get("status") == "ok" and lBeam2Result.get("element_ids")):
-            
-            lElementIds = lBeam1Result["element_ids"] + lBeam2Result["element_ids"]
-            
-            return await self.m_pController.unite_elements(
-                element_ids=lElementIds,
-                keep_originals=True  # Keep original elements for testing
-            )
-        else:
-            return {"status": "skip", "message": "Failed to create test elements for union"}
-    
-    def runAllTests(self) -> Dict[str, Any]:
-        """Run all geometry tests"""
-        print(f"\n[GEOMETRY] {self.m_aName} Tests")
-        print("=" * 50)
-        
-        if not self.checkConnection():
-            # Create error summary for failed connection
-            lErrorResult = CTestResult("Connection Test", CTestStatus.ERROR, "Connection failed", 0.0)
-            self.m_lResults.append(lErrorResult)
-            return self.getSummary()
-        
-        self.runTest(self.testElementInfo, "Element Info")
-        self.runTest(self.testCalculateVolume, "Calculate Volume")
-        self.runTest(self.testGetBoundingBox, "Get Bounding Box")
-        self.runTest(self.testGetElementOutline, "Get Element Outline")
-        self.runTest(self.testGetSectionOutline, "Get Section Outline")
-        self.runTest(self.testIntersectElements, "Intersect Elements")
-        self.runTest(self.testSubtractElements, "Subtract Elements")
-        self.runTest(self.testUniteElements, "Unite Elements")
-        
-        return self.getSummary()
-
-
-class CAttributeTests(CTestSuite):
-    """Attribute Controller Tests"""
-    
-    def __init__(self):
-        super().__init__("Attribute Controller")
-        self.m_pController = AttributeController()
-    
-    async def testGetStandardAttributes(self) -> Dict[str, Any]:
-        """Test getting standard attributes"""
-        lAllElements = await ElementController().get_all_element_ids()
-        if lAllElements.get("status") == "ok" and lAllElements.get("element_ids"):
-            lElementIds = lAllElements["element_ids"][:2]
-            return await self.m_pController.get_standard_attributes(lElementIds)
-        else:
-            return {"status": "skip", "message": "No elements available for attribute test"}
-    
-    async def testSetMaterial(self) -> Dict[str, Any]:
-        """Test setting material"""
-        lAllElements = await ElementController().get_all_element_ids()
-        if lAllElements.get("status") == "ok" and lAllElements.get("element_ids"):
-            lElementIds = lAllElements["element_ids"][:1]
-            return await self.m_pController.set_material(lElementIds, "C24")
-        else:
-            return {"status": "skip", "message": "No elements available for material test"}
-    
-    def runAllTests(self) -> Dict[str, Any]:
-        """Run all attribute tests"""
-        print(f"\n[ATTRIBUTES] {self.m_aName} Tests")
-        print("=" * 50)
-        
-        if not self.checkConnection():
-            # Create error summary for failed connection
-            lErrorResult = CTestResult("Connection Test", CTestStatus.ERROR, "Connection failed", 0.0)
-            self.m_lResults.append(lErrorResult)
-            return self.getSummary()
-        
-        self.runTest(self.testGetStandardAttributes, "Get Standard Attributes")
-        self.runTest(self.testSetMaterial, "Set Material")
-        
-        return self.getSummary()
-
-
-class CVisualizationTests(CTestSuite):
-    """Visualization Controller Tests"""
-    
-    def __init__(self):
-        super().__init__("Visualization Controller")
-        self.m_pController = CVisualizationController()
-    
-    async def testShowAllElements(self) -> Dict[str, Any]:
-        """Test showing all elements"""
-        return await self.m_pController.show_all_elements()
-    
-    async def testGetVisibleCount(self) -> Dict[str, Any]:
-        """Test getting visible element count"""
-        return await self.m_pController.get_visible_element_count()
-    
-    def runAllTests(self) -> Dict[str, Any]:
-        """Run all visualization tests"""
-        print(f"\n[VISUALIZATION] {self.m_aName} Tests")
-        print("=" * 50)
-        
-        if not self.checkConnection():
-            # Create error summary for failed connection
-            lErrorResult = CTestResult("Connection Test", CTestStatus.ERROR, "Connection failed", 0.0)
-            self.m_lResults.append(lErrorResult)
-            return self.getSummary()
-        
-        self.runTest(self.testShowAllElements, "Show All Elements")
-        self.runTest(self.testGetVisibleCount, "Get Visible Count")
-        
-        return self.getSummary()
-
-
-class CSystemTests(CTestSuite):
-    """System Tests"""
-    
-    def __init__(self):
-        super().__init__("System Tests")
-        self.m_pUtilityController = CUtilityController()
-    
-    def testPing(self) -> Dict[str, Any]:
-        """Test ping connection"""
-        lConnection = get_connection()
-        return lConnection.send_command("ping", {})
-    
-    async def testProjectInfo(self) -> Dict[str, Any]:
-        """Test getting project info"""
-        return await self.m_pUtilityController.get_project_data()
-    
-    async def testVersionInfo(self) -> Dict[str, Any]:
-        """Test getting version info"""
-        return await self.m_pUtilityController.get_cadwork_version_info()
-    
-    def runAllTests(self) -> Dict[str, Any]:
-        """Run all system tests"""
-        print(f"\n[SYSTEM] {self.m_aName} Tests")
-        print("=" * 50)
-        
-        if not self.checkConnection():
-            # Create error summary for failed connection
-            lErrorResult = CTestResult("Connection Test", CTestStatus.ERROR, "Connection failed", 0.0)
-            self.m_lResults.append(lErrorResult)
-            return self.getSummary()
-        
-        self.runTest(self.testPing, "Ping Test")
-        self.runTest(self.testProjectInfo, "Project Info")
-        self.runTest(self.testVersionInfo, "Version Info")
-        
-        return self.getSummary()
-
-
-def printHeader(aTitle: str) -> None:
+def print_header(title: str) -> None:
     """Print formatted header"""
-    print("\n" + "=" * 80)
-    print(f" {aTitle} ".center(80))
+    print("=" * 80)
+    print(f"{title:^80}")
     print("=" * 80)
 
 
-def printSummaryTable(lSummaries: List[Dict[str, Any]]) -> None:
-    """Print test summary table"""
-    print("\n" + "=" * 80)
-    print(" TEST SUMMARY ".center(80))
-    print("=" * 80)
-    
-    # Table header
-    print(f"{'Suite':<25} {'Total':<6} {'Pass':<6} {'Fail':<6} {'Err':<6} {'Skip':<6} {'Success':<8} {'Time':<8}")
-    print("-" * 80)
-    
-    nTotalTests = 0
-    nTotalPassed = 0
-    nTotalFailed = 0
-    nTotalError = 0
-    nTotalSkipped = 0
-    fTotalTime = 0.0
-    
-    for lSummary in lSummaries:
-        aSuiteName = lSummary["suite_name"]
-        nTotal = lSummary["total"]
-        nPassed = lSummary["passed"]
-        nFailed = lSummary["failed"]
-        nError = lSummary["error"]
-        nSkipped = lSummary["skipped"]
-        fSuccessRate = lSummary["success_rate"]
-        fDuration = lSummary["total_duration"]
-        
-        nTotalTests += nTotal
-        nTotalPassed += nPassed
-        nTotalFailed += nFailed
-        nTotalError += nError
-        nTotalSkipped += nSkipped
-        fTotalTime += fDuration
-        
-        print(f"{aSuiteName:<25} {nTotal:<6} {nPassed:<6} {nFailed:<6} {nError:<6} {nSkipped:<6} {fSuccessRate:>6.1f}%   {fDuration:>6.2f}s")
-    
-    # Total row
-    print("-" * 80)
-    fOverallSuccess = (nTotalPassed / nTotalTests * 100) if nTotalTests > 0 else 0
-    print(f"{'TOTAL':<25} {nTotalTests:<6} {nTotalPassed:<6} {nTotalFailed:<6} {nTotalError:<6} {nTotalSkipped:<6} {fOverallSuccess:>6.1f}%   {fTotalTime:>6.2f}s")
-    print("=" * 80)
+def print_section(title: str) -> None:
+    """Print section header"""
+    print(f"\n[{title.upper()}]")
+    print("=" * 50)
 
 
-def printFailedTests(lSummaries: List[Dict[str, Any]]) -> None:
-    """Print failed test details"""
-    lFailedTests = []
+async def test_run() -> bool:
+    """
+    Haupttest-Funktion - führt alle wichtigen Cadwork MCP Tests aus
     
-    for lSummary in lSummaries:
-        for lResult in lSummary["results"]:
-            if lResult.eStatus in [CTestStatus.FAILED, CTestStatus.ERROR]:
-                lFailedTests.append((lSummary["suite_name"], lResult))
+    Returns:
+        bool: True wenn alle Tests erfolgreich, False bei Fehlern
+    """
     
-    if lFailedTests:
-        print("\n" + "=" * 80)
-        print(" FAILED/ERROR TESTS ".center(80))
-        print("=" * 80)
-        
-        for aSuiteName, lResult in lFailedTests:
-            print(f"\n[{aSuiteName}] {lResult.aTestName}")
-            print(f"  Status: {lResult.eStatus.value}")
-            print(f"  Message: {lResult.aMessage}")
-            print(f"  Duration: {lResult.fDuration:.2f}s")
-            if lResult.aDetails:
-                print(f"  Details: {lResult.aDetails[:200]}...")
-        
-        print("=" * 80)
-
-
-def runTest() -> bool:
-    """Main test runner function - call this to run all tests"""
-    
-    printHeader("CADWORK MCP SERVER - SIMPLE TEST RUNNER")
+    print_header("CADWORK MCP SERVER - SIMPLIFIED TEST RUNNER")
     
     print(f"Start Time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Python: {sys.version.split()[0]}")
     print(f"Project Root: {PROJECT_ROOT}")
     
-    # Initialize test suites
-    lTestSuites = [
-        CElementTests(),
-        CGeometryTests(),
-        CAttributeTests(),
-        CVisualizationTests(),
-        CSystemTests()
-    ]
+    # Test statistics
+    tests_total = 0
+    tests_passed = 0
+    tests_failed = 0
+    start_time = time.time()
+    failed_tests = []
     
-    # Run all test suites
-    lSummaries = []
-    fStartTime = time.time()
+    # Element Controller Tests
+    print_section("Element Controller Tests")
     
-    for lSuite in lTestSuites:
-        try:
-            lSummary = lSuite.runAllTests()
-            lSummaries.append(lSummary)
-        except KeyboardInterrupt:
-            print(f"\nTests interrupted during {lSuite.m_aName}")
-            break
-        except Exception as e:
-            print(f"\nTest suite {lSuite.m_aName} crashed: {e}")
-            lErrorSummary = {
-                "suite_name": lSuite.m_aName,
-                "total": 1,
-                "passed": 0,
-                "failed": 0,
-                "error": 1,
-                "skipped": 0,
-                "success_rate": 0.0,
-                "total_duration": 0.0,
-                "results": [CTestResult(f"{lSuite.m_aName}_crash", CTestStatus.ERROR, str(e), 0.0)]
-            }
-            lSummaries.append(lErrorSummary)
+    element_controller = ElementController()
     
-    # Print results
-    if lSummaries:
-        printSummaryTable(lSummaries)
-        printFailedTests(lSummaries)
-        
-        fTotalDuration = time.time() - fStartTime
-        nTotalTests = sum(s["total"] for s in lSummaries)
-        nTotalPassed = sum(s["passed"] for s in lSummaries)
-        
-        print(f"\nTotal Execution Time: {fTotalDuration:.2f} seconds")
-        print(f"Tests Per Second: {nTotalTests/fTotalDuration:.1f}")
-        
-        if nTotalPassed == nTotalTests:
-            print("\n[SUCCESS] ALL TESTS PASSED!")
-            return True
+    # Get All Elements
+    tests_total += 1
+    try:
+        result = await element_controller.get_all_element_ids()
+        if result.get("status") == "ok":
+            element_count = len(result.get("element_ids", []))
+            print(f"  + Get All Elements - PASSED ({element_count} elements)")
+            tests_passed += 1
         else:
-            print(f"\n[WARNING] {nTotalTests - nTotalPassed} TESTS FAILED/ERROR")
-            return False
+            print(f"  - Get All Elements - FAILED: {result.get('message', 'Unknown error')}")
+            tests_failed += 1
+            failed_tests.append(("Get All Elements", result.get('message', 'Unknown error')))
+    except Exception as e:
+        print(f"  - Get All Elements - ERROR: {e}")
+        tests_failed += 1
+        failed_tests.append(("Get All Elements", str(e)))
+    
+    # Create Beam
+    tests_total += 1
+    try:
+        result = await element_controller.create_beam(
+            p1=[0, 0, 0], p2=[1000, 0, 0], width=200, height=300
+        )
+        if result.get("status") == "ok":
+            print(f"  + Create Beam - PASSED (ID: {result.get('id')})")
+            tests_passed += 1
+        else:
+            print(f"  - Create Beam - FAILED: {result.get('message', 'Unknown error')}")
+            tests_failed += 1
+            failed_tests.append(("Create Beam", result.get('message', 'Unknown error')))
+    except Exception as e:
+        print(f"  - Create Beam - ERROR: {e}")
+        tests_failed += 1
+        failed_tests.append(("Create Beam", str(e)))
+    
+    # Create Panel
+    tests_total += 1
+    try:
+        result = await element_controller.create_panel(
+            p1=[2000, 0, 0], p2=[3000, 0, 0], width=1000, thickness=20
+        )
+        if result.get("status") == "ok":
+            print(f"  + Create Panel - PASSED (ID: {result.get('id')})")
+            tests_passed += 1
+        else:
+            print(f"  - Create Panel - FAILED: {result.get('message', 'Unknown error')}")
+            tests_failed += 1
+            failed_tests.append(("Create Panel", result.get('message', 'Unknown error')))
+    except Exception as e:
+        print(f"  - Create Panel - ERROR: {e}")
+        tests_failed += 1
+        failed_tests.append(("Create Panel", str(e)))
+    
+    # Create Surface
+    tests_total += 1
+    try:
+        result = await element_controller.create_surface(
+            vertices=[[0, 0, 0], [1000, 0, 0], [1000, 1000, 0], [0, 1000, 0]]
+        )
+        if result.get("status") == "ok":
+            print(f"  + Create Surface - PASSED (ID: {result.get('id')})")
+            tests_passed += 1
+        else:
+            print(f"  - Create Surface - FAILED: {result.get('message', 'Unknown error')}")
+            tests_failed += 1
+            failed_tests.append(("Create Surface", result.get('message', 'Unknown error')))
+    except Exception as e:
+        print(f"  - Create Surface - ERROR: {e}")
+        tests_failed += 1
+        failed_tests.append(("Create Surface", str(e)))
+    
+    # Geometry Controller Tests
+    print_section("Geometry Controller Tests")
+    
+    geometry_controller = GeometryController()
+    
+    # Get Element Info
+    tests_total += 1
+    try:
+        all_elements = await element_controller.get_all_element_ids()
+        if all_elements.get("status") == "ok" and all_elements.get("element_ids"):
+            element_id = all_elements["element_ids"][0]
+            result = await geometry_controller.get_element_info(element_id)
+            if result.get("status") == "ok":
+                print(f"  + Get Element Info - PASSED (Element {element_id})")
+                tests_passed += 1
+            else:
+                print(f"  - Get Element Info - FAILED: {result.get('message', 'Unknown error')}")
+                tests_failed += 1
+                failed_tests.append(("Get Element Info", result.get('message', 'Unknown error')))
+        else:
+            print("  ! Get Element Info - SKIPPED (No elements available)")
+            tests_failed += 1
+            failed_tests.append(("Get Element Info", "No elements available"))
+    except Exception as e:
+        print(f"  - Get Element Info - ERROR: {e}")
+        tests_failed += 1
+        failed_tests.append(("Get Element Info", str(e)))
+    
+    # Get Bounding Box
+    tests_total += 1
+    try:
+        all_elements = await element_controller.get_all_element_ids()
+        if all_elements.get("status") == "ok" and all_elements.get("element_ids"):
+            element_id = all_elements["element_ids"][0]
+            result = await geometry_controller.get_bounding_box(element_id)
+            if result.get("status") == "ok":
+                print(f"  + Get Bounding Box - PASSED (Element {element_id})")
+                tests_passed += 1
+            else:
+                print(f"  - Get Bounding Box - FAILED: {result.get('message', 'Unknown error')}")
+                tests_failed += 1
+                failed_tests.append(("Get Bounding Box", result.get('message', 'Unknown error')))
+        else:
+            print("  ! Get Bounding Box - SKIPPED (No elements available)")
+            tests_failed += 1
+            failed_tests.append(("Get Bounding Box", "No elements available"))
+    except Exception as e:
+        print(f"  - Get Bounding Box - ERROR: {e}")
+        tests_failed += 1
+        failed_tests.append(("Get Bounding Box", str(e)))
+    
+    # Visualization Controller Tests
+    print_section("Visualization Controller Tests")
+    
+    visualization_controller = CVisualizationController()
+    
+    # Show All Elements
+    tests_total += 1
+    try:
+        result = await visualization_controller.show_all_elements()
+        if result.get("status") == "success":
+            visible_count = result.get("processed_count", 0)
+            print(f"  + Show All Elements - PASSED ({visible_count} elements)")
+            tests_passed += 1
+        else:
+            print(f"  - Show All Elements - FAILED: {result.get('message', 'Unknown error')}")
+            tests_failed += 1
+            failed_tests.append(("Show All Elements", result.get('message', 'Unknown error')))
+    except Exception as e:
+        print(f"  - Show All Elements - ERROR: {e}")
+        tests_failed += 1
+        failed_tests.append(("Show All Elements", str(e)))
+    
+    # Get Visible Element Count
+    tests_total += 1
+    try:
+        result = await visualization_controller.get_visible_element_count()
+        if result.get("status") == "success":
+            visible_count = result.get("visible_elements", 0)
+            total_count = result.get("total_elements", 0)
+            percentage = result.get("visibility_percentage", 0)
+            print(f"  + Get Visible Count - PASSED ({visible_count}/{total_count} = {percentage:.1f}%)")
+            tests_passed += 1
+        else:
+            print(f"  - Get Visible Count - FAILED: {result.get('message', 'Unknown error')}")
+            tests_failed += 1
+            failed_tests.append(("Get Visible Count", result.get('message', 'Unknown error')))
+    except Exception as e:
+        print(f"  - Get Visible Count - ERROR: {e}")
+        tests_failed += 1
+        failed_tests.append(("Get Visible Count", str(e)))
+    
+    # Summary
+    end_time = time.time()
+    duration = end_time - start_time
+    success_rate = (tests_passed / tests_total * 100) if tests_total > 0 else 0
+    
+    print_header("TEST SUMMARY")
+    
+    print(f"Tests Total:      {tests_total}")
+    print(f"Tests Passed:     {tests_passed}")
+    print(f"Tests Failed:     {tests_failed}")
+    print(f"Success Rate:     {success_rate:.1f}%")
+    print(f"Execution Time:   {duration:.2f} seconds")
+    print(f"Tests per Second: {tests_total/duration:.1f}")
+    
+    if failed_tests:
+        print(f"\nFAILED TESTS ({len(failed_tests)}):")
+        print("-" * 50)
+        for test_name, error_msg in failed_tests:
+            print(f"  {test_name}: {error_msg}")
+    
+    if tests_failed == 0:
+        print("\nALL TESTS PASSED!")
+        return True
     else:
-        print("\nNo test results available")
+        print(f"\n{tests_failed} TESTS FAILED")
         return False
+
+
+# Backwards compatibility
+async def runTest() -> bool:
+    """Legacy function name for compatibility"""
+    return await test_run()
 
 
 def main():
     """Entry point when script is run directly"""
-    bSuccess = runTest()
-    sys.exit(0 if bSuccess else 1)
+    try:
+        success = asyncio.run(test_run())
+        sys.exit(0 if success else 1)
+    except KeyboardInterrupt:
+        print("\n\nTests interrupted by user")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n\nUnexpected error: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

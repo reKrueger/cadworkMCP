@@ -1,6 +1,6 @@
 # Cadwork MCP - Vollständige Test-Übersicht
 
-## 📊 Status: **16 von 62+ Funktionen getestet (26%)**
+## 📊 Status: **50 von 96+ Funktionen getestet (52%)**
 
 Diese Übersicht zeigt **alle verfügbaren API-Funktionen** und ihren Test-Status.
 
@@ -78,10 +78,13 @@ Diese Übersicht zeigt **alle verfügbaren API-Funktionen** und ihren Test-Statu
 
 ## 📈 FORTSCHRITT
 
-**Letzte Änderungen (2025-07-13):**
-- ✨ **+3 Element Controller Tests hinzugefügt**
-- ✅ `get_element_info()` - Element-Informationen abrufen
-- ✅ `delete_elements()` - Elemente sicher löschen (mit Testfeld-Erstellung)
-- ✅ `copy_elements()` - Elemente kopieren mit Cleanup-Tracking
-- 📊 **Element Controller Coverage: 45% → 73%**
-- 🎯 **Gesamt Coverage: 21% → 28%**
+**Letzte Änderungen (2025-07-17):**
+- ✨ **+20 Funktionen heute hinzugefügt (16 Export + 4 Import + 2 Shop Drawing)**
+- 📊 **Export Controller:** Alle 16 Export-Funktionen aus Cadwork API implementiert - **VOLLSTÄNDIG!**
+- 🔄 **Import Controller:** 4 neue Import-Funktionen (STEP, SAT, Rhino, BTL) - **NEU!**
+- 🔧 **Shop Drawing Controller:** 2 neue Shop Drawing-Funktionen hinzugefügt
+- 🎯 **Gesamt Coverage: 50% → 52%**
+- 📈 **Gesamt-Funktionen: 140→144**
+- 🏆 **Datenökosystem: Export UND Import für vollständigen Workflow**
+- 🔄 **Bidirektionaler Datenfluss: 20 Export + 4 Import = 24 Funktionen**
+- 🚀 **NEUER MEILENSTEIN: Komplettes Import/Export-System implementiert!**

@@ -3,6 +3,7 @@ Visualization Handler für Cadwork Bridge
 Verarbeitet Farb- und Sichtbarkeits-Operationen
 """
 from typing import Dict, Any
+from ..helpers import validate_element_ids
 
 def handle_set_color(aParams: Dict[str, Any]) -> Dict[str, Any]:
     """Setzt Farbe für Elemente"""

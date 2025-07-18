@@ -12,12 +12,12 @@ class COptimizationController(BaseController):
     
     async def optimize_cutting_list(self,
                                   element_ids: Optional[List[int]] = None,
-                                  stock_lengths: List[float] = None,
+                                  stock_lengths: Optional[List[float]] = None,
                                   optimization_algorithm: str = "bin_packing",
                                   kerf_width: float = 3.0,
                                   min_offcut_length: float = 100.0,
                                   max_waste_percentage: float = 5.0,
-                                  material_groups: Dict[str, List[str]] = None,
+                                  material_groups: Optional[Dict[str, List[str]]] = None,
                                   priority_mode: str = "waste_minimization") -> Dict[str, Any]:
         """Optimize cutting lists for minimal material waste and efficient production"""
         try:

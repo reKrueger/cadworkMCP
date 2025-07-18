@@ -1,7 +1,7 @@
 """
 Attribute controller for attribute operations
 """
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from .base_controller import BaseController
 
 class AttributeController(BaseController):
@@ -410,9 +410,9 @@ class AttributeController(BaseController):
                                     report_format: str = "JSON",
                                     include_standard_attributes: bool = True,
                                     include_user_attributes: bool = True,
-                                    user_attribute_numbers: List[int] = None,
+                                    user_attribute_numbers: Optional[List[int]] = None,
                                     include_dimensions: bool = False,
-                                    group_by: str = None) -> Dict[str, Any]:
+                                    group_by: Optional[str] = None) -> Dict[str, Any]:
         """Export comprehensive attribute report for elements"""
         if not isinstance(element_ids, list) or not element_ids:
             raise ValueError("element_ids must be a non-empty list")

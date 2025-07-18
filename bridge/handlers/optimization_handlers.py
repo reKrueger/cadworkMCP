@@ -1,7 +1,7 @@
 """
 Optimization handlers
 """
-from typing import Dict, Any
+from typing import Dict, Any, List
 from ..helpers import validate_element_ids
 
 def handle_optimize_cutting_list(args: Dict[str, Any]) -> Dict[str, Any]:
@@ -47,7 +47,7 @@ def handle_optimize_cutting_list(args: Dict[str, Any]) -> Dict[str, Any]:
             raise ValueError("max_waste_percentage must be between 0 and 100")
         
         # Collect element data for cutting optimization
-        cutting_requirements = []
+        cutting_requirements: List[Dict[str, Any]] = []
         for element_id in element_ids:
             try:
                 length = gc.get_length(element_id)
@@ -67,7 +67,7 @@ def handle_optimize_cutting_list(args: Dict[str, Any]) -> Dict[str, Any]:
             except Exception:
                 continue        
         # Group requirements by cross-section and material
-        grouped_requirements = {}
+        grouped_requirements: Dict[str, Dict[str, Any]] = {}
         for req in cutting_requirements:
             key = f"{req['material']}_{req['cross_section']}"
             if key not in grouped_requirements:
@@ -79,7 +79,7 @@ def handle_optimize_cutting_list(args: Dict[str, Any]) -> Dict[str, Any]:
             grouped_requirements[key]["elements"].append(req)
         
         # Perform optimization for each group
-        optimized_cutting_list = []
+        optimized_cutting_list: List[Dict[str, Any]] = []
         total_waste_length = 0.0
         total_stock_used = 0.0
         
@@ -89,7 +89,7 @@ def handle_optimize_cutting_list(args: Dict[str, Any]) -> Dict[str, Any]:
             
             # Simple bin packing algorithm (First Fit Decreasing)
             required_lengths.sort(reverse=True)  # Sort by length descending
-            stock_pieces = []
+            stock_pieces: List[Dict[str, Any]] = []
             
             for req_length in required_lengths:
                 placed = False

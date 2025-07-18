@@ -1,7 +1,7 @@
 """
 List and report handlers
 """
-from typing import Dict, Any
+from typing import Dict, Any, List, Union, Optional
 from ..helpers import validate_element_ids
 
 def handle_create_element_list(args: Dict[str, Any]) -> Dict[str, Any]:
@@ -35,16 +35,16 @@ def handle_create_element_list(args: Dict[str, Any]) -> Dict[str, Any]:
         sort_by = args.get("sort_by", "name")
         
         # Collect element data
-        element_list = []
+        element_list: List[Dict[str, Any]] = []
         for element_id in element_ids:
-            element_data = {"id": element_id}
+            element_data: Dict[str, Any] = {"id": element_id}
             
             # Basic properties
             if include_properties:
                 try:
                     element_data["type"] = gc.get_element_type(element_id)
                     names = ac.get_name([element_id])
-                    element_data["name"] = names[0] if names else f"Element_{element_id}"
+                    element_data["name"] = str(names[0]) if names else f"Element_{element_id}"
                 except:
                     element_data["type"] = "unknown"
                     element_data["name"] = f"Element_{element_id}"            
@@ -52,7 +52,7 @@ def handle_create_element_list(args: Dict[str, Any]) -> Dict[str, Any]:
             if include_materials:
                 try:
                     materials = ac.get_material([element_id])
-                    element_data["material"] = materials[0] if materials else "Unknown"
+                    element_data["material"] = str(materials[0]) if materials else "Unknown"
                 except:
                     element_data["material"] = "Unknown"
             
@@ -133,13 +133,13 @@ def handle_generate_material_list(args: Dict[str, Any]) -> Dict[str, Any]:
             raise ValueError(f"Invalid optimization_mode. Must be one of: {valid_optimization_modes}")
         
         # Collect material data from elements
-        material_data = {}
+        material_data: Dict[str, Dict[str, Any]] = {}
         
         for element_id in element_ids:
             try:
                 # Get material information
                 materials = ac.get_material([element_id])
-                material_name = materials[0] if materials else "Unknown"
+                material_name = str(materials[0]) if materials else "Unknown"
                 
                 # Get element dimensions
                 length = gc.get_length(element_id)
@@ -148,7 +148,7 @@ def handle_generate_material_list(args: Dict[str, Any]) -> Dict[str, Any]:
                 volume = gc.get_volume(element_id)
                 
                 # Get element type for categorization
-                element_type = gc.get_element_type(element_id)
+                element_type = str(gc.get_element_type(element_id))
                 
                 # Create material key
                 if group_by_material:
@@ -161,8 +161,8 @@ def handle_generate_material_list(args: Dict[str, Any]) -> Dict[str, Any]:
                     material_data[material_key] = {
                         "material_name": material_name,
                         "dimensions": f"{width}x{height}",
-                        "width": width,
-                        "height": height,
+                        "width": float(width),
+                        "height": float(height),
                         "element_type": element_type,
                         "count": 0,
                         "total_length": 0.0,
@@ -172,8 +172,8 @@ def handle_generate_material_list(args: Dict[str, Any]) -> Dict[str, Any]:
                 
                 # Accumulate data
                 material_data[material_key]["count"] += 1
-                material_data[material_key]["total_length"] += length
-                material_data[material_key]["total_volume"] += volume
+                material_data[material_key]["total_length"] += float(length)
+                material_data[material_key]["total_volume"] += float(volume)
                 material_data[material_key]["element_ids"].append(element_id)
                 
             except Exception as e:
@@ -183,26 +183,27 @@ def handle_generate_material_list(args: Dict[str, Any]) -> Dict[str, Any]:
         # Apply waste factor if requested
         if include_waste:
             for material_key in material_data:
-                material_data[material_key]["total_length_with_waste"] = material_data[material_key]["total_length"] * (1 + waste_factor)
-                material_data[material_key]["total_volume_with_waste"] = material_data[material_key]["total_volume"] * (1 + waste_factor)
-                material_data[material_key]["waste_factor"] = waste_factor
+                material_entry = material_data[material_key]
+                material_entry["total_length_with_waste"] = float(material_entry["total_length"]) * (1 + waste_factor)
+                material_entry["total_volume_with_waste"] = float(material_entry["total_volume"]) * (1 + waste_factor)
+                material_entry["waste_factor"] = waste_factor
         
         # Convert to list and sort based on optimization mode
-        material_list = list(material_data.values())
+        material_list: List[Dict[str, Any]] = list(material_data.values())
         
         if optimization_mode == "length":
-            material_list.sort(key=lambda x: x["total_length"], reverse=True)
+            material_list.sort(key=lambda x: float(x["total_length"]), reverse=True)
         elif optimization_mode == "volume":
-            material_list.sort(key=lambda x: x["total_volume"], reverse=True)
+            material_list.sort(key=lambda x: float(x["total_volume"]), reverse=True)
         elif optimization_mode == "count":
-            material_list.sort(key=lambda x: x["count"], reverse=True)
+            material_list.sort(key=lambda x: int(x["count"]), reverse=True)
         else:
-            material_list.sort(key=lambda x: x["material_name"])
+            material_list.sort(key=lambda x: str(x["material_name"]))
         
         # Calculate totals
-        total_length = sum(item["total_length"] for item in material_list)
-        total_volume = sum(item["total_volume"] for item in material_list)
-        total_count = sum(item["count"] for item in material_list)
+        total_length = sum(float(item["total_length"]) for item in material_list)
+        total_volume = sum(float(item["total_volume"]) for item in material_list)
+        total_count = sum(int(item["count"]) for item in material_list)
         
         if include_waste:
             total_length_with_waste = total_length * (1 + waste_factor)

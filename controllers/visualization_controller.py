@@ -2,7 +2,7 @@
 Visualization Controller for Cadwork MCP Server
 Manages colors, transparency and visibility of elements
 """
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from .base_controller import BaseController
 
 class CVisualizationController(BaseController):
@@ -285,7 +285,7 @@ class CVisualizationController(BaseController):
         except Exception as e:
             return {"status": "error", "message": f"create_visual_filter failed: {e}"}
     
-    async def apply_color_scheme(self, scheme_name: str, element_ids: List[int] = None, 
+    async def apply_color_scheme(self, scheme_name: str, element_ids: Optional[List[int]] = None, 
                                scheme_basis: str = "material") -> Dict[str, Any]:
         """
         Apply predefined color scheme to elements
@@ -469,7 +469,7 @@ class CVisualizationController(BaseController):
                                duration: float = 30.0,
                                camera_height: float = 1700.0,
                                movement_speed: str = "smooth",
-                               focus_elements: List[int] = None,
+                               focus_elements: Optional[List[int]] = None,
                                include_audio: bool = False,
                                output_format: str = "mp4",
                                resolution: str = "1920x1080") -> Dict[str, Any]:

@@ -1,7 +1,7 @@
 """
 Geometry controller for geometry operations
 """
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from .base_controller import BaseController
 
 class GeometryController(BaseController):
@@ -497,7 +497,7 @@ class GeometryController(BaseController):
     async def validate_joints(self, 
                             element_ids: List[int],
                             joint_type: str = "auto",
-                            load_conditions: Dict[str, Any] = None,
+                            load_conditions: Optional[Dict[str, Any]] = None,
                             safety_factor: float = 2.0,
                             wood_grade: str = "C24") -> Dict[str, Any]:
         """

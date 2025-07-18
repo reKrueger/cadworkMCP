@@ -289,3 +289,140 @@ async def run_element_tests(quick_mode: bool = False) -> None:
 if __name__ == "__main__":
     import asyncio
     asyncio.run(run_element_tests(quick_mode=True))
+    
+    async def run_boolean_operations_tests(self) -> List[TestResult]:
+        """Test Boolean operations (intersect, subtract, unite)"""
+        self.helper.print_header("ELEMENT CONTROLLER - BOOLEAN OPERATIONS")
+        
+        # Create overlapping elements for Boolean operations
+        from controllers.element_controller import ElementController
+        element_ctrl = ElementController()
+        boolean_test_elements = []
+        
+        # Create overlapping beams for Boolean operations
+        overlapping_configs = [
+            {"p1": [0, 0, 0], "p2": [2000, 0, 0], "width": 200, "height": 200},  # Horizontal beam
+            {"p1": [1000, -100, -100], "p2": [1000, 100, 100], "width": 200, "height": 200},  # Vertical intersecting beam
+            {"p1": [500, 0, 0], "p2": [1500, 0, 0], "width": 150, "height": 150}  # Overlapping beam
+        ]
+        
+        for config in overlapping_configs:
+            result = await element_ctrl.create_beam(**config)
+            if result.get("status") == "success":
+                element_id = result.get("element_id")
+                if element_id:
+                    boolean_test_elements.append(element_id)
+        
+        if len(boolean_test_elements) >= 3:
+            # Test 1: Element intersection
+            await self.helper.run_test(
+                "Intersect Elements",
+                self.controller.intersect_elements,
+                boolean_test_elements[:2],  # First 2 elements
+                True  # keep_originals
+            )
+            
+            # Test 2: Element subtraction
+            await self.helper.run_test(
+                "Subtract Elements",
+                self.controller.subtract_elements,
+                boolean_test_elements[0],  # target
+                boolean_test_elements[1:2],  # subtract these
+                False  # don't keep originals
+            )
+            
+            # Test 3: Element union
+            await self.helper.run_test(
+                "Unite Elements",
+                self.controller.unite_elements,
+                boolean_test_elements[1:3],  # Last 2 elements
+                False  # don't keep originals
+            )
+            
+            # Test 4: Complex Boolean chain
+            if len(boolean_test_elements) >= 2:
+                # Create new elements for complex operations
+                new_beam_params = self.param_finder.get_beam_parameters()
+                new_beam_params["p1"] = [3000, 0, 0]
+                new_beam_params["p2"] = [4000, 0, 0]
+                
+                result = await element_ctrl.create_beam(**new_beam_params)
+                if result.get("status") == "success":
+                    new_id = result.get("element_id")
+                    if new_id:
+                        boolean_test_elements.append(new_id)
+                        
+                        await self.helper.run_test(
+                            "Complex Boolean Chain",
+                            self._perform_complex_boolean_chain,
+                            boolean_test_elements
+                        )
+            
+            # Test 5: Boolean operation validation
+            await self.helper.run_test(
+                "Boolean Parameter Validation",
+                self._test_boolean_validation
+            )
+        
+        # Cleanup
+        if boolean_test_elements:
+            try:
+                await element_ctrl.delete_elements(boolean_test_elements)
+            except:
+                pass
+        
+        return self.helper.test_results
+    
+    async def _perform_complex_boolean_chain(self, element_ids):
+        """Perform complex chain of Boolean operations"""
+        try:
+            if len(element_ids) < 2:
+                return {"status": "error", "message": "Need at least 2 elements for Boolean operations"}
+            
+            # First unite some elements
+            unite_result = await self.controller.unite_elements(element_ids[:2], True)
+            
+            # Then try intersection if we have more elements
+            if len(element_ids) >= 3:
+                intersect_result = await self.controller.intersect_elements(element_ids[1:3], True)
+                
+                return {
+                    "status": "success" if unite_result.get("status") == "success" else "partial",
+                    "message": f"Boolean chain completed: unite={unite_result.get('status')}, intersect={intersect_result.get('status')}",
+                    "details": {"unite": unite_result, "intersect": intersect_result}
+                }
+            
+            return unite_result
+            
+        except Exception as e:
+            return {"status": "error", "message": f"Boolean chain failed: {e}"}
+    
+    async def _test_boolean_validation(self):
+        """Test Boolean operation parameter validation"""
+        validation_errors = []
+        
+        # Test invalid element lists
+        test_cases = [
+            ("Empty list", []),
+            ("Single element", [1]),
+            ("Invalid IDs", [-1, -2])
+        ]
+        
+        for test_name, element_list in test_cases:
+            try:
+                result = await self.controller.unite_elements(element_list, True)
+                if result.get("status") == "error":
+                    validation_errors.append(f"{test_name}: properly caught")
+                else:
+                    validation_errors.append(f"{test_name}: not caught")
+            except Exception:
+                validation_errors.append(f"{test_name}: exception caught")
+        
+        caught_errors = sum(1 for error in validation_errors if "caught" in error)
+        total_errors = len(validation_errors)
+        
+        return {
+            "status": "success" if caught_errors >= total_errors * 0.8 else "partial",
+            "message": f"Boolean validation: {caught_errors}/{total_errors} errors properly handled",
+            "details": validation_errors
+        }

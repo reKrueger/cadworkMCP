@@ -167,3 +167,203 @@ class TestGeometryController:
             await element_ctrl.delete_elements(test_elements)
         
         return self.helper.test_results
+    
+    async def run_spatial_analysis_tests(self) -> List[TestResult]:
+        """Run advanced spatial analysis and geometric calculations"""
+        self.helper.print_header("GEOMETRY CONTROLLER - SPATIAL ANALYSIS")
+        
+        # Create complex geometry for spatial analysis
+        from controllers.element_controller import ElementController
+        element_ctrl = ElementController()
+        spatial_elements = []
+        
+        # Create elements at specific positions for spatial testing
+        spatial_configs = [
+            {"p1": [0, 0, 0], "p2": [1000, 0, 0], "width": 100, "height": 100},  # X-axis beam
+            {"p1": [0, 0, 0], "p2": [0, 1000, 0], "width": 100, "height": 100},  # Y-axis beam
+            {"p1": [0, 0, 0], "p2": [0, 0, 1000], "width": 100, "height": 100},  # Z-axis beam
+            {"p1": [500, 500, 500], "p2": [1500, 1500, 1500], "width": 150, "height": 150}  # Diagonal beam
+        ]
+        
+        for config in spatial_configs:
+            result = await element_ctrl.create_beam(**config)
+            if result.get("status") == "success":
+                element_id = result.get("element_id")
+                if element_id:
+                    spatial_elements.append(element_id)
+        
+        if len(spatial_elements) >= 4:
+            # Test 1: Advanced geometric queries
+            for i, element_id in enumerate(spatial_elements):
+                await self.helper.run_test(
+                    f"Get Element Facets {i+1}",
+                    self.controller.get_element_facets,
+                    element_id
+                )
+                
+                await self.helper.run_test(
+                    f"Get Reference Face Area {i+1}",
+                    self.controller.get_element_reference_face_area,
+                    element_id
+                )
+                
+                await self.helper.run_test(
+                    f"Get Total Face Area {i+1}",
+                    self.controller.get_total_area_of_all_faces,
+                    element_id
+                )
+            
+            # Test 2: Spatial relationships
+            test_points = [
+                [250, 250, 250],  # Near origin
+                [750, 750, 750],  # Middle diagonal
+                [1250, 1250, 1250],  # Far diagonal
+                [0, 500, 1000]  # Off-axis point
+            ]
+            
+            for i, point in enumerate(test_points):
+                for j, element_id in enumerate(spatial_elements[:2]):  # Test with first 2 elements
+                    await self.helper.run_test(
+                        f"Project Point {i+1} to Element {j+1}",
+                        self.controller.project_point_to_element,
+                        point,
+                        element_id
+                    )
+                    
+                    await self.helper.run_test(
+                        f"Get Closest Point {i+1} on Element {j+1}",
+                        self.controller.get_closest_point_on_element,
+                        element_id,
+                        point
+                    )
+            
+            # Test 3: Element-to-element spatial analysis
+            element_pairs = [
+                (spatial_elements[0], spatial_elements[1]),  # X-axis to Y-axis
+                (spatial_elements[0], spatial_elements[2]),  # X-axis to Z-axis
+                (spatial_elements[1], spatial_elements[2]),  # Y-axis to Z-axis
+                (spatial_elements[0], spatial_elements[3])   # X-axis to diagonal
+            ]
+            
+            for i, (elem1, elem2) in enumerate(element_pairs):
+                await self.helper.run_test(
+                    f"Minimum Distance Pair {i+1}",
+                    self.controller.get_minimum_distance_between_elements,
+                    elem1,
+                    elem2
+                )
+            
+            # Test 4: Section analysis
+            section_planes = [
+                {"point": [500, 0, 0], "normal": [1, 0, 0], "name": "YZ-Plane Section"},
+                {"point": [0, 500, 0], "normal": [0, 1, 0], "name": "XZ-Plane Section"},
+                {"point": [0, 0, 500], "normal": [0, 0, 1], "name": "XY-Plane Section"},
+                {"point": [500, 500, 500], "normal": [1, 1, 1], "name": "Diagonal Section"}
+            ]
+            
+            for section in section_planes:
+                for element_id in spatial_elements[:2]:  # Test with first 2 elements
+                    await self.helper.run_test(
+                        f"{section['name']} - Element {element_id}",
+                        self.controller.get_section_outline,
+                        element_id,
+                        section["point"],
+                        section["normal"]
+                    )
+            
+            # Test 5: Complex spatial calculations
+            await self.helper.run_test(
+                "Multi-Element Center of Mass",
+                self.controller.calculate_center_of_mass,
+                spatial_elements,
+                True  # include_material_properties
+            )
+            
+            await self.helper.run_test(
+                "Multi-Element Total Volume",
+                self.controller.calculate_total_volume,
+                spatial_elements
+            )
+            
+            await self.helper.run_test(
+                "Multi-Element Total Weight",
+                self.controller.calculate_total_weight,
+                spatial_elements
+            )
+        
+        # Cleanup
+        if spatial_elements:
+            try:
+                await element_ctrl.delete_elements(spatial_elements)
+            except:
+                pass
+        
+        return self.helper.test_results
+    
+    async def run_precision_tests(self) -> List[TestResult]:
+        """Test geometric precision and edge cases"""
+        self.helper.print_header("GEOMETRY CONTROLLER - PRECISION TESTS")
+        
+        # Create elements with very precise dimensions
+        from controllers.element_controller import ElementController
+        element_ctrl = ElementController()
+        precision_elements = []
+        
+        # High precision configurations
+        precision_configs = [
+            {"p1": [0.001, 0.001, 0.001], "p2": [0.999, 0.999, 0.999], "width": 0.1, "height": 0.1},  # Micro beam
+            {"p1": [0, 0, 0], "p2": [10000.123456, 0, 0], "width": 200.789, "height": 150.456},  # High precision
+            {"p1": [-5000.5, -3000.3, -1000.1], "p2": [5000.5, 3000.3, 1000.1], "width": 100.05, "height": 100.05}  # Negative coords
+        ]
+        
+        for i, config in enumerate(precision_configs):
+            result = await element_ctrl.create_beam(**config)
+            if result.get("status") == "success":
+                element_id = result.get("element_id")
+                if element_id:
+                    precision_elements.append(element_id)
+                    
+                    # Test precision of geometric queries
+                    await self.helper.run_test(
+                        f"Precision Length {i+1}",
+                        self.controller.get_element_length,
+                        element_id
+                    )
+                    
+                    await self.helper.run_test(
+                        f"Precision Volume {i+1}",
+                        self.controller.get_element_volume,
+                        element_id
+                    )
+                    
+                    await self.helper.run_test(
+                        f"Precision Bounding Box {i+1}",
+                        self.controller.get_bounding_box,
+                        element_id
+                    )
+        
+        # Test edge cases with extreme coordinates
+        extreme_test_points = [
+            [0, 0, 0],  # Origin
+            [999999.999, 999999.999, 999999.999],  # Very large
+            [-999999.999, -999999.999, -999999.999],  # Very negative
+            [0.000001, 0.000001, 0.000001]  # Very small
+        ]
+        
+        if precision_elements:
+            for i, point in enumerate(extreme_test_points):
+                await self.helper.run_test(
+                    f"Extreme Point Projection {i+1}",
+                    self.controller.project_point_to_element,
+                    point,
+                    precision_elements[0]
+                )
+        
+        # Cleanup
+        if precision_elements:
+            try:
+                await element_ctrl.delete_elements(precision_elements)
+            except:
+                pass
+        
+        return self.helper.test_results

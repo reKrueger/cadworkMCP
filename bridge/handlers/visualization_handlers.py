@@ -2,8 +2,9 @@
 Visualization Handler für Cadwork Bridge
 Verarbeitet Farb- und Sichtbarkeits-Operationen
 """
+from typing import Dict, Any
 
-def handle_set_color(aParams: dict) -> dict:
+def handle_set_color(aParams: Dict[str, Any]) -> Dict[str, Any]:
     """Setzt Farbe für Elemente"""
     try:
         import element_controller as ec
@@ -31,7 +32,7 @@ def handle_set_color(aParams: dict) -> dict:
     except Exception as e:
         return {"status": "error", "message": f"set_color failed: {e}"}
 
-def handle_set_visibility(aParams: dict) -> dict:
+def handle_set_visibility(aParams: Dict[str, Any]) -> Dict[str, Any]:
     """Setzt Sichtbarkeit für Elemente"""
     try:
         import element_controller as ec
@@ -63,7 +64,7 @@ def handle_set_visibility(aParams: dict) -> dict:
     except Exception as e:
         return {"status": "error", "message": f"set_visibility failed: {e}"}
 
-def handle_set_transparency(aParams: dict) -> dict:
+def handle_set_transparency(aParams: Dict[str, Any]) -> Dict[str, Any]:
     """Setzt Transparenz für Elemente"""
     try:
         import element_controller as ec
@@ -91,7 +92,7 @@ def handle_set_transparency(aParams: dict) -> dict:
     except Exception as e:
         return {"status": "error", "message": f"set_transparency failed: {e}"}
 
-def handle_get_color(aParams: dict) -> dict:
+def handle_get_color(aParams: Dict[str, Any]) -> Dict[str, Any]:
     """Ruft Farbe eines Elements ab"""
     try:
         import element_controller as ec
@@ -131,7 +132,7 @@ def handle_get_color(aParams: dict) -> dict:
     except Exception as e:
         return {"status": "error", "message": f"get_color failed: {e}"}
 
-def handle_get_transparency(aParams: dict) -> dict:
+def handle_get_transparency(aParams: Dict[str, Any]) -> Dict[str, Any]:
     """Ruft Transparenz eines Elements ab"""
     try:
         import element_controller as ec
@@ -155,7 +156,7 @@ def handle_get_transparency(aParams: dict) -> dict:
     except Exception as e:
         return {"status": "error", "message": f"get_transparency failed: {e}"}
 
-def handle_show_all_elements(aParams: dict) -> dict:
+def handle_show_all_elements(aParams: Dict[str, Any]) -> Dict[str, Any]:
     """Macht alle Elemente sichtbar"""
     try:
         import element_controller as ec
@@ -186,7 +187,7 @@ def handle_show_all_elements(aParams: dict) -> dict:
     except Exception as e:
         return {"status": "error", "message": f"show_all_elements failed: {e}"}
 
-def handle_hide_all_elements(aParams: dict) -> dict:
+def handle_hide_all_elements(aParams: Dict[str, Any]) -> Dict[str, Any]:
     """Blendet alle Elemente aus"""
     try:
         import element_controller as ec
@@ -218,7 +219,7 @@ def handle_hide_all_elements(aParams: dict) -> dict:
         return {"status": "error", "message": f"hide_all_elements failed: {e}"}
 
 
-def handle_refresh_display(aParams: dict) -> dict:
+def handle_refresh_display(aParams: Dict[str, Any]) -> Dict[str, Any]:
     """Aktualisiert das Display/Viewport"""
     try:
         import utility_controller as uc
@@ -235,7 +236,7 @@ def handle_refresh_display(aParams: dict) -> dict:
     except Exception as e:
         return {"status": "error", "message": f"refresh_display failed: {e}"}
 
-def handle_get_visible_element_count(aParams: dict) -> dict:
+def handle_get_visible_element_count(aParams: Dict[str, Any]) -> Dict[str, Any]:
     """Ermittelt Anzahl sichtbarer Elemente"""
     try:
         import element_controller as ec

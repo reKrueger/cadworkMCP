@@ -49,14 +49,14 @@ list_ctrl = CListController()
 
 @mcp.tool(
     name="create_beam",
-    description="Creates a rectangular beam element. Requires start point p1 ([x,y,z]), end point p2 ([x,y,z]), width, and height. Optional orientation point p3 ([x,y,z])."
+    description="Creates a rectangular beam element. Requires start point p1 ([x,y,z]), end point p2 ([x,y,z]), width, and height. IMPORTANT: For vertical beams or when p1 and p2 have same x,y coordinates, you MUST provide orientation point p3 ([x,y,z]) to define the beam's cross-section orientation, otherwise the beam will appear as a line. P3 defines the direction of the beam's width."
 )
 async def create_beam(p1: List[float], p2: List[float], width: float, height: float, p3: Optional[List[float]] = None) -> Dict[str, Any]:
     return await element_ctrl.create_beam(p1, p2, width, height, p3)
 
 @mcp.tool(
     name="create_panel", 
-    description="Creates a rectangular panel element. Requires start point p1 ([x,y,z]), end point p2 ([x,y,z]), width, and thickness. Optional orientation point p3 ([x,y,z])."
+    description="Creates a rectangular panel element. Requires start point p1 ([x,y,z]), end point p2 ([x,y,z]), width, and thickness. IMPORTANT: When p1 and p2 define only a line (same x,y coordinates for vertical panels, or along a single axis), you MUST provide orientation point p3 ([x,y,z]) to define the panel's width direction and orientation, otherwise the panel will appear as a line. P3 defines the direction in which the panel's width extends from the p1-p2 line."
 )
 async def create_panel(p1: List[float], p2: List[float], width: float, thickness: float, p3: Optional[List[float]] = None) -> Dict[str, Any]:
     return await element_ctrl.create_panel(p1, p2, width, thickness, p3)
@@ -140,7 +140,7 @@ async def mirror_elements(element_ids: List[int], mirror_plane_point: List[float
 
 @mcp.tool(
     name="create_solid_wood_panel",
-    description="Creates a solid wood panel with specified wood type and grain direction. Takes start point p1 [x,y,z], end point p2 [x,y,z], thickness, wood type, and optional orientation point p3 [x,y,z]."
+    description="Creates a solid wood panel with specified wood type and grain direction. Takes start point p1 [x,y,z], end point p2 [x,y,z], thickness, wood type. IMPORTANT: When p1 and p2 define only a line (same x,y coordinates for vertical panels, or along a single axis), you MUST provide orientation point p3 ([x,y,z]) to define the panel's width direction, orientation, and wood grain direction, otherwise the panel will appear as a line. P3 defines the direction in which the panel's width extends from the p1-p2 line and determines grain orientation."
 )
 async def create_solid_wood_panel(p1: List[float], p2: List[float], thickness: float, wood_type: str = "Generic", p3: Optional[List[float]] = None) -> Dict[str, Any]:
     return await element_ctrl.create_solid_wood_panel(p1, p2, thickness, wood_type, p3)
@@ -156,28 +156,28 @@ async def get_user_element_ids(count: Optional[int] = None) -> Dict[str, Any]:
 
 @mcp.tool(
     name="create_circular_beam_points",
-    description="Creates a circular beam element using points. Requires diameter, start point p1 ([x,y,z]), end point p2 ([x,y,z]), and optional orientation point p3 ([x,y,z])."
+    description="Creates a circular beam element using points. Requires diameter, start point p1 ([x,y,z]), end point p2 ([x,y,z]). IMPORTANT: For vertical beams or when p1 and p2 have same x,y coordinates, you MUST provide orientation point p3 ([x,y,z]) to define the beam's rotation around its axis, otherwise default orientation is used. P3 defines the reference direction for the circular cross-section."
 )
 async def create_circular_beam_points(diameter: float, p1: List[float], p2: List[float], p3: Optional[List[float]] = None) -> Dict[str, Any]:
     return await element_ctrl.create_circular_beam_points(diameter, p1, p2, p3)
 
 @mcp.tool(
     name="create_square_beam_points", 
-    description="Creates a square beam element using points. Requires width, start point p1 ([x,y,z]), end point p2 ([x,y,z]), and optional orientation point p3 ([x,y,z])."
+    description="Creates a square beam element using points. Requires width, start point p1 ([x,y,z]), end point p2 ([x,y,z]). IMPORTANT: For vertical beams or when p1 and p2 have same x,y coordinates, you MUST provide orientation point p3 ([x,y,z]) to define the beam's cross-section orientation, otherwise the beam will appear as a line. P3 defines the direction of one side of the square cross-section."
 )
 async def create_square_beam_points(width: float, p1: List[float], p2: List[float], p3: Optional[List[float]] = None) -> Dict[str, Any]:
     return await element_ctrl.create_square_beam_points(width, p1, p2, p3)
 
 @mcp.tool(
     name="create_standard_beam_points",
-    description="Creates a standard beam element using points from Cadwork library. Requires standard_element_name, start point p1 ([x,y,z]), end point p2 ([x,y,z]), and optional orientation point p3 ([x,y,z])."
+    description="Creates a standard beam element using points from Cadwork library. Requires standard_element_name, start point p1 ([x,y,z]), end point p2 ([x,y,z]). IMPORTANT: For vertical beams or when p1 and p2 have same x,y coordinates, you MUST provide orientation point p3 ([x,y,z]) to define the beam's cross-section orientation, otherwise the beam may appear incorrectly oriented. P3 defines the direction of the beam's local coordinate system."
 )
 async def create_standard_beam_points(standard_element_name: str, p1: List[float], p2: List[float], p3: Optional[List[float]] = None) -> Dict[str, Any]:
     return await element_ctrl.create_standard_beam_points(standard_element_name, p1, p2, p3)
 
 @mcp.tool(
     name="create_standard_panel_points",
-    description="Creates a standard panel element using points from Cadwork library. Requires standard_element_name, start point p1 ([x,y,z]), end point p2 ([x,y,z]), and optional orientation point p3 ([x,y,z])."
+    description="Creates a standard panel element using points from Cadwork library. Requires standard_element_name, start point p1 ([x,y,z]), end point p2 ([x,y,z]). IMPORTANT: When p1 and p2 define only a line (same x,y coordinates for vertical panels, or along a single axis), you MUST provide orientation point p3 ([x,y,z]) to define the panel's width direction and orientation, otherwise the panel may appear as a line or incorrectly oriented. P3 defines the direction in which the panel's width extends from the p1-p2 line."
 )
 async def create_standard_panel_points(standard_element_name: str, p1: List[float], p2: List[float], p3: Optional[List[float]] = None) -> Dict[str, Any]:
     return await element_ctrl.create_standard_panel_points(standard_element_name, p1, p2, p3)
@@ -951,7 +951,7 @@ async def get_cadwork_version_info() -> Dict[str, Any]:
 
 @mcp.tool(
     name="create_auxiliary_beam_points",
-    description="Creates an auxiliary beam element using points. Auxiliary elements are used for construction purposes and can be converted to regular beams later. Requires start point p1 ([x,y,z]), end point p2 ([x,y,z]), and optional orientation point p3 ([x,y,z])."
+    description="Creates an auxiliary beam element using points. Auxiliary elements are used for construction purposes and can be converted to regular beams later. Requires start point p1 ([x,y,z]), end point p2 ([x,y,z]). IMPORTANT: For vertical beams or when p1 and p2 have same x,y coordinates, you MUST provide orientation point p3 ([x,y,z]) to define the beam's orientation, otherwise the beam will appear as a line. P3 defines the direction for the beam's local coordinate system."
 )
 async def create_auxiliary_beam_points(p1: List[float], p2: List[float], p3: Optional[List[float]] = None) -> Dict[str, Any]:
     return await element_ctrl.create_auxiliary_beam_points(p1, p2, p3)

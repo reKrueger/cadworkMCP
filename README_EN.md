@@ -73,13 +73,17 @@ No manual start required! 🚀
 - **Transformations:** `rotate_elements`, `apply_global_scale`, `invert_model`, `rotate_height_axis_90`, `rotate_length_axis_90`
 - **Calculations:** `calculate_total_volume`, `calculate_total_weight`
 
-### ✅ Attribute Management (8 Functions)
-- **Queries:** `get_standard_attributes`, `get_user_attributes`, `list_defined_user_attributes`
-- **Setters:** `set_name`, `set_material`, `set_group`, `set_comment`, `set_subgroup`
+### ✅ Attribute Management (16 Functions)
+- **Queries:** `get_standard_attributes`, `get_user_attributes`, `list_defined_user_attributes`, `get_element_attribute_display_name`
+- **Setters:** `set_name`, `set_material`, `set_group`, `set_comment`, `set_subgroup`, `set_user_attribute`
+- **Advanced:** `clear_user_attribute`, `copy_attributes`
+- **Batch Operations:** `batch_set_user_attributes`, `validate_attribute_consistency`
+- **Business Intelligence:** `search_elements_by_attributes`, `export_attribute_report`
 
-### ✅ Visualization (10 Functions)
+### ✅ Visualization (12 Functions)
 - **Properties:** `set_color`, `set_visibility`, `set_transparency`, `get_color`, `get_transparency`
 - **Global Control:** `show_all_elements`, `hide_all_elements`, `refresh_display`, `get_visible_element_count`
+- **Advanced Visualization:** `create_visual_filter`, `apply_color_scheme`
 
 ### ✅ Utility Functions (6 Functions)
 - **Display:** `disable_auto_display_refresh`, `enable_auto_display_refresh`
@@ -95,7 +99,7 @@ No manual start required! 🚀
 - **Shop Drawings (4):** `add_wall_section_x`, `add_wall_section_y`, `add_wall_section_vertical`, `export_2d_wireframe`
 - **Export/Import (24):** `export_to_btl`, `export_element_list`, `export_to_ifc`, `export_to_dxf`, `export_workshop_drawings`, `export_cutting_list`, `export_to_step`, `export_to_3dm`, `export_to_obj`, `export_to_ply`, `export_to_stl`, `export_to_gltf`, `export_to_x3d`, `export_production_data`, `export_to_fbx`, `export_to_webgl`, `export_to_sat`, `export_to_dstv`, `export_step_with_drillings`, `export_btl_for_nesting`, `import_from_step`, `import_from_sat`, `import_from_rhino`, `import_from_btl`
 
-**Current Total: 144 available functions**
+**Current Total: 156 available functions**
 
 ## ❌ Missing Cadwork API Functions (to be implemented)
 

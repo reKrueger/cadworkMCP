@@ -200,3 +200,135 @@ class CVisualizationController(BaseController):
             
         except Exception as e:
             return {"status": "error", "message": f"get_visible_element_count failed: {e}"}
+    
+    async def create_visual_filter(self, filter_name: str, filter_criteria: Dict[str, Any], 
+                                 visual_properties: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Create and apply visual filter based on element attributes
+        
+        Args:
+            filter_name: Name for the visual filter
+            filter_criteria: Criteria to select elements (like search_elements_by_attributes)
+            visual_properties: Visual properties to apply (color, transparency, visibility)
+        
+        Returns:
+            dict: Status of filter creation and application
+        """
+        try:
+            # Validate filter name
+            if not isinstance(filter_name, str) or not filter_name.strip():
+                return {"status": "error", "message": "filter_name must be a non-empty string"}
+            
+            # Validate filter criteria
+            if not isinstance(filter_criteria, dict) or not filter_criteria:
+                return {"status": "error", "message": "filter_criteria must be a non-empty dictionary"}
+            
+            # Validate visual properties
+            if not isinstance(visual_properties, dict) or not visual_properties:
+                return {"status": "error", "message": "visual_properties must be a non-empty dictionary"}
+            
+            # Validate visual properties content
+            valid_visual_keys = ["color_id", "transparency", "visibility"]
+            validated_visuals: Dict[str, Any] = {}
+            
+            for key, value in visual_properties.items():
+                if key not in valid_visual_keys:
+                    return {"status": "error", "message": f"Invalid visual property: {key}. Must be one of: {valid_visual_keys}"}
+                
+                if key == "color_id":
+                    if not isinstance(value, int) or value < 1 or value > 255:
+                        return {"status": "error", "message": "color_id must be an integer between 1 and 255"}
+                    validated_visuals[key] = value
+                    
+                elif key == "transparency":
+                    if not isinstance(value, int) or value < 0 or value > 100:
+                        return {"status": "error", "message": "transparency must be an integer between 0 and 100"}
+                    validated_visuals[key] = value
+                    
+                elif key == "visibility":
+                    if not isinstance(value, bool):
+                        return {"status": "error", "message": "visibility must be a boolean"}
+                    validated_visuals[key] = value
+            
+            # Validate filter criteria structure (similar to search_elements_by_attributes)
+            validated_criteria: Dict[str, Any] = {}
+            for key, val in filter_criteria.items():
+                if key.startswith("user_attr_"):
+                    try:
+                        attr_num_str = key.replace("user_attr_", "")
+                        attr_num = int(attr_num_str)
+                        if attr_num <= 0:
+                            return {"status": "error", "message": f"Invalid user attribute number: {attr_num}"}
+                        validated_criteria[key] = {"type": "user_attribute", "number": attr_num, "value": str(val)}
+                    except (ValueError, TypeError):
+                        return {"status": "error", "message": f"Invalid user attribute key format: {key}"}
+                        
+                elif key in ["name", "material", "group", "comment", "subgroup"]:
+                    validated_criteria[key] = {"type": "standard_attribute", "value": str(val)}
+                    
+                elif key.startswith("dimension_"):
+                    dimension_type = key.replace("dimension_", "")
+                    if dimension_type not in ["width", "height", "length", "volume", "weight"]:
+                        return {"status": "error", "message": f"Invalid dimension type: {dimension_type}"}
+                    validated_criteria[key] = {"type": "dimension", "dimension": dimension_type, "value": val}
+                    
+                else:
+                    return {"status": "error", "message": f"Unknown filter criteria key: {key}"}
+            
+            # Send command
+            return self.send_command("create_visual_filter", {
+                "filter_name": filter_name.strip(),
+                "filter_criteria": validated_criteria,
+                "visual_properties": validated_visuals
+            })
+            
+        except Exception as e:
+            return {"status": "error", "message": f"create_visual_filter failed: {e}"}
+    
+    async def apply_color_scheme(self, scheme_name: str, element_ids: List[int] = None, 
+                               scheme_basis: str = "material") -> Dict[str, Any]:
+        """
+        Apply predefined color scheme to elements
+        
+        Args:
+            scheme_name: Name of color scheme ('material_based', 'status_based', 'priority_based', 'custom')
+            element_ids: Optional list of element IDs (if None, applies to all visible elements)
+            scheme_basis: Basis for coloring ('material', 'group', 'element_type', 'user_attribute')
+        
+        Returns:
+            dict: Status of color scheme application
+        """
+        try:
+            # Validate scheme name
+            valid_schemes = ["material_based", "status_based", "priority_based", "element_type_based", 
+                           "group_based", "dimension_based", "custom"]
+            if scheme_name not in valid_schemes:
+                return {"status": "error", "message": f"Invalid scheme_name. Must be one of: {valid_schemes}"}
+            
+            # Validate element IDs if provided
+            validated_ids = None
+            if element_ids is not None:
+                if not isinstance(element_ids, list):
+                    return {"status": "error", "message": "element_ids must be a list if provided"}
+                if element_ids:  # Only validate if not empty
+                    validated_ids = [self.validate_element_id(eid) for eid in element_ids]
+            
+            # Validate scheme basis
+            valid_basis = ["material", "group", "element_type", "user_attribute", "dimension", "status"]
+            if scheme_basis not in valid_basis:
+                return {"status": "error", "message": f"Invalid scheme_basis. Must be one of: {valid_basis}"}
+            
+            # Build command arguments
+            args: Dict[str, Any] = {
+                "scheme_name": scheme_name,
+                "scheme_basis": scheme_basis
+            }
+            
+            if validated_ids is not None:
+                args["element_ids"] = validated_ids
+            
+            # Send command
+            return self.send_command("apply_color_scheme", args)
+            
+        except Exception as e:
+            return {"status": "error", "message": f"apply_color_scheme failed: {e}"}

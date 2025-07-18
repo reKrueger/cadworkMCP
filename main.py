@@ -19,6 +19,8 @@ from controllers.measurement_controller import CMeasurementController
 from controllers.material_controller import CMaterialController
 from controllers.export_controller import CExportController
 from controllers.import_controller import CImportController
+from controllers.container_controller import CContainerController
+from controllers.transformation_controller import CTransformationController
 
 # Create MCP server
 mcp = create_mcp_server()
@@ -36,6 +38,8 @@ measurement_ctrl = CMeasurementController()
 material_ctrl = CMaterialController()
 export_ctrl = CExportController()
 import_ctrl = CImportController()
+container_ctrl = CContainerController()
+transformation_ctrl = CTransformationController()
 
 # --- ELEMENT TOOLS ---
 
@@ -723,6 +727,20 @@ async def refresh_display() -> Dict[str, Any]:
 async def get_visible_element_count() -> Dict[str, Any]:
     return await visualization_ctrl.get_visible_element_count()
 
+@mcp.tool(
+    name="create_visual_filter",
+    description="Creates and applies visual filters based on element attributes. Takes filter name, criteria (like search), and visual properties (color, transparency, visibility) to automatically style matching elements."
+)
+async def create_visual_filter(filter_name: str, filter_criteria: Dict[str, Any], visual_properties: Dict[str, Any]) -> Dict[str, Any]:
+    return await visualization_ctrl.create_visual_filter(filter_name, filter_criteria, visual_properties)
+
+@mcp.tool(
+    name="apply_color_scheme",
+    description="Applies predefined color schemes to elements based on various criteria. Takes scheme name, optional element IDs, and scheme basis (material, group, element_type, etc.) for intelligent automatic coloring."
+)
+async def apply_color_scheme(scheme_name: str, element_ids: List[int] = None, scheme_basis: str = "material") -> Dict[str, Any]:
+    return await visualization_ctrl.apply_color_scheme(scheme_name, element_ids, scheme_basis)
+
 # --- EXTENDED ATTRIBUTE TOOLS ---
 
 @mcp.tool(
@@ -745,6 +763,68 @@ async def set_comment(element_ids: List[int], comment: str) -> Dict[str, Any]:
 )
 async def set_subgroup(element_ids: List[int], subgroup: str) -> Dict[str, Any]:
     return await attribute_ctrl.set_subgroup(element_ids, subgroup)
+
+@mcp.tool(
+    name="set_user_attribute",
+    description="Sets a user-defined attribute for a list of elements. Takes element IDs, attribute number (1-999), and attribute value string."
+)
+async def set_user_attribute(element_ids: List[int], attribute_number: int, attribute_value: str) -> Dict[str, Any]:
+    return await attribute_ctrl.set_user_attribute(element_ids, attribute_number, attribute_value)
+
+@mcp.tool(
+    name="get_element_attribute_display_name",
+    description="Gets the display name for a user-defined attribute number. Takes attribute number and returns configured display name."
+)
+async def get_element_attribute_display_name(attribute_number: int) -> Dict[str, Any]:
+    return await attribute_ctrl.get_element_attribute_display_name(attribute_number)
+
+@mcp.tool(
+    name="clear_user_attribute",
+    description="Clears/deletes a user-defined attribute for a list of elements. Takes element IDs and attribute number to clear."
+)
+async def clear_user_attribute(element_ids: List[int], attribute_number: int) -> Dict[str, Any]:
+    return await attribute_ctrl.clear_user_attribute(element_ids, attribute_number)
+
+@mcp.tool(
+    name="copy_attributes",
+    description="Copies attributes from a source element to target elements. Takes source element ID, target element IDs, and optional flags for which attribute types to copy."
+)
+async def copy_attributes(source_element_id: int, target_element_ids: List[int], 
+                         copy_user_attributes: bool = True, copy_standard_attributes: bool = True) -> Dict[str, Any]:
+    return await attribute_ctrl.copy_attributes(source_element_id, target_element_ids, copy_user_attributes, copy_standard_attributes)
+
+@mcp.tool(
+    name="batch_set_user_attributes",
+    description="Sets multiple user-defined attributes for elements in a single operation. Takes element IDs and a dictionary mapping attribute numbers to values for efficient batch processing."
+)
+async def batch_set_user_attributes(element_ids: List[int], attribute_mappings: Dict[int, str]) -> Dict[str, Any]:
+    return await attribute_ctrl.batch_set_user_attributes(element_ids, attribute_mappings)
+
+@mcp.tool(
+    name="validate_attribute_consistency",
+    description="Validates attribute consistency across multiple elements. Checks for completeness (all elements have attributes) and/or uniqueness (no duplicate values). Takes element IDs, attribute numbers, and validation flags."
+)
+async def validate_attribute_consistency(element_ids: List[int], attribute_numbers: List[int], 
+                                       check_completeness: bool = True, check_uniqueness: bool = False) -> Dict[str, Any]:
+    return await attribute_ctrl.validate_attribute_consistency(element_ids, attribute_numbers, check_completeness, check_uniqueness)
+
+@mcp.tool(
+    name="search_elements_by_attributes",
+    description="Searches elements by flexible attribute criteria. Supports standard attributes, user attributes, and dimensions with various search modes (AND, OR, CONTAINS, etc.). Takes search criteria dictionary and search mode."
+)
+async def search_elements_by_attributes(search_criteria: Dict[str, Any], search_mode: str = "AND") -> Dict[str, Any]:
+    return await attribute_ctrl.search_elements_by_attributes(search_criteria, search_mode)
+
+@mcp.tool(
+    name="export_attribute_report",
+    description="Exports comprehensive attribute reports for elements in various formats (JSON, CSV, XML, HTML, PDF). Takes element IDs, format, and options for which data to include and how to group it."
+)
+async def export_attribute_report(element_ids: List[int], report_format: str = "JSON",
+                                include_standard_attributes: bool = True, include_user_attributes: bool = True,
+                                user_attribute_numbers: List[int] = None, include_dimensions: bool = False,
+                                group_by: str = None) -> Dict[str, Any]:
+    return await attribute_ctrl.export_attribute_report(element_ids, report_format, include_standard_attributes, 
+                                                       include_user_attributes, user_attribute_numbers, include_dimensions, group_by)
 
 # --- UTILITY TOOLS ---
 
@@ -1230,6 +1310,38 @@ async def import_from_btl(file_path: str, import_mode: str = "standard",
                          merge_duplicates: bool = True, validate_geometry: bool = True,
                          import_processing: bool = True) -> Dict[str, Any]:
     return await import_ctrl.import_from_btl(file_path, import_mode, merge_duplicates, validate_geometry, import_processing)
+
+# --- CONTAINER TOOLS ---
+
+@mcp.tool(
+    name="create_auto_container_from_standard",
+    description="Creates an automatic container from standard elements. Containers are groups that organize multiple elements together. Useful for complex structures and assemblies. Takes element IDs and container name."
+)
+async def create_auto_container_from_standard(element_ids: List[int], container_name: str) -> Dict[str, Any]:
+    return await container_ctrl.create_auto_container_from_standard(element_ids, container_name)
+
+@mcp.tool(
+    name="get_container_content_elements",
+    description="Retrieves all elements contained within a specific container. Returns list of element IDs and detailed information about each contained element. Takes container ID."
+)
+async def get_container_content_elements(container_id: int) -> Dict[str, Any]:
+    return await container_ctrl.get_container_content_elements(container_id)
+
+# --- TRANSFORMATION TOOLS ---
+
+@mcp.tool(
+    name="rotate_elements",
+    description="Rotates elements around a specified axis. Takes element IDs, origin point [x,y,z], rotation axis vector [x,y,z], and angle in degrees."
+)
+async def rotate_elements(element_ids: List[int], origin: List[float], rotation_axis: List[float], rotation_angle: float) -> Dict[str, Any]:
+    return await transformation_ctrl.rotate_elements(element_ids, origin, rotation_axis, rotation_angle)
+
+@mcp.tool(
+    name="apply_global_scale",
+    description="Applies global scaling to elements. Takes element IDs, scale factor (e.g., 2.0 = double size), and origin point [x,y,z] for scaling."
+)
+async def apply_global_scale(element_ids: List[int], scale: float, origin: List[float]) -> Dict[str, Any]:
+    return await transformation_ctrl.apply_global_scale(element_ids, scale, origin)
 
 if __name__ == "__main__":
     import argparse

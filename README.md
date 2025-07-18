@@ -63,6 +63,7 @@ Kein manueller Start erforderlich! 🚀
 - **Holzverbindungen:** `cut_corner_lap`, `cut_cross_lap`, `cut_half_lap`, `cut_double_tenon`, `cut_scarf_joint`, `cut_shoulder`
 - **Konvertierung:** `convert_beam_to_panel`, `convert_panel_to_beam`, `convert_auxiliary_to_beam`
 - **Container:** `create_auto_container_from_standard`, `get_container_content_elements`
+- **Container:** `create_auto_container_from_standard`, `get_container_content_elements`
 
 ### ✅ Geometrie-Operationen (33 Funktionen)
 - **Abmessungen:** `get_element_width`, `get_element_height`, `get_element_length`, `get_element_volume`, `get_element_weight`
@@ -76,13 +77,17 @@ Kein manueller Start erforderlich! 🚀
 - **Transformationen:** `rotate_elements`, `apply_global_scale`, `invert_model`, `rotate_height_axis_90`, `rotate_length_axis_90`
 - **Berechnungen:** `calculate_total_volume`, `calculate_total_weight`
 
-### ✅ Attribut-Management (8 Funktionen)
-- **Abfragen:** `get_standard_attributes`, `get_user_attributes`, `list_defined_user_attributes`
-- **Setzen:** `set_name`, `set_material`, `set_group`, `set_comment`, `set_subgroup`
+### ✅ Attribut-Management (16 Funktionen)
+- **Abfragen:** `get_standard_attributes`, `get_user_attributes`, `list_defined_user_attributes`, `get_element_attribute_display_name`
+- **Setzen:** `set_name`, `set_material`, `set_group`, `set_comment`, `set_subgroup`, `set_user_attribute`
+- **Erweitert:** `clear_user_attribute`, `copy_attributes`
+- **Batch-Operationen:** `batch_set_user_attributes`, `validate_attribute_consistency`
+- **Business Intelligence:** `search_elements_by_attributes`, `export_attribute_report`
 
-### ✅ Visualisierung (10 Funktionen)
+### ✅ Visualisierung (12 Funktionen)
 - **Eigenschaften:** `set_color`, `set_visibility`, `set_transparency`, `get_color`, `get_transparency`
 - **Globale Steuerung:** `show_all_elements`, `hide_all_elements`, `refresh_display`, `get_visible_element_count`
+- **Erweiterte Visualisierung:** `create_visual_filter`, `apply_color_scheme`
 
 ### ✅ Utility-Funktionen (6 Funktionen)
 - **Display:** `disable_auto_display_refresh`, `enable_auto_display_refresh`
@@ -98,7 +103,7 @@ Kein manueller Start erforderlich! 🚀
 - **Shop Drawings (4):** `add_wall_section_x`, `add_wall_section_y`, `add_wall_section_vertical`, `export_2d_wireframe`
 - **Export/Import (24):** `export_to_btl`, `export_element_list`, `export_to_ifc`, `export_to_dxf`, `export_workshop_drawings`, `export_cutting_list`, `export_to_step`, `export_to_3dm`, `export_to_obj`, `export_to_ply`, `export_to_stl`, `export_to_gltf`, `export_to_x3d`, `export_production_data`, `export_to_fbx`, `export_to_webgl`, `export_to_sat`, `export_to_dstv`, `export_step_with_drillings`, `export_btl_for_nesting`, `import_from_step`, `import_from_sat`, `import_from_rhino`, `import_from_btl`
 
-**Aktuelle Anzahl: 144 verfügbare Funktionen**
+**Aktuelle Anzahl: 156 verfügbare Funktionen**
 
 ## 🎯 Test-Status & Qualität
 

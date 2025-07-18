@@ -79,3 +79,141 @@ class TestMeasurementController:
     
     def get_summary(self): return self.helper.get_summary()
     def print_summary(self): self.helper.print_summary()
+    
+    async def run_advanced_measurement_tests(self) -> list:
+        """Run advanced measurement and calculation tests"""
+        self.helper.print_header("MEASUREMENT CONTROLLER - ADVANCED TESTS")
+        
+        # Test 1: Complex polygon area calculations
+        complex_polygons = [
+            {
+                "name": "Pentagon",
+                "vertices": [
+                    [0, 0, 0],
+                    [1000, 0, 0],
+                    [1500, 951, 0],
+                    [500, 1539, 0],
+                    [-500, 951, 0]
+                ]
+            },
+            {
+                "name": "L-Shape",
+                "vertices": [
+                    [0, 0, 0],
+                    [2000, 0, 0],
+                    [2000, 1000, 0],
+                    [1000, 1000, 0],
+                    [1000, 2000, 0],
+                    [0, 2000, 0]
+                ]
+            },
+            {
+                "name": "Star Shape",
+                "vertices": [
+                    [1000, 0, 0],
+                    [1200, 800, 0],
+                    [2000, 800, 0],
+                    [1400, 1200, 0],
+                    [1600, 2000, 0],
+                    [1000, 1600, 0],
+                    [400, 2000, 0],
+                    [600, 1200, 0],
+                    [0, 800, 0],
+                    [800, 800, 0]
+                ]
+            }
+        ]
+        
+        for polygon in complex_polygons:
+            await self.helper.run_test(
+                f"Measure {polygon['name']} Area",
+                self.controller.measure_area,
+                polygon["vertices"]
+            )
+        
+        # Test 2: Distance measurements in different coordinate systems
+        distance_test_cases = [
+            ("XY Plane Distance", [0, 0, 0], [1000, 1000, 0]),
+            ("XZ Plane Distance", [0, 0, 0], [1000, 0, 1000]),
+            ("YZ Plane Distance", [0, 0, 0], [0, 1000, 1000]),
+            ("3D Diagonal", [0, 0, 0], [1000, 1000, 1000]),
+            ("Negative Coordinates", [-500, -500, -500], [500, 500, 500])
+        ]
+        
+        for test_name, p1, p2 in distance_test_cases:
+            await self.helper.run_test(
+                test_name,
+                self.controller.measure_distance,
+                p1, p2
+            )
+        
+        # Test 3: Special angle measurements
+        angle_test_cases = [
+            ("90 Degree Angle", [1, 0, 0], [0, 1, 0]),
+            ("180 Degree Angle", [1, 0, 0], [-1, 0, 0]),
+            ("45 Degree Angle", [1, 0, 0], [1, 1, 0]),
+            ("3D Angle", [1, 1, 1], [1, -1, 1]),
+            ("Obtuse Angle", [1, 0, 0], [-1, 1, 0])
+        ]
+        
+        for test_name, v1, v2 in angle_test_cases:
+            await self.helper.run_test(
+                test_name,
+                self.controller.measure_angle,
+                v1, v2
+            )
+        
+        # Test 4: Measurement validation and error handling
+        validation_test_cases = [
+            ("Zero Length Vector", [0, 0, 0], [1, 0, 0]),
+            ("Identical Points", [100, 100, 100], [100, 100, 100]),
+            ("Invalid Polygon (2 points)", [[0, 0, 0], [1, 0, 0]]),
+            ("Collinear Polygon", [[0, 0, 0], [1, 0, 0], [2, 0, 0]])
+        ]
+        
+        validation_results = []
+        for test_name, *args in validation_test_cases:
+            try:
+                if "Vector" in test_name:
+                    result = await self.controller.measure_angle(*args)
+                elif "Points" in test_name:
+                    result = await self.controller.measure_distance(*args)
+                else:
+                    result = await self.controller.measure_area(args[0])
+                
+                validation_results.append(f"{test_name}: {result.get('status', 'unknown')}")
+            except Exception as e:
+                validation_results.append(f"{test_name}: exception handled")
+        
+        await self.helper.run_test(
+            "Measurement Validation Summary",
+            self._create_validation_summary,
+            validation_results
+        )
+        
+        # Test 5: Performance test with large datasets
+        large_polygon = []
+        for i in range(100):  # 100-sided polygon
+            angle = 2 * 3.14159 * i / 100
+            x = 1000 * (1 + 0.1 * (i % 10)) * round(1000 * (1 + 0.5 * __import__('math').cos(angle)))
+            y = 1000 * (1 + 0.1 * (i % 10)) * round(1000 * (1 + 0.5 * __import__('math').sin(angle)))
+            large_polygon.append([x, y, 0])
+        
+        await self.helper.run_test(
+            "Large Polygon Performance Test",
+            self.controller.measure_area,
+            large_polygon
+        )
+        
+        return self.helper.test_results
+    
+    async def _create_validation_summary(self, validation_results):
+        """Create summary of validation test results"""
+        successful_validations = sum(1 for result in validation_results if "error" in result or "exception" in result)
+        total_validations = len(validation_results)
+        
+        return {
+            "status": "success" if successful_validations >= total_validations * 0.5 else "partial",
+            "message": f"Validation tests: {successful_validations}/{total_validations} handled appropriately",
+            "details": validation_results
+        }

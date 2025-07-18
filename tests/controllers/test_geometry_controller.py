@@ -103,3 +103,67 @@ class TestGeometryController:
                 await element_ctrl.delete_elements([element_id])
         
         return self.helper.test_results
+    async def run_calculation_tests(self) -> List[TestResult]:
+        """Run additional calculation and analysis tests"""
+        self.helper.print_header("GEOMETRY CONTROLLER - CALCULATION TESTS")
+        
+        # Create test elements for calculations
+        from controllers.element_controller import ElementController
+        element_ctrl = ElementController()
+        
+        # Create multiple elements for multi-element calculations
+        test_elements = []
+        for i in range(3):
+            beam_params = self.param_finder.get_beam_parameters()
+            beam_params["p1"][0] += i * 1500  # Offset beams
+            beam_params["p2"][0] += i * 1500
+            
+            result = await element_ctrl.create_beam(**beam_params)
+            if result.get("status") == "success":
+                element_id = result.get("element_id")
+                if element_id:
+                    test_elements.append(element_id)
+        
+        if len(test_elements) >= 2:
+            # Test 1: Calculate total volume for multiple elements
+            await self.helper.run_test(
+                "Calculate Total Volume",
+                self.controller.calculate_total_volume,
+                test_elements
+            )
+            
+            # Test 2: Calculate total weight for multiple elements
+            await self.helper.run_test(
+                "Calculate Total Weight",
+                self.controller.calculate_total_weight,
+                test_elements
+            )
+            
+            # Test 3: Get center of gravity for element list
+            await self.helper.run_test(
+                "Get Center of Gravity for List",
+                self.controller.get_center_of_gravity_for_list,
+                test_elements
+            )
+            
+            # Test 4: Calculate center of mass with material properties
+            await self.helper.run_test(
+                "Calculate Center of Mass",
+                self.controller.calculate_center_of_mass,
+                test_elements,
+                True  # include_material_properties
+            )
+            
+            # Test 5: Get minimum distance between elements
+            await self.helper.run_test(
+                "Get Minimum Distance Between Elements",
+                self.controller.get_minimum_distance_between_elements,
+                test_elements[0],
+                test_elements[1]
+            )
+        
+        # Cleanup test elements
+        if test_elements:
+            await element_ctrl.delete_elements(test_elements)
+        
+        return self.helper.test_results

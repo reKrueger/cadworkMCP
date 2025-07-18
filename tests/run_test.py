@@ -1,237 +1,284 @@
 #!/usr/bin/env python3
 """
-New Cadwork MCP Test Runner - Restructured & Organized
-====================================================
+Cadwork MCP Test Runner
+======================
 
-Orchestrates all controller tests with modular structure.
-Clean organization, detailed reporting, and easy extension.
+Clean, simple test runner for all Cadwork MCP tests.
+Supports unit tests, integration tests, and various execution modes.
 
 Usage:
-    python run_test.py [--quick] [--controller=element] [--verbose]
+    python run_test.py                    # Run all tests
+    python run_test.py --quick            # Run quick tests only
+    python run_test.py --unit             # Run unit tests only
+    python run_test.py --integration      # Run integration tests only
+    python run_test.py --controller=name  # Run specific controller tests
+    python run_test.py --verbose          # Verbose output
+    python run_test.py --mock             # Use mock (no Cadwork needed)
 """
 
 import sys
 import os
 import asyncio
 import argparse
-from typing import Dict, Any, List, Optional
 import time
+import importlib
+from typing import List, Dict, Any
+from pathlib import Path
 
-# Add project root to path  
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add project root to path
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-# Import helper classes
-from helpers.test_helper import TestHelper, TestResult
-from helpers.parameter_finder import ParameterFinder
-from helpers.result_validator import ResultValidator
-
-# Import test controllers
-try:
-    from controllers.test_element_controller import TestElementController
-    from controllers.test_geometry_controller import TestGeometryController
-    from controllers.test_attribute_controller import TestAttributeController
-    from controllers.test_visualization_controller import TestVisualizationController
-    from controllers.test_utility_controller import TestUtilityController
-    from controllers.test_export_controller import TestExportController
-    from controllers.test_import_controller import TestImportController
-    from controllers.test_material_controller import TestMaterialController
-    from controllers.test_measurement_controller import TestMeasurementController
-    from controllers.test_machine_controller import TestMachineController
-    from controllers.test_roof_controller import TestRoofController
-    from controllers.test_shop_drawing_controller import TestShopDrawingController
-except ImportError as e:
-    print(f"⚠️  Warning: Some test controllers not yet available: {e}")
+from tests.helpers.base_test import TestResult
 
 
-class CadworkTestRunner:
-    """Main test runner orchestrating all controller tests"""
+class TestRunner:
+    """Main test runner class"""
     
-    def __init__(self, verbose: bool = False):
+    def __init__(self, verbose: bool = False, mock: bool = False):
         self.verbose = verbose
-        self.helper = TestHelper()
-        self.all_results: List[TestResult] = []
-        self.controller_summaries: Dict[str, Dict[str, Any]] = {}
+        self.mock = mock
+        self.results: List[TestResult] = []
+        self.start_time = time.time()
         
-        # Available test controllers
-        self.test_controllers = {
-            'element': TestElementController,
-            'geometry': TestGeometryController, 
-            'attribute': TestAttributeController,
-            'visualization': TestVisualizationController,
-            'utility': TestUtilityController,
-            'export': TestExportController,
-            'import': TestImportController,
-            'material': TestMaterialController,
-            'measurement': TestMeasurementController,
-            'machine': TestMachineController,
-            'roof': TestRoofController,
-            'shop_drawing': TestShopDrawingController,
-        }
+    def print_header(self, title: str):
+        """Print formatted header"""
+        print("=" * 80)
+        print(f"{title:^80}")
+        print("=" * 80)
+        
+    def print_section(self, title: str):
+        """Print section header"""
+        print(f"\n[{title.upper()}]")
+        print("=" * 50)
     
-    async def run_all_tests(self, quick_mode: bool = False) -> None:
-        """Run all available controller tests"""
-        self.helper.print_header("🚀 CADWORK MCP TEST SUITE")
-        print(f"Mode: {'Quick Tests' if quick_mode else 'Full Test Suite'}")
-        print(f"Available Controllers: {len(self.test_controllers)}")
-        print()
+    async def discover_and_run_tests(self, test_path: str, pattern: str = "test_*.py") -> List[TestResult]:
+        """Discover and run all tests in a directory"""
+        test_results = []
+        test_dir = Path(__file__).parent / test_path
         
-        total_start_time = time.time()
-        
-        for controller_name, controller_class in self.test_controllers.items():
-            await self._run_controller_tests(controller_name, controller_class, quick_mode)
-        
-        total_time = time.time() - total_start_time
-        self._print_final_summary(total_time)
-    
-    async def run_specific_controller(self, controller_name: str, quick_mode: bool = False) -> None:
-        """Run tests for a specific controller"""
-        if controller_name not in self.test_controllers:
-            print(f"❌ Controller '{controller_name}' not found!")
-            print(f"Available controllers: {list(self.test_controllers.keys())}")
-            return
-        
-        self.helper.print_header(f"🎯 TESTING {controller_name.upper()} CONTROLLER")
-        
-        controller_class = self.test_controllers[controller_name]
-        await self._run_controller_tests(controller_name, controller_class, quick_mode)
-        
-        self._print_final_summary()
-    
-    async def _run_controller_tests(self, name: str, controller_class, quick_mode: bool) -> None:
-        """Run tests for a single controller"""
-        try:
-            print(f"🔧 Testing {name.title()} Controller...")
+        if not test_dir.exists():
+            print(f"Warning: Test directory {test_dir} does not exist")
+            return test_results
             
-            # Initialize controller test suite
-            test_suite = controller_class()
-            
-            # Run tests (quick or full)
-            if quick_mode and hasattr(test_suite, 'run_quick_tests'):
-                results = await test_suite.run_quick_tests()
-            else:
-                results = await test_suite.run_all_tests()
-            
-            # Collect results
-            self.all_results.extend(results)
-            
-            # Get controller summary
-            if hasattr(test_suite, 'get_summary'):
-                summary = test_suite.get_summary()
-                self.controller_summaries[name] = summary
+        # Find all test files
+        test_files = list(test_dir.glob(pattern))
+        
+        for test_file in test_files:
+            if test_file.name.startswith('__'):
+                continue
                 
-                # Print brief controller summary
-                print(f"   ✅ {summary['passed']}/{summary['total_tests']} tests passed " +
-                      f"({summary['success_rate']:.1f}%)")
-            
-        except Exception as e:
-            print(f"   ❌ Error testing {name} controller: {e}")
-            if self.verbose:
-                import traceback
-                traceback.print_exc()
+            module_name = f"tests.{test_path}.{test_file.stem}"
+            test_results.extend(await self.run_test_module(module_name))
+        
+        return test_results
     
-    def _print_final_summary(self, total_time: Optional[float] = None) -> None:
-        """Print comprehensive final summary"""
-        self.helper.print_header("📊 FINAL TEST SUMMARY")
+    async def run_test_module(self, module_name: str) -> List[TestResult]:
+        """Run all tests in a specific module"""
+        results = []
         
-        # Overall statistics
-        total_tests = len(self.all_results)
-        passed = len([r for r in self.all_results if r.status == "PASSED"])
-        failed = len([r for r in self.all_results if r.status == "FAILED"])
-        errors = len([r for r in self.all_results if r.status == "ERROR"])
-        skipped = len([r for r in self.all_results if r.status == "SKIPPED"])
+        try:
+            # Import the test module
+            module = importlib.import_module(module_name)
+            
+            # Find all test classes
+            test_classes = [
+                getattr(module, name) for name in dir(module)
+                if name.startswith('Test') and isinstance(getattr(module, name), type)
+            ]
+            
+            for test_class in test_classes:
+                results.extend(await self.run_test_class(test_class))
+                
+        except Exception as e:
+            # Module failed to import or run
+            results.append(TestResult(
+                name=f"Module {module_name}",
+                status="ERROR",
+                message=f"Failed to run module: {e}",
+                execution_time=0.0
+            ))
+            
+        return results
+    
+    async def run_test_class(self, test_class) -> List[TestResult]:
+        """Run all test methods in a test class"""
+        results = []
         
-        success_rate = (passed / total_tests * 100) if total_tests > 0 else 0
-        avg_time = sum(r.execution_time for r in self.all_results) / total_tests if total_tests > 0 else 0
+        try:
+            # Create test instance with mock flag
+            if hasattr(test_class, '__init__'):
+                # Check if constructor accepts use_mock parameter
+                import inspect
+                sig = inspect.signature(test_class.__init__)
+                if 'use_mock' in sig.parameters:
+                    test_instance = test_class(use_mock=self.mock)
+                else:
+                    test_instance = test_class()
+            else:
+                test_instance = test_class()
+            
+            # Find all test methods
+            test_methods = [
+                getattr(test_instance, method_name) 
+                for method_name in dir(test_instance)
+                if method_name.startswith('test_')
+            ]
+            
+            for test_method in test_methods:
+                test_name = f"{test_class.__name__}.{test_method.__name__}"
+                result = await test_instance.run_test(test_method, test_name)
+                results.append(result)
+                
+                # Print immediate feedback
+                status_icon = "+" if result.status == "PASSED" else "-"
+                print(f"  {status_icon} {test_name} - {result.status}")
+                if result.status != "PASSED" and self.verbose:
+                    print(f"    {result.message}")
+                    
+        except Exception as e:
+            results.append(TestResult(
+                name=f"Class {test_class.__name__}",
+                status="ERROR",
+                message=f"Failed to run test class: {e}",
+                execution_time=0.0
+            ))
+            
+        return results
+    
+    async def run_quick_tests(self) -> List[TestResult]:
+        """Run essential quick tests only"""
+        self.print_section("Quick Tests (Essential Only)")
         
-        print(f"🎯 Overall Results:")
-        print(f"   Total Tests:    {total_tests}")
-        print(f"   Passed:         {passed} ✅")
-        print(f"   Failed:         {failed} ❌") 
-        print(f"   Errors:         {errors} ⚠️")
-        print(f"   Skipped:        {skipped} ⏭️")
-        print(f"   Success Rate:   {success_rate:.1f}%")
-        print(f"   Avg Test Time:  {avg_time:.3f}s")
+        # Just run connection tests for quick check
+        return await self.discover_and_run_tests("unit", "test_connection.py")
+    
+    async def run_unit_tests(self) -> List[TestResult]:
+        """Run all unit tests"""
+        self.print_section("Unit Tests")
+        return await self.discover_and_run_tests("unit")
+    
+    async def run_integration_tests(self) -> List[TestResult]:
+        """Run all integration tests"""
+        self.print_section("Integration Tests") 
+        return await self.discover_and_run_tests("integration")
+    
+    async def run_all_tests(self) -> List[TestResult]:
+        """Run all tests"""
+        results = []
+        results.extend(await self.run_unit_tests())
+        results.extend(await self.run_integration_tests())
+        return results
+    
+    def print_summary(self, results: List[TestResult]):
+        """Print comprehensive test summary"""
+        total = len(results)
+        passed = len([r for r in results if r.status == "PASSED"])
+        failed = len([r for r in results if r.status == "FAILED"])
+        errors = len([r for r in results if r.status == "ERROR"])
         
-        if total_time:
-            print(f"   Total Runtime:  {total_time:.2f}s")
+        success_rate = (passed / total * 100) if total > 0 else 0
+        total_time = time.time() - self.start_time
+        avg_time = sum(r.execution_time for r in results) / total if total > 0 else 0
         
-        # Controller breakdown
-        if self.controller_summaries:
-            print(f"\n📋 Controller Breakdown:")
-            for controller, summary in self.controller_summaries.items():
-                status_icon = "✅" if summary['success_rate'] >= 80 else "⚠️" if summary['success_rate'] >= 50 else "❌"
-                print(f"   {status_icon} {controller.title():15} {summary['passed']:2}/{summary['total_tests']:2} " +
-                      f"({summary['success_rate']:5.1f}%)")
+        self.print_header("TEST SUMMARY")
         
-        # Failed tests details
-        failed_tests = [r for r in self.all_results if r.status in ["FAILED", "ERROR"]]
-        if failed_tests and self.verbose:
-            print(f"\n🔍 Failed Tests Details:")
-            print("-" * 60)
-            for test in failed_tests[:10]:  # Show first 10 failures
+        print(f"Tests Total:      {total}")
+        print(f"Tests Passed:     {passed}")
+        print(f"Tests Failed:     {failed}")
+        print(f"Tests Errors:     {errors}")
+        print(f"Success Rate:     {success_rate:.1f}%")
+        print(f"Total Time:       {total_time:.2f}s")
+        print(f"Average Time:     {avg_time:.3f}s per test")
+        
+        # Show failed tests
+        failed_tests = [r for r in results if r.status in ["FAILED", "ERROR"]]
+        if failed_tests:
+            print(f"\nFAILED/ERROR TESTS ({len(failed_tests)}):")
+            print("-" * 50)
+            for test in failed_tests[:10]:  # Show first 10
                 print(f"{test.status}: {test.name}")
                 print(f"    {test.message}")
+                if self.verbose and test.details:
+                    print(f"    Details: {test.details}")
                 print()
-            
-            if len(failed_tests) > 10:
-                print(f"... and {len(failed_tests) - 10} more failures")
         
-        # Recommendations
-        print(f"\n💡 Recommendations:")
+        # Status and recommendations
         if success_rate >= 90:
-            print("   🎉 Excellent! All systems working well.")
+            status = "EXCELLENT"
+            print(f"\nStatus: {status} - All systems working well!")
         elif success_rate >= 70:
-            print("   👍 Good results. Minor issues to investigate.")
+            status = "GOOD" 
+            print(f"\nStatus: {status} - Minor issues to investigate")
         elif success_rate >= 50:
-            print("   ⚠️  Some issues detected. Check failed tests.")
+            status = "PARTIAL"
+            print(f"\nStatus: {status} - Some issues detected")
         else:
-            print("   🚨 Multiple failures. Check Cadwork connection.")
-            print("   💡 Ensure Cadwork 3D is running and MCP Bridge is started.")
+            status = "FAILED"
+            print(f"\nStatus: {status} - Major issues detected")
+            print("Recommendation: Check Cadwork connection and MCP Bridge")
+        
+        return success_rate >= 50
 
 
 async def main():
-    """Main entry point with command line arguments"""
+    """Main entry point"""
     parser = argparse.ArgumentParser(description="Cadwork MCP Test Runner")
-    parser.add_argument('--quick', action='store_true', 
-                       help='Run quick tests only')
-    parser.add_argument('--controller', type=str,
-                       help='Run tests for specific controller only')
-    parser.add_argument('--verbose', '-v', action='store_true',
-                       help='Verbose output with detailed error info')
-    parser.add_argument('--list', action='store_true',
-                       help='List available controllers')
+    parser.add_argument('--quick', action='store_true', help='Run quick tests only')
+    parser.add_argument('--unit', action='store_true', help='Run unit tests only')
+    parser.add_argument('--integration', action='store_true', help='Run integration tests only')
+    parser.add_argument('--controller', type=str, help='Run specific controller tests')
+    parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
+    parser.add_argument('--mock', action='store_true', help='Use mock mode (no Cadwork needed)')
     
     args = parser.parse_args()
     
-    runner = CadworkTestRunner(verbose=args.verbose)
+    runner = TestRunner(verbose=args.verbose, mock=args.mock)
     
-    if args.list:
-        print("Available test controllers:")
-        for name in runner.test_controllers.keys():
-            print(f"  - {name}")
-        return
+    runner.print_header("CADWORK MCP TEST RUNNER")
+    
+    if args.mock:
+        print("Mode: MOCK (No Cadwork connection required)")
+    else:
+        print("Mode: LIVE (Requires Cadwork 3D and MCP Bridge)")
+    
+    print(f"Verbose: {args.verbose}")
+    print()
     
     try:
-        if args.controller:
-            await runner.run_specific_controller(args.controller, args.quick)
+        # Run appropriate tests based on arguments
+        if args.quick:
+            results = await runner.run_quick_tests()
+        elif args.unit:
+            results = await runner.run_unit_tests()
+        elif args.integration:
+            results = await runner.run_integration_tests()
+        elif args.controller:
+            # Run specific controller tests (to be implemented)
+            results = await runner.discover_and_run_tests("unit", f"test_{args.controller}.py")
         else:
-            await runner.run_all_tests(args.quick)
-            
+            results = await runner.run_all_tests()
+        
+        # Print summary and return appropriate exit code
+        success = runner.print_summary(results)
+        return 0 if success else 1
+        
     except KeyboardInterrupt:
-        print("\n⏹️  Tests interrupted by user")
+        print("\nTests interrupted by user")
+        return 1
     except Exception as e:
-        print(f"\n❌ Test runner error: {e}")
+        print(f"\nTest runner error: {e}")
         if args.verbose:
             import traceback
             traceback.print_exc()
+        return 1
 
 
 if __name__ == "__main__":
-    # Check if Cadwork connection would be available
-    print("🔧 Cadwork MCP Test Runner")
-    print("⚠️  Ensure Cadwork 3D is running and MCP Bridge is started!")
+    print("Cadwork MCP Test Runner")
+    print("Ensure Cadwork 3D is running and MCP Bridge is started!")
     print()
     
-    asyncio.run(main())
+    exit_code = asyncio.run(main())
+    sys.exit(exit_code)

@@ -1,5 +1,5 @@
 """
-New clean Cadwork MCP Server
+New clean Cadwork MCP Server with Axis Configuration Support
 """
 import os
 from typing import Optional, List, Dict, Any
@@ -7,6 +7,14 @@ from contextlib import asynccontextmanager
 from mcp.server.fastmcp import FastMCP
 from core.server import create_mcp_server
 from core.logging import get_logger
+
+# Import Cadwork axis configuration
+try:
+    from config.cadwork_axis_config import CADWORK_AXIS_INFO, CadworkAxisHelper
+    AXIS_CONFIG_AVAILABLE = True
+except ImportError:
+    CADWORK_AXIS_INFO = "Cadwork axis configuration not available"
+    AXIS_CONFIG_AVAILABLE = False
 from controllers.element_controller import ElementController
 from controllers.geometry_controller import GeometryController
 from controllers.attribute_controller import AttributeController
@@ -49,10 +57,20 @@ list_ctrl = CListController()
 
 @mcp.tool(
     name="create_beam",
-    description="Creates a rectangular beam element. Requires start point p1 ([x,y,z]), end point p2 ([x,y,z]), width, and height. IMPORTANT: For vertical beams or when p1 and p2 have same x,y coordinates, you MUST provide orientation point p3 ([x,y,z]) to define the beam's cross-section orientation, otherwise the beam will appear as a line. P3 defines the direction of the beam's width."
+    description=f"Creates a rectangular beam element. Requires start point p1 ([x,y,z]), end point p2 ([x,y,z]), width, and height. Optional orientation point p3 ([x,y,z]).\n\nIMPORTANT AXIS DIRECTIONS:\n{CADWORK_AXIS_INFO if AXIS_CONFIG_AVAILABLE else 'For vertical beams: p1/p2 must be in Z-direction'}"
 )
 async def create_beam(p1: List[float], p2: List[float], width: float, height: float, p3: Optional[List[float]] = None) -> Dict[str, Any]:
-    return await element_ctrl.create_beam(p1, p2, width, height, p3)
+    result = await element_ctrl.create_beam(p1, p2, width, height, p3)
+    
+    # Add axis validation if helper is available
+    if AXIS_CONFIG_AVAILABLE:
+        helper = CadworkAxisHelper()
+        if p1[0] == p2[0] and p1[1] == p2[1]:  # Vertical beam detected
+            is_correct = helper.validate_beam_orientation(p1, p2, 'Z')
+            if not is_correct:
+                result["axis_warning"] = "WARNING: Vertical beam may have incorrect axis orientation. Use Z-direction for longitudinal axis."
+    
+    return result
 
 @mcp.tool(
     name="create_panel", 
@@ -1492,3 +1510,28 @@ if __name__ == "__main__":
             logger.error(f"Server failed: {e}")
             import sys
             sys.exit(1)
+
+# Add a helper tool for axis information
+@mcp.tool(
+    name="get_cadwork_axis_info",
+    description="Returns important Cadwork axis direction information for correct beam and panel creation."
+)
+async def get_cadwork_axis_info() -> Dict[str, Any]:
+    if AXIS_CONFIG_AVAILABLE:
+        helper = CadworkAxisHelper()
+        return {
+            "status": "ok",
+            "axis_info": CADWORK_AXIS_INFO,
+            "helper_available": True,
+            "standard_dimensions": helper.get_beam_dimensions("80x80"),
+            "validation_example": {
+                "vertical_beam_correct": helper.validate_beam_orientation([0,0,0], [0,0,800], 'Z'),
+                "horizontal_beam_x_correct": helper.validate_beam_orientation([0,0,0], [800,0,0], 'X')
+            }
+        }
+    else:
+        return {
+            "status": "warning", 
+            "message": "Cadwork axis configuration not loaded",
+            "basic_info": "For vertical beams: p1/p2 in Z-direction, width=X-axis, height=Y-axis"
+        }

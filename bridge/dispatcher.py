@@ -6,7 +6,7 @@ from typing import Dict, Any
 def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
     """Dispatch command to appropriate handler"""
     # Import handlers here to avoid circular imports
-    from .handlers import element_handlers, geometry_handlers, attribute_handlers, utility_handlers, visualization_handlers, shop_drawing_handlers, roof_handlers, machine_handlers, export_handlers, import_handlers
+    from .handlers import element_handlers, geometry_handlers, attribute_handlers, utility_handlers, visualization_handlers, shop_drawing_handlers, roof_handlers, machine_handlers, export_handlers, import_handlers, list_handlers, optimization_handlers
     
     # Map operations to their handlers
     OPERATION_HANDLERS = {
@@ -162,6 +162,22 @@ def dispatch_command(operation: str, args: Dict[str, Any]) -> Dict[str, Any]:
         "import_from_sat": import_handlers.handle_import_from_sat,
         "import_from_rhino": import_handlers.handle_import_from_rhino,
         "import_from_btl": import_handlers.handle_import_from_btl,
+        
+        # List and report operations
+        "create_element_list": list_handlers.handle_create_element_list,
+        "generate_material_list": list_handlers.handle_generate_material_list,
+        
+        # Advanced geometry operations
+        "check_collisions": geometry_handlers.handle_check_collisions,
+        "validate_joints": geometry_handlers.handle_validate_joints,
+        
+        # Advanced visualization operations
+        "create_assembly_animation": visualization_handlers.handle_create_assembly_animation,
+        "set_camera_position": visualization_handlers.handle_set_camera_position,
+        "create_walkthrough": visualization_handlers.handle_create_walkthrough,
+        
+        # Optimization operations
+        "optimize_cutting_list": optimization_handlers.handle_optimize_cutting_list,
     }
     if operation not in OPERATION_HANDLERS:
         return {

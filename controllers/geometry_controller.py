@@ -470,3 +470,90 @@ class GeometryController(BaseController):
             return {"status": "error", "message": f"Invalid input: {e}"}
         except Exception as e:
             return {"status": "error", "message": f"calculate_center_of_mass failed: {e}"}
+    
+    async def check_collisions(self, element_ids: List[int], tolerance: float = 0.1) -> Dict[str, Any]:
+        """Check for collisions between elements with specified tolerance"""
+        try:
+            # Validate element IDs
+            validated_ids = [self.validate_element_id(eid) for eid in element_ids]
+            
+            if len(validated_ids) < 2:
+                return {"status": "error", "message": "At least 2 elements required for collision check"}
+            
+            # Validate tolerance
+            if tolerance < 0:
+                return {"status": "error", "message": "Tolerance must be non-negative"}
+            
+            return self.send_command("check_collisions", {
+                "element_ids": validated_ids,
+                "tolerance": tolerance
+            })
+            
+        except ValueError as e:
+            return {"status": "error", "message": f"Invalid input: {e}"}
+        except Exception as e:
+            return {"status": "error", "message": f"check_collisions failed: {e}"}
+    
+    async def validate_joints(self, 
+                            element_ids: List[int],
+                            joint_type: str = "auto",
+                            load_conditions: Dict[str, Any] = None,
+                            safety_factor: float = 2.0,
+                            wood_grade: str = "C24") -> Dict[str, Any]:
+        """
+        Validate joints between elements for structural integrity and feasibility
+        
+        Args:
+            element_ids: List of element IDs to check joints between
+            joint_type: Type of joint to validate (auto, mortise_tenon, lap_joint, dovetail, custom)
+            load_conditions: Load conditions dict with forces and moments
+            safety_factor: Safety factor for calculations (default 2.0)
+            wood_grade: Wood grade for strength calculations (C24, C30, GL24h, etc.)
+        
+        Returns:
+            dict: Joint validation results with strength analysis
+        """
+        try:
+            # Validate element IDs
+            if not isinstance(element_ids, list) or len(element_ids) < 2:
+                return {"status": "error", "message": "At least 2 elements required for joint validation"}
+            
+            validated_ids = [self.validate_element_id(eid) for eid in element_ids]
+            
+            # Validate joint_type
+            valid_joint_types = ["auto", "mortise_tenon", "lap_joint", "dovetail", "scarf_joint", "custom"]
+            if joint_type not in valid_joint_types:
+                return {"status": "error", "message": f"Invalid joint_type. Must be one of: {valid_joint_types}"}
+            
+            # Validate safety_factor
+            if not isinstance(safety_factor, (int, float)) or safety_factor <= 0:
+                return {"status": "error", "message": "safety_factor must be a positive number"}
+            
+            # Validate wood_grade
+            valid_wood_grades = ["C16", "C20", "C24", "C27", "C30", "C35", "C40", "GL24h", "GL28h", "GL32h"]
+            if wood_grade not in valid_wood_grades:
+                return {"status": "error", "message": f"Invalid wood_grade. Must be one of: {valid_wood_grades}"}
+            
+            # Validate load_conditions if provided
+            if load_conditions is not None:
+                if not isinstance(load_conditions, dict):
+                    return {"status": "error", "message": "load_conditions must be a dictionary"}
+                
+                # Check for required load condition keys
+                valid_load_keys = ["normal_force", "shear_force", "moment", "torsion", "load_duration"]
+                for key in load_conditions.keys():
+                    if key not in valid_load_keys:
+                        return {"status": "error", "message": f"Invalid load condition key '{key}'. Valid keys: {valid_load_keys}"}
+            
+            return self.send_command("validate_joints", {
+                "element_ids": validated_ids,
+                "joint_type": joint_type,
+                "load_conditions": load_conditions or {},
+                "safety_factor": float(safety_factor),
+                "wood_grade": wood_grade
+            })
+            
+        except ValueError as e:
+            return {"status": "error", "message": f"Invalid input: {e}"}
+        except Exception as e:
+            return {"status": "error", "message": f"validate_joints failed: {e}"}

@@ -40,6 +40,114 @@ class TestGeometryController(BaseCadworkTest):
             "element_info": info_result
         }
     
+    async def test_check_collisions(self):
+        """Test collision detection between elements"""
+        # Create two overlapping beams for collision test
+        beam1_data = {
+            "p1": [0.0, 0.0, 0.0],
+            "p2": [1000.0, 0.0, 0.0],
+            "width": 100.0,
+            "height": 100.0
+        }
+        beam2_data = {
+            "p1": [500.0, -50.0, 0.0],
+            "p2": [1500.0, -50.0, 0.0],
+            "width": 100.0,
+            "height": 100.0
+        }
+        
+        # Create test elements
+        result1 = await self.element_ctrl.create_beam(**beam1_data)
+        element_id1 = self.assert_element_id(result1, "create_beam_for_collision_1")
+        
+        result2 = await self.element_ctrl.create_beam(**beam2_data)
+        element_id2 = self.assert_element_id(result2, "create_beam_for_collision_2")
+        
+        # Test collision detection
+        collision_result = await self.geometry_ctrl.check_collisions([element_id1, element_id2], 0.1)
+        self.assert_success(collision_result, "check_collisions")
+        
+        # Test with invalid input
+        invalid_result = await self.geometry_ctrl.check_collisions([element_id1], 0.1)
+        self.assert_error(invalid_result, "check_collisions_insufficient_elements")
+        
+        # Test with negative tolerance
+        negative_result = await self.geometry_ctrl.check_collisions([element_id1, element_id2], -1.0)
+        self.assert_error(negative_result, "check_collisions_negative_tolerance")
+        
+        return {
+            "element_ids": [element_id1, element_id2],
+            "collision_result": collision_result
+        }
+    
+    async def test_validate_joints(self):
+        """Test joint validation between elements"""
+        # Create two connecting beams
+        beam1_data = {
+            "p1": [0.0, 0.0, 0.0],
+            "p2": [1000.0, 0.0, 0.0],
+            "width": 120.0,
+            "height": 200.0
+        }
+        beam2_data = {
+            "p1": [1000.0, 0.0, 0.0],
+            "p2": [1000.0, 1000.0, 0.0],
+            "width": 120.0,
+            "height": 200.0
+        }
+        
+        # Create test elements
+        result1 = await self.element_ctrl.create_beam(**beam1_data)
+        element_id1 = self.assert_element_id(result1, "create_beam_for_joint_1")
+        
+        result2 = await self.element_ctrl.create_beam(**beam2_data)
+        element_id2 = self.assert_element_id(result2, "create_beam_for_joint_2")
+        
+        # Test basic joint validation
+        basic_result = await self.geometry_ctrl.validate_joints(
+            element_ids=[element_id1, element_id2]
+        )
+        self.assert_success(basic_result, "validate_joints_basic")
+        
+        # Test with specific joint type and load conditions
+        load_conditions = {
+            "normal_force": 5000.0,  # 5 kN
+            "shear_force": 2000.0,   # 2 kN
+            "load_duration": "permanent"
+        }
+        
+        advanced_result = await self.geometry_ctrl.validate_joints(
+            element_ids=[element_id1, element_id2],
+            joint_type="mortise_tenon",
+            load_conditions=load_conditions,
+            safety_factor=2.5,
+            wood_grade="C30"
+        )
+        self.assert_success(advanced_result, "validate_joints_advanced")
+        
+        # Test invalid parameters
+        invalid_joint_type_result = await self.geometry_ctrl.validate_joints(
+            element_ids=[element_id1, element_id2],
+            joint_type="invalid_joint"
+        )
+        self.assert_error(invalid_joint_type_result, "validate_joints_invalid_type")
+        
+        invalid_safety_result = await self.geometry_ctrl.validate_joints(
+            element_ids=[element_id1, element_id2],
+            safety_factor=-1.0
+        )
+        self.assert_error(invalid_safety_result, "validate_joints_invalid_safety")
+        
+        insufficient_elements_result = await self.geometry_ctrl.validate_joints(
+            element_ids=[element_id1]
+        )
+        self.assert_error(insufficient_elements_result, "validate_joints_insufficient_elements")
+        
+        return {
+            "element_ids": [element_id1, element_id2],
+            "joint_results": [basic_result, advanced_result]
+        }
+    
     async def test_get_element_dimensions(self):
         """Test getting element dimensions"""
         # Create test element

@@ -332,3 +332,218 @@ class CVisualizationController(BaseController):
             
         except Exception as e:
             return {"status": "error", "message": f"apply_color_scheme failed: {e}"}
+    
+    async def create_assembly_animation(self, 
+                                      element_ids: List[int],
+                                      animation_type: str = "sequential",
+                                      duration: float = 10.0,
+                                      start_delay: float = 0.0,
+                                      element_delay: float = 0.5,
+                                      fade_in: bool = True,
+                                      movement_path: str = "gravity") -> Dict[str, Any]:
+        """
+        Create assembly animation showing construction sequence
+        
+        Args:
+            element_ids: List of elements to animate
+            animation_type: Type of animation (sequential, parallel, grouped)
+            duration: Total animation duration in seconds
+            start_delay: Delay before animation starts
+            element_delay: Delay between individual elements (for sequential)
+            fade_in: Use fade-in effect
+            movement_path: Movement path (gravity, linear, custom)
+        
+        Returns:
+            dict: Animation creation status and details
+        """
+        try:
+            # Validate element IDs
+            if not isinstance(element_ids, list) or not element_ids:
+                return {"status": "error", "message": "element_ids must be a non-empty list"}
+            
+            validated_ids = [self.validate_element_id(eid) for eid in element_ids]
+            
+            # Validate animation_type
+            valid_animation_types = ["sequential", "parallel", "grouped", "reverse_sequential"]
+            if animation_type not in valid_animation_types:
+                return {"status": "error", "message": f"Invalid animation_type. Must be one of: {valid_animation_types}"}
+            
+            # Validate duration and timing
+            if not isinstance(duration, (int, float)) or duration <= 0:
+                return {"status": "error", "message": "duration must be a positive number"}
+            
+            if not isinstance(start_delay, (int, float)) or start_delay < 0:
+                return {"status": "error", "message": "start_delay must be non-negative"}
+            
+            if not isinstance(element_delay, (int, float)) or element_delay < 0:
+                return {"status": "error", "message": "element_delay must be non-negative"}
+            
+            # Validate movement_path
+            valid_paths = ["gravity", "linear", "custom", "arc", "spiral"]
+            if movement_path not in valid_paths:
+                return {"status": "error", "message": f"Invalid movement_path. Must be one of: {valid_paths}"}
+            
+            return self.send_command("create_assembly_animation", {
+                "element_ids": validated_ids,
+                "animation_type": animation_type,
+                "duration": float(duration),
+                "start_delay": float(start_delay),
+                "element_delay": float(element_delay),
+                "fade_in": bool(fade_in),
+                "movement_path": movement_path
+            })
+            
+        except ValueError as e:
+            return {"status": "error", "message": f"Invalid input: {e}"}
+        except Exception as e:
+            return {"status": "error", "message": f"create_assembly_animation failed: {e}"}
+    
+    async def set_camera_position(self, 
+                                position: List[float],
+                                target: List[float],
+                                up_vector: List[float] = [0.0, 0.0, 1.0],
+                                fov: float = 45.0,
+                                animate_transition: bool = True,
+                                transition_duration: float = 2.0,
+                                camera_name: str = "default") -> Dict[str, Any]:
+        """
+        Set camera position and orientation for optimal viewing
+        
+        Args:
+            position: Camera position [x, y, z]
+            target: Target point to look at [x, y, z]
+            up_vector: Camera up vector [x, y, z]
+            fov: Field of view in degrees
+            animate_transition: Animate camera movement
+            transition_duration: Animation duration in seconds
+            camera_name: Name for camera preset
+        
+        Returns:
+            dict: Camera positioning status
+        """
+        try:
+            # Validate and convert position
+            position = self.validate_point_3d(position, "position")
+            if position is None:
+                return {"status": "error", "message": "position is required and must be [x, y, z]"}
+            
+            # Validate and convert target
+            target = self.validate_point_3d(target, "target")
+            if target is None:
+                return {"status": "error", "message": "target is required and must be [x, y, z]"}
+            
+            # Validate and convert up_vector
+            up_vector = self.validate_point_3d(up_vector, "up_vector")
+            if up_vector is None:
+                return {"status": "error", "message": "up_vector must be [x, y, z]"}
+            
+            # Validate FOV
+            if not isinstance(fov, (int, float)) or fov <= 0 or fov >= 180:
+                return {"status": "error", "message": "fov must be between 0 and 180 degrees"}
+            
+            # Validate transition duration
+            if not isinstance(transition_duration, (int, float)) or transition_duration < 0:
+                return {"status": "error", "message": "transition_duration must be non-negative"}
+            
+            # Validate camera name
+            if not isinstance(camera_name, str) or not camera_name.strip():
+                return {"status": "error", "message": "camera_name must be a non-empty string"}
+            
+            return self.send_command("set_camera_position", {
+                "position": position,
+                "target": target,
+                "up_vector": up_vector,
+                "fov": float(fov),
+                "animate_transition": bool(animate_transition),
+                "transition_duration": float(transition_duration),
+                "camera_name": camera_name.strip()
+            })
+            
+        except ValueError as e:
+            return {"status": "error", "message": f"Invalid input: {e}"}
+        except Exception as e:
+            return {"status": "error", "message": f"set_camera_position failed: {e}"}
+    
+    async def create_walkthrough(self,
+                               waypoints: List[List[float]],
+                               duration: float = 30.0,
+                               camera_height: float = 1700.0,
+                               movement_speed: str = "smooth",
+                               focus_elements: List[int] = None,
+                               include_audio: bool = False,
+                               output_format: str = "mp4",
+                               resolution: str = "1920x1080") -> Dict[str, Any]:
+        """
+        Create interactive 3D walkthrough for VR and presentations
+        
+        Args:
+            waypoints: List of waypoint positions [[x,y,z], [x,y,z], ...]
+            duration: Total walkthrough duration in seconds
+            camera_height: Camera height above ground in mm
+            movement_speed: Movement style (smooth, linear, accelerated, custom)
+            focus_elements: Optional element IDs to highlight during walkthrough
+            include_audio: Include ambient audio tracks
+            output_format: Output format (mp4, webm, vr, interactive)
+            resolution: Video resolution (1920x1080, 2560x1440, 3840x2160)
+        
+        Returns:
+            dict: Walkthrough creation status and export details
+        """
+        try:
+            # Validate waypoints
+            if not isinstance(waypoints, list) or len(waypoints) < 2:
+                return {"status": "error", "message": "At least 2 waypoints required for walkthrough"}
+            
+            validated_waypoints = []
+            for i, waypoint in enumerate(waypoints):
+                validated_point = self.validate_point_3d(waypoint, f"waypoint_{i}")
+                if validated_point is None:
+                    return {"status": "error", "message": f"waypoint_{i} must be [x, y, z] coordinates"}
+                validated_waypoints.append(validated_point)
+            
+            # Validate duration
+            if not isinstance(duration, (int, float)) or duration <= 0:
+                return {"status": "error", "message": "duration must be a positive number"}
+            
+            # Validate camera_height
+            if not isinstance(camera_height, (int, float)) or camera_height < 0:
+                return {"status": "error", "message": "camera_height must be non-negative"}
+            
+            # Validate movement_speed
+            valid_movement_speeds = ["smooth", "linear", "accelerated", "decelerated", "custom"]
+            if movement_speed not in valid_movement_speeds:
+                return {"status": "error", "message": f"Invalid movement_speed. Must be one of: {valid_movement_speeds}"}
+            
+            # Validate focus_elements if provided
+            validated_focus_elements = None
+            if focus_elements is not None:
+                if not isinstance(focus_elements, list):
+                    return {"status": "error", "message": "focus_elements must be a list if provided"}
+                if focus_elements:  # Only validate if not empty
+                    validated_focus_elements = [self.validate_element_id(eid) for eid in focus_elements]
+            
+            # Validate output_format
+            valid_output_formats = ["mp4", "webm", "avi", "mov", "vr", "interactive", "frames"]
+            if output_format not in valid_output_formats:
+                return {"status": "error", "message": f"Invalid output_format. Must be one of: {valid_output_formats}"}
+            
+            # Validate resolution
+            valid_resolutions = ["1280x720", "1920x1080", "2560x1440", "3840x2160", "4096x2160"]
+            if resolution not in valid_resolutions:
+                return {"status": "error", "message": f"Invalid resolution. Must be one of: {valid_resolutions}"}
+            
+            return self.send_command("create_walkthrough", {
+                "waypoints": validated_waypoints,
+                "duration": float(duration),
+                "camera_height": float(camera_height),
+                "movement_speed": movement_speed,
+                "focus_elements": validated_focus_elements,
+                "include_audio": bool(include_audio),
+                "output_format": output_format,
+                "resolution": resolution
+            })
+            
+        except ValueError as e:
+            return {"status": "error", "message": f"Invalid input: {e}"}
+        except Exception as e:
+            return {"status": "error", "message": f"create_walkthrough failed: {e}"}

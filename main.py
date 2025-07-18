@@ -21,6 +21,8 @@ from controllers.export_controller import CExportController
 from controllers.import_controller import CImportController
 from controllers.container_controller import CContainerController
 from controllers.transformation_controller import CTransformationController
+from controllers.optimization_controller import COptimizationController
+from controllers.list_controller import CListController
 
 # Create MCP server
 mcp = create_mcp_server()
@@ -40,6 +42,8 @@ export_ctrl = CExportController()
 import_ctrl = CImportController()
 container_ctrl = CContainerController()
 transformation_ctrl = CTransformationController()
+optimization_ctrl = COptimizationController()
+list_ctrl = CListController()
 
 # --- ELEMENT TOOLS ---
 
@@ -617,6 +621,24 @@ async def calculate_total_volume(element_ids: List[int]) -> Dict[str, Any]:
 async def calculate_total_weight(element_ids: List[int]) -> Dict[str, Any]:
     return await geometry_ctrl.calculate_total_weight(element_ids)
 
+@mcp.tool(
+    name="check_collisions",
+    description="Check for collisions between elements with specified tolerance. Takes element IDs and optional tolerance value."
+)
+async def check_collisions(element_ids: List[int], tolerance: float = 0.1) -> Dict[str, Any]:
+    return await geometry_ctrl.check_collisions(element_ids, tolerance)
+
+@mcp.tool(
+    name="validate_joints",
+    description="Validate joints between elements for structural integrity and feasibility. Takes element IDs, joint type, load conditions, and material properties."
+)
+async def validate_joints(element_ids: List[int],
+                        joint_type: str = "auto",
+                        load_conditions: Optional[Dict[str, Any]] = None,
+                        safety_factor: float = 2.0,
+                        wood_grade: str = "C24") -> Dict[str, Any]:
+    return await geometry_ctrl.validate_joints(element_ids, joint_type, load_conditions, safety_factor, wood_grade)
+
 # --- ATTRIBUTE TOOLS ---
 
 @mcp.tool(
@@ -740,6 +762,49 @@ async def create_visual_filter(filter_name: str, filter_criteria: Dict[str, Any]
 )
 async def apply_color_scheme(scheme_name: str, element_ids: List[int] = None, scheme_basis: str = "material") -> Dict[str, Any]:
     return await visualization_ctrl.apply_color_scheme(scheme_name, element_ids, scheme_basis)
+
+@mcp.tool(
+    name="create_assembly_animation",
+    description="Create assembly animation showing construction sequence. Takes element IDs and animation parameters like type, duration, and movement path."
+)
+async def create_assembly_animation(element_ids: List[int], 
+                                  animation_type: str = "sequential",
+                                  duration: float = 10.0,
+                                  start_delay: float = 0.0,
+                                  element_delay: float = 0.5,
+                                  fade_in: bool = True,
+                                  movement_path: str = "gravity") -> Dict[str, Any]:
+    return await visualization_ctrl.create_assembly_animation(element_ids, animation_type, duration, 
+                                                            start_delay, element_delay, fade_in, movement_path)
+
+@mcp.tool(
+    name="set_camera_position",
+    description="Set camera position and orientation for optimal viewing. Takes position, target point, and camera parameters."
+)
+async def set_camera_position(position: List[float],
+                            target: List[float],
+                            up_vector: List[float] = [0.0, 0.0, 1.0],
+                            fov: float = 45.0,
+                            animate_transition: bool = True,
+                            transition_duration: float = 2.0,
+                            camera_name: str = "default") -> Dict[str, Any]:
+    return await visualization_ctrl.set_camera_position(position, target, up_vector, fov, 
+                                                      animate_transition, transition_duration, camera_name)
+
+@mcp.tool(
+    name="create_walkthrough",
+    description="Create interactive 3D walkthrough for VR and presentations. Takes waypoint positions and various walkthrough parameters."
+)
+async def create_walkthrough(waypoints: List[List[float]],
+                           duration: float = 30.0,
+                           camera_height: float = 1700.0,
+                           movement_speed: str = "smooth",
+                           focus_elements: Optional[List[int]] = None,
+                           include_audio: bool = False,
+                           output_format: str = "mp4",
+                           resolution: str = "1920x1080") -> Dict[str, Any]:
+    return await visualization_ctrl.create_walkthrough(waypoints, duration, camera_height, movement_speed,
+                                                     focus_elements, include_audio, output_format, resolution)
 
 # --- EXTENDED ATTRIBUTE TOOLS ---
 
@@ -1326,6 +1391,52 @@ async def create_auto_container_from_standard(element_ids: List[int], container_
 )
 async def get_container_content_elements(container_id: int) -> Dict[str, Any]:
     return await container_ctrl.get_container_content_elements(container_id)
+
+# --- LIST & REPORT TOOLS ---
+
+@mcp.tool(
+    name="create_element_list",
+    description="Create a comprehensive element list with optional filtering and grouping. Takes optional element IDs and various display/sorting options."
+)
+async def create_element_list(element_ids: Optional[List[int]] = None,
+                            include_properties: bool = True,
+                            include_materials: bool = True,
+                            include_dimensions: bool = True,
+                            group_by: str = "type",
+                            sort_by: str = "name",
+                            filter_criteria: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    return await list_ctrl.create_element_list(element_ids, include_properties, include_materials, 
+                                             include_dimensions, group_by, sort_by, filter_criteria)
+
+@mcp.tool(
+    name="generate_material_list",
+    description="Generate comprehensive material list for production and ordering. Takes optional element IDs and various calculation parameters."
+)
+async def generate_material_list(element_ids: Optional[List[int]] = None,
+                               include_waste: bool = True,
+                               waste_factor: float = 0.1,
+                               group_by_material: bool = True,
+                               include_costs: bool = False,
+                               cost_database: str = "default",
+                               optimization_mode: str = "length") -> Dict[str, Any]:
+    return await list_ctrl.generate_material_list(element_ids, include_waste, waste_factor, 
+                                                group_by_material, include_costs, cost_database, optimization_mode)
+
+@mcp.tool(
+    name="optimize_cutting_list",
+    description="Optimize cutting lists for minimal material waste and efficient production. Takes optional element IDs and optimization parameters."
+)
+async def optimize_cutting_list(element_ids: Optional[List[int]] = None,
+                              stock_lengths: Optional[List[float]] = None,
+                              optimization_algorithm: str = "bin_packing",
+                              kerf_width: float = 3.0,
+                              min_offcut_length: float = 100.0,
+                              max_waste_percentage: float = 5.0,
+                              material_groups: Optional[Dict[str, List[str]]] = None,
+                              priority_mode: str = "waste_minimization") -> Dict[str, Any]:
+    return await optimization_ctrl.optimize_cutting_list(element_ids, stock_lengths, optimization_algorithm,
+                                                       kerf_width, min_offcut_length, max_waste_percentage,
+                                                       material_groups, priority_mode)
 
 # --- TRANSFORMATION TOOLS ---
 

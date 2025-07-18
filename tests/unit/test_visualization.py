@@ -129,3 +129,159 @@ class TestVisualizationController(BaseCadworkTest):
         self.assert_success(result, "refresh_display")
         
         return result
+    
+    async def test_create_assembly_animation(self):
+        """Test creating assembly animation"""
+        # Create test elements
+        beam_result = await self.element_ctrl.create_beam(**TEST_BEAM_DATA)
+        beam_id = self.assert_element_id(beam_result, "create_beam_for_animation")
+        
+        # Test basic animation creation
+        animation_result = await self.viz_ctrl.create_assembly_animation(
+            element_ids=[beam_id],
+            animation_type="sequential",
+            duration=5.0
+        )
+        self.assert_success(animation_result, "create_assembly_animation_basic")
+        
+        # Test with multiple elements and advanced parameters
+        beam2_data = {
+            "p1": [1000.0, 0.0, 0.0],
+            "p2": [2000.0, 0.0, 0.0],
+            "width": 100.0,
+            "height": 100.0
+        }
+        beam2_result = await self.element_ctrl.create_beam(**beam2_data)
+        beam2_id = self.assert_element_id(beam2_result, "create_beam_for_animation_2")
+        
+        advanced_result = await self.viz_ctrl.create_assembly_animation(
+            element_ids=[beam_id, beam2_id],
+            animation_type="parallel",
+            duration=10.0,
+            start_delay=1.0,
+            element_delay=0.5,
+            fade_in=True,
+            movement_path="gravity"
+        )
+        self.assert_success(advanced_result, "create_assembly_animation_advanced")
+        
+        # Test invalid parameters
+        invalid_type_result = await self.viz_ctrl.create_assembly_animation(
+            element_ids=[beam_id],
+            animation_type="invalid_type"
+        )
+        self.assert_error(invalid_type_result, "create_assembly_animation_invalid_type")
+        
+        invalid_duration_result = await self.viz_ctrl.create_assembly_animation(
+            element_ids=[beam_id],
+            duration=-1.0
+        )
+        self.assert_error(invalid_duration_result, "create_assembly_animation_invalid_duration")
+        
+        return {
+            "element_ids": [beam_id, beam2_id],
+            "animation_results": [animation_result, advanced_result]
+        }
+    
+    async def test_set_camera_position(self):
+        """Test setting camera position"""
+        # Test basic camera positioning
+        basic_result = await self.viz_ctrl.set_camera_position(
+            position=[1000.0, 1000.0, 1000.0],
+            target=[0.0, 0.0, 0.0]
+        )
+        self.assert_success(basic_result, "set_camera_position_basic")
+        
+        # Test with advanced parameters
+        advanced_result = await self.viz_ctrl.set_camera_position(
+            position=[2000.0, 2000.0, 1500.0],
+            target=[500.0, 500.0, 0.0],
+            up_vector=[0.0, 0.0, 1.0],
+            fov=60.0,
+            animate_transition=True,
+            transition_duration=3.0,
+            camera_name="overview"
+        )
+        self.assert_success(advanced_result, "set_camera_position_advanced")
+        
+        # Test invalid parameters
+        invalid_position_result = await self.viz_ctrl.set_camera_position(
+            position=[1000.0, 1000.0],  # Missing z coordinate
+            target=[0.0, 0.0, 0.0]
+        )
+        self.assert_error(invalid_position_result, "set_camera_position_invalid_position")
+        
+        invalid_fov_result = await self.viz_ctrl.set_camera_position(
+            position=[1000.0, 1000.0, 1000.0],
+            target=[0.0, 0.0, 0.0],
+            fov=200.0  # Invalid FOV > 180
+        )
+        self.assert_error(invalid_fov_result, "set_camera_position_invalid_fov")
+        
+        same_position_target_result = await self.viz_ctrl.set_camera_position(
+            position=[1000.0, 1000.0, 1000.0],
+            target=[1000.0, 1000.0, 1000.0]  # Same as position
+        )
+        self.assert_error(same_position_target_result, "set_camera_position_same_point")
+        
+        return {
+            "camera_results": [basic_result, advanced_result]
+        }
+    
+    async def test_create_walkthrough(self):
+        """Test creating 3D walkthrough"""
+        # Define waypoints for walkthrough
+        waypoints = [
+            [0.0, 0.0, 1700.0],      # Start position
+            [2000.0, 0.0, 1700.0],   # Move forward
+            [2000.0, 2000.0, 1700.0], # Turn right
+            [0.0, 2000.0, 1700.0],   # Move back
+            [0.0, 0.0, 1700.0]       # Return to start
+        ]
+        
+        # Test basic walkthrough creation
+        basic_result = await self.viz_ctrl.create_walkthrough(
+            waypoints=waypoints,
+            duration=20.0
+        )
+        self.assert_success(basic_result, "create_walkthrough_basic")
+        
+        # Test with advanced parameters
+        advanced_result = await self.viz_ctrl.create_walkthrough(
+            waypoints=waypoints,
+            duration=30.0,
+            camera_height=1800.0,
+            movement_speed="smooth",
+            include_audio=True,
+            output_format="mp4",
+            resolution="1920x1080"
+        )
+        self.assert_success(advanced_result, "create_walkthrough_advanced")
+        
+        # Test invalid parameters
+        invalid_waypoints_result = await self.viz_ctrl.create_walkthrough(
+            waypoints=[[0.0, 0.0]]  # Missing waypoints
+        )
+        self.assert_error(invalid_waypoints_result, "create_walkthrough_invalid_waypoints")
+        
+        insufficient_waypoints_result = await self.viz_ctrl.create_walkthrough(
+            waypoints=[[0.0, 0.0, 0.0]]  # Only one waypoint
+        )
+        self.assert_error(insufficient_waypoints_result, "create_walkthrough_insufficient_waypoints")
+        
+        invalid_duration_result = await self.viz_ctrl.create_walkthrough(
+            waypoints=waypoints,
+            duration=-5.0  # Negative duration
+        )
+        self.assert_error(invalid_duration_result, "create_walkthrough_invalid_duration")
+        
+        invalid_resolution_result = await self.viz_ctrl.create_walkthrough(
+            waypoints=waypoints,
+            resolution="invalid_resolution"
+        )
+        self.assert_error(invalid_resolution_result, "create_walkthrough_invalid_resolution")
+        
+        return {
+            "waypoints": waypoints,
+            "walkthrough_results": [basic_result, advanced_result]
+        }

@@ -890,3 +890,170 @@ def handle_get_bounding_box(aParams: dict) -> dict:
             
     except Exception as e:
         return {"status": "error", "message": f"get_bounding_box failed: {e}"}
+
+def handle_check_collisions(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle check collisions command"""
+    try:
+        # Import here to avoid import-time errors
+        import geometry_controller as gc
+
+        element_ids_raw = args.get("element_ids")
+        if element_ids_raw is None:
+            raise ValueError("Missing required argument: element_ids")
+        
+        element_ids = validate_element_ids(element_ids_raw)
+        if len(element_ids) < 2:
+            raise ValueError("At least 2 elements required for collision check")
+        
+        tolerance = args.get("tolerance", 0.1)
+        if not isinstance(tolerance, (int, float)) or tolerance < 0:
+            raise ValueError("Tolerance must be a non-negative number")
+        
+        # Check for collisions between all pairs of elements
+        collision_results = []
+        for i in range(len(element_ids)):
+            for j in range(i + 1, len(element_ids)):
+                # Use Cadwork API to check collision between elements
+                # This is a placeholder - actual implementation depends on Cadwork API
+                min_distance = gc.get_minimum_distance_between_elements(element_ids[i], element_ids[j])
+                has_collision = min_distance <= tolerance
+                
+                collision_results.append({
+                    "element_1": element_ids[i],
+                    "element_2": element_ids[j],
+                    "distance": min_distance,
+                    "has_collision": has_collision
+                })
+        
+        # Determine overall collision status
+        total_collisions = sum(1 for result in collision_results if result["has_collision"])
+        
+        return {
+            "status": "ok",
+            "collision_count": total_collisions,
+            "has_any_collision": total_collisions > 0,
+            "details": collision_results,
+            "tolerance": tolerance
+        }
+    
+    except ValueError as e:
+        return {"status": "error", "message": f"Invalid input: {e}"}
+    except Exception as e:
+        return {"status": "error", "message": f"check_collisions failed: {e}"}
+
+def handle_validate_joints(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle validate joints command"""
+    try:
+        # Import here to avoid import-time errors
+        import geometry_controller as gc
+        import attribute_controller as ac
+
+        # Validate required arguments
+        element_ids_raw = args.get("element_ids")
+        if element_ids_raw is None:
+            raise ValueError("Missing required argument: element_ids")
+        
+        element_ids = validate_element_ids(element_ids_raw)
+        if len(element_ids) < 2:
+            raise ValueError("At least 2 elements required for joint validation")
+        
+        # Get optional parameters with defaults
+        joint_type = args.get("joint_type", "auto")
+        load_conditions = args.get("load_conditions", {})
+        safety_factor = args.get("safety_factor", 2.0)
+        wood_grade = args.get("wood_grade", "C24")
+        
+        # Validate parameters
+        valid_joint_types = ["auto", "mortise_tenon", "lap_joint", "dovetail", "scarf_joint", "custom"]
+        if joint_type not in valid_joint_types:
+            raise ValueError(f"Invalid joint_type. Must be one of: {valid_joint_types}")
+        
+        if not isinstance(safety_factor, (int, float)) or safety_factor <= 0:
+            raise ValueError("safety_factor must be a positive number")
+        
+        valid_wood_grades = ["C16", "C20", "C24", "C27", "C30", "C35", "C40", "GL24h", "GL28h", "GL32h"]
+        if wood_grade not in valid_wood_grades:
+            raise ValueError(f"Invalid wood_grade. Must be one of: {valid_wood_grades}")
+        
+        # Material strength properties for different wood grades
+        wood_properties = {
+            "C24": {"fm_k": 24.0, "fv_k": 4.0, "fc_0_k": 21.0, "ft_0_k": 14.0, "E_mean": 11000.0},
+            "C30": {"fm_k": 30.0, "fv_k": 4.0, "fc_0_k": 23.0, "ft_0_k": 18.0, "E_mean": 12000.0},
+            "GL24h": {"fm_k": 24.0, "fv_k": 2.7, "fc_0_k": 24.0, "ft_0_k": 16.5, "E_mean": 11500.0}
+        }
+        
+        # Get wood properties (default to C24 if not found)
+        properties = wood_properties.get(wood_grade, wood_properties["C24"])
+        
+        # Analyze joints between element pairs
+        joint_analyses = []
+        for i in range(len(element_ids)):
+            for j in range(i + 1, len(element_ids)):
+                element_1 = element_ids[i]
+                element_2 = element_ids[j]
+                
+                # Get element geometries
+                try:
+                    width_1 = gc.get_width(element_1)
+                    height_1 = gc.get_height(element_1)
+                    width_2 = gc.get_width(element_2)
+                    height_2 = gc.get_height(element_2)
+                    
+                    # Calculate joint area (simplified)
+                    joint_area = min(width_1 * height_1, width_2 * height_2)
+                    
+                    # Basic strength calculations
+                    normal_force = load_conditions.get("normal_force", 0.0)
+                    shear_force = load_conditions.get("shear_force", 0.0)
+                    
+                    # Calculate stresses
+                    normal_stress = normal_force / joint_area if joint_area > 0 else 0
+                    shear_stress = shear_force / joint_area if joint_area > 0 else 0
+                    
+                    # Check against allowable stresses with safety factor
+                    allowable_normal = properties["fc_0_k"] / safety_factor
+                    allowable_shear = properties["fv_k"] / safety_factor
+                    
+                    # Safety checks
+                    normal_utilization = normal_stress / allowable_normal if allowable_normal > 0 else 0
+                    shear_utilization = shear_stress / allowable_shear if allowable_shear > 0 else 0
+                    
+                    is_valid = normal_utilization <= 1.0 and shear_utilization <= 1.0
+                    
+                    joint_analyses.append({
+                        "element_pair": [element_1, element_2],
+                        "joint_type": joint_type,
+                        "joint_area": joint_area,
+                        "normal_stress": normal_stress,
+                        "shear_stress": shear_stress,
+                        "normal_utilization": normal_utilization,
+                        "shear_utilization": shear_utilization,
+                        "is_valid": is_valid,
+                        "safety_factor": safety_factor
+                    })
+                    
+                except Exception as e:
+                    joint_analyses.append({
+                        "element_pair": [element_1, element_2],
+                        "error": f"Could not analyze joint: {e}",
+                        "is_valid": False
+                    })
+        
+        # Overall validation result
+        all_valid = all(analysis.get("is_valid", False) for analysis in joint_analyses)
+        
+        return {
+            "status": "ok",
+            "overall_valid": all_valid,
+            "joint_count": len(joint_analyses),
+            "wood_grade": wood_grade,
+            "safety_factor": safety_factor,
+            "joint_analyses": joint_analyses,
+            "wood_properties": properties,
+            "message": f"Joint validation {'passed' if all_valid else 'failed'} for {len(joint_analyses)} joint(s)"
+        }
+        
+    except ValueError as e:
+        return {"status": "error", "message": f"Invalid input: {e}"}
+    except Exception as e:
+        return {"status": "error", "message": f"validate_joints failed: {e}"}

@@ -4,7 +4,7 @@ List and report controller for generating various element lists and reports
 from typing import Dict, Any, List, Optional
 from .base_controller import BaseController
 
-class CListController(BaseController):
+class ListController(BaseController):
     """Controller for list and report generation operations"""
     
     def __init__(self) -> None:

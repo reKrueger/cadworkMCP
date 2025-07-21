@@ -18,19 +18,19 @@ except ImportError:
 from controllers.element_controller import ElementController
 from controllers.geometry_controller import GeometryController
 from controllers.attribute_controller import AttributeController
-from controllers.visualization_controller import CVisualizationController
-from controllers.utility_controller import CUtilityController
-from controllers.shop_drawing_controller import CShopDrawingController
-from controllers.roof_controller import CRoofController
-from controllers.machine_controller import CMachineController
-from controllers.measurement_controller import CMeasurementController
-from controllers.material_controller import CMaterialController
-from controllers.export_controller import CExportController
-from controllers.import_controller import CImportController
-from controllers.container_controller import CContainerController
-from controllers.transformation_controller import CTransformationController
-from controllers.optimization_controller import COptimizationController
-from controllers.list_controller import CListController
+from controllers.visualization_controller import VisualizationController
+from controllers.utility_controller import UtilityController
+from controllers.shop_drawing_controller import ShopDrawingController
+from controllers.roof_controller import RoofController
+from controllers.machine_controller import MachineController
+from controllers.measurement_controller import MeasurementController
+from controllers.material_controller import MaterialController
+from controllers.export_controller import ExportController
+from controllers.import_controller import ImportController
+from controllers.container_controller import ContainerController
+from controllers.transformation_controller import TransformationController
+from controllers.optimization_controller import OptimizationController
+from controllers.list_controller import ListController
 
 # Create MCP server
 mcp = create_mcp_server()
@@ -39,19 +39,19 @@ mcp = create_mcp_server()
 element_ctrl = ElementController()
 geometry_ctrl = GeometryController()
 attribute_ctrl = AttributeController()
-visualization_ctrl = CVisualizationController()
-utility_ctrl = CUtilityController()
-shop_drawing_ctrl = CShopDrawingController()
-roof_ctrl = CRoofController()
-machine_ctrl = CMachineController()
-measurement_ctrl = CMeasurementController()
-material_ctrl = CMaterialController()
-export_ctrl = CExportController()
-import_ctrl = CImportController()
-container_ctrl = CContainerController()
-transformation_ctrl = CTransformationController()
-optimization_ctrl = COptimizationController()
-list_ctrl = CListController()
+visualization_ctrl = VisualizationController()
+utility_ctrl = UtilityController()
+shop_drawing_ctrl = ShopDrawingController()
+roof_ctrl = RoofController()
+machine_ctrl = MachineController()
+measurement_ctrl = MeasurementController()
+material_ctrl = MaterialController()
+export_ctrl = ExportController()
+import_ctrl = ImportController()
+container_ctrl = ContainerController()
+transformation_ctrl = TransformationController()
+optimization_ctrl = OptimizationController()
+list_ctrl = ListController()
 
 # --- ELEMENT TOOLS ---
 

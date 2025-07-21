@@ -4,7 +4,7 @@ Import controller for file import operations
 from typing import Dict, Any, List, Optional
 from .base_controller import BaseController
 
-class CImportController(BaseController):
+class ImportController(BaseController):
     """Controller for import operations"""
     
     def __init__(self) -> None:

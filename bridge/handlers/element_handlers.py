@@ -2,16 +2,44 @@
 Element operation handlers
 """
 from typing import Dict, Any
-from ..helpers import to_point_3d, point_3d_to_list, validate_positive_number, validate_element_ids
+from .base_handler import BaseHandler, validate_element_ids
+from ..controller_manager import call_cadwork_function
+
+# Legacy helper functions for compatibility
+def to_point_3d(point_data):
+    """Convert point data to cadwork point_3d"""
+    try:
+        import cadwork
+        if isinstance(point_data, (list, tuple)) and len(point_data) >= 3:
+            return cadwork.point_3d(float(point_data[0]), float(point_data[1]), float(point_data[2]))
+        else:
+            raise ValueError("Point must be a list/tuple of at least 3 numbers")
+    except ImportError:
+        # Fallback wenn cadwork nicht verfügbar
+        return point_data
+
+def point_3d_to_list(point):
+    """Convert cadwork point_3d to list"""
+    try:
+        return [point.x, point.y, point.z]
+    except:
+        return point if isinstance(point, list) else [0, 0, 0]
+
+def validate_positive_number(value, name):
+    """Validate positive number"""
+    try:
+        num = float(value)
+        if num <= 0:
+            raise ValueError(f"{name} must be positive")
+        return num
+    except (ValueError, TypeError):
+        raise ValueError(f"{name} must be a positive number")
 
 def handle_create_beam(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle create beam command"""
     try:
         # Import here to avoid import-time errors
         import cadwork
-        import element_controller as ec
-        import geometry_controller as gc
-        import attribute_controller as ac
         
         # Validate required arguments
         required = ["p1", "p2", "width", "height"]
@@ -32,8 +60,8 @@ def handle_create_beam(args: Dict[str, Any]) -> Dict[str, Any]:
         else:
             p3 = to_point_3d(p3_raw)
         
-        # Create beam
-        beam_id = ec.create_rectangular_beam_points(width, height, p1, p2, p3)
+        # Create beam using Controller Manager
+        beam_id = call_cadwork_function('create_rectangular_beam_points', width, height, p1, p2, p3)
         
         if isinstance(beam_id, int) and beam_id >= 0:
             return {"status": "ok", "id": beam_id}

@@ -5,7 +5,7 @@ Manages display refresh, output functions and system utilities
 from typing import Dict, Any
 from .base_controller import BaseController
 
-class CUtilityController(BaseController):
+class UtilityController(BaseController):
     """Controller for utility operations"""
     
     def __init__(self) -> None:

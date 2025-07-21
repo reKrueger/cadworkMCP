@@ -4,7 +4,7 @@ Transformation controller for element transformation operations
 from typing import Dict, Any, List, Optional
 from .base_controller import BaseController
 
-class CTransformationController(BaseController):
+class TransformationController(BaseController):
     """Controller for element transformation operations"""
     
     def __init__(self) -> None:

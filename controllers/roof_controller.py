@@ -5,7 +5,7 @@ Manages roof-specific CAD functions for carpentry and roof construction
 from typing import Dict, Any, List
 from .base_controller import BaseController
 
-class CRoofController(BaseController):
+class RoofController(BaseController):
     """Controller for roof operations"""
     
     def __init__(self) -> None:

@@ -4,7 +4,7 @@ Export controller for file export operations
 from typing import Dict, Any, List, Optional
 from .base_controller import BaseController
 
-class CExportController(BaseController):
+class ExportController(BaseController):
     """Controller for export operations"""
     
     def __init__(self) -> None:

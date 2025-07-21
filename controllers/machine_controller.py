@@ -5,7 +5,7 @@ Manages CNC and production-specific functions for manufacturing planning
 from typing import Dict, Any
 from .base_controller import BaseController
 
-class CMachineController(BaseController):
+class MachineController(BaseController):
     """Controller for machine/CNC operations"""
     
     def __init__(self) -> None:

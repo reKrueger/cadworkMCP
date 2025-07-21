@@ -4,7 +4,7 @@ Container controller for container operations
 from typing import Dict, Any, List, Optional
 from .base_controller import BaseController
 
-class CContainerController(BaseController):
+class ContainerController(BaseController):
     """Controller for container operations"""
     
     def __init__(self) -> None:

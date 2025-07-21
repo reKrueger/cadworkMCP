@@ -4,7 +4,7 @@ Material controller for material management operations
 from typing import Dict, Any, Optional
 from .base_controller import BaseController
 
-class CMaterialController(BaseController):
+class MaterialController(BaseController):
     """Controller for material management operations"""
     
     def __init__(self) -> None:

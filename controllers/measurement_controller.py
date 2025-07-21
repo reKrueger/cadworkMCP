@@ -5,7 +5,7 @@ from typing import Dict, Any, List, Optional
 import math
 from .base_controller import BaseController
 
-class CMeasurementController(BaseController):
+class MeasurementController(BaseController):
     """Controller for measurement operations"""
     
     def __init__(self) -> None:

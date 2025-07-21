@@ -4,7 +4,7 @@ Optimization controller for material and production optimization
 from typing import Dict, Any, List, Optional
 from .base_controller import BaseController
 
-class COptimizationController(BaseController):
+class OptimizationController(BaseController):
     """Controller for optimization operations"""
     
     def __init__(self) -> None:

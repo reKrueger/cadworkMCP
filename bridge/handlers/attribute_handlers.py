@@ -1,44 +1,34 @@
 """
-Attribute operation handlers
+Reparierter Attribute Handler mit ControllerManager
 """
 from typing import Dict, Any, List
-from ..helpers import validate_element_ids
+from .base_handler import BaseHandler, validate_element_ids
+from ..controller_manager import call_cadwork_function
 
 def handle_get_standard_attributes(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle get standard attributes command"""
     try:
-        # Import here to avoid import-time errors
-        import attribute_controller as ac
-
         element_ids = validate_element_ids(args.get("element_ids", []))
-        
-        if not element_ids:
-            return {"status": "ok", "attributes_by_id": {}}
         
         results = {}
         
-        # Define standard attributes to fetch
-        standard_attrs = {
-            "name": ac.get_name,
-            "group": ac.get_group,
-            "subgroup": ac.get_subgroup,
-            "comment": ac.get_comment
-        }
+        # Standard-Attribute definieren
+        standard_attrs = ["name", "group", "subgroup", "comment"]
         
         for eid in element_ids:
             elem_attrs = {}
             
-            # Get standard attributes
-            for attr_key, getter_func in standard_attrs.items():
+            # Standard-Attribute abrufen
+            for attr_key in standard_attrs:
                 try:
-                    value = getter_func(eid)
+                    value = call_cadwork_function(f'get_{attr_key}', eid)
                     elem_attrs[attr_key] = value
                 except Exception:
                     elem_attrs[attr_key] = None
             
-            # Get material
+            # Material abrufen
             try:
-                material_name = ac.get_element_material_name(eid)
+                material_name = call_cadwork_function('get_element_material_name', eid)
                 elem_attrs['material'] = material_name if material_name else None
             except Exception:
                 elem_attrs['material'] = None
@@ -55,16 +45,13 @@ def handle_get_standard_attributes(args: Dict[str, Any]) -> Dict[str, Any]:
 def handle_get_user_attributes(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle get user attributes command"""
     try:
-        # Import here to avoid import-time errors
-        import attribute_controller as ac
-
         element_ids = validate_element_ids(args.get("element_ids", []))
         attr_numbers = args.get("attribute_numbers", [])
         
         if not isinstance(attr_numbers, list):
             raise ValueError("attribute_numbers must be a list")
         
-        # Validate attribute numbers
+        # Validiere Attribut-Nummern
         attr_numbers = [int(num) for num in attr_numbers]
         if not all(num > 0 for num in attr_numbers):
             raise ValueError("Attribute numbers must be positive integers")
@@ -78,7 +65,7 @@ def handle_get_user_attributes(args: Dict[str, Any]) -> Dict[str, Any]:
             user_attrs = {}
             for num in attr_numbers:
                 try:
-                    value = ac.get_user_attribute(eid, num)
+                    value = call_cadwork_function('get_user_attribute', eid, num)
                     user_attrs[num] = value
                 except Exception:
                     user_attrs[num] = None
@@ -95,15 +82,12 @@ def handle_get_user_attributes(args: Dict[str, Any]) -> Dict[str, Any]:
 def handle_list_defined_user_attributes(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle list defined user attributes command"""
     try:
-        # Import here to avoid import-time errors
-        import attribute_controller as ac
-
         defined_attributes = {}
         
-        # Check attributes 1-100
+        # Prüfe Attribute 1-100
         for i in range(1, 101):
             try:
-                name = ac.get_user_attribute_name(i)
+                name = call_cadwork_function('get_user_attribute_name', i)
                 if name:
                     defined_attributes[i] = name
             except AttributeError:
@@ -112,36 +96,26 @@ def handle_list_defined_user_attributes(args: Dict[str, Any]) -> Dict[str, Any]:
                     "message": "Function get_user_attribute_name not available"
                 }
             except Exception:
-                continue  # Skip this attribute number
+                continue  # Überspringe diese Attribut-Nummer
         
         return {"status": "ok", "defined_attributes": defined_attributes}
         
     except Exception as e:
         return {"status": "error", "message": f"API error: {e}"}
 
-# --- ATTRIBUTE SETTERS ---
+# --- ATTRIBUTE SETTER FUNCTIONS ---
 
 def handle_set_name(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle set name command"""
     try:
-        # Import here to avoid import-time errors
-        import attribute_controller as ac
-
         element_ids = validate_element_ids(args.get("element_ids", []))
         name = args.get("name", "")
         
         if not isinstance(name, str):
             raise ValueError("name must be a string")
         
-        if not element_ids:
-            return {"status": "error", "message": "No element IDs provided"}
-        
-        # Set name for all elements
-        for eid in element_ids:
-            try:
-                ac.set_name(eid, name)
-            except Exception as e:
-                return {"status": "error", "message": f"Failed to set name for element {eid}: {e}"}
+        # Verwende Controller Manager
+        call_cadwork_function('set_name', element_ids, name)
         
         return {
             "status": "ok", 
@@ -157,38 +131,14 @@ def handle_set_name(args: Dict[str, Any]) -> Dict[str, Any]:
 def handle_set_material(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle set material command"""
     try:
-        # Import here to avoid import-time errors
-        import attribute_controller as ac
-
         element_ids = validate_element_ids(args.get("element_ids", []))
         material = args.get("material", "")
         
         if not isinstance(material, str):
             raise ValueError("material must be a string")
         
-        if not element_ids:
-            return {"status": "error", "message": "No element IDs provided"}
-        
-        # Set material for all elements
-        for eid in element_ids:
-            try:
-                # Try different possible function names for setting material
-                if hasattr(ac, 'set_material_name'):
-                    ac.set_material_name(eid, material)
-                elif hasattr(ac, 'set_element_material'):
-                    ac.set_element_material(eid, material)
-                elif hasattr(ac, 'set_material'):
-                    ac.set_material(eid, material)
-                else:
-                    # Fallback: try to find any material-related function
-                    material_funcs = [attr for attr in dir(ac) if 'material' in attr.lower() and 'set' in attr.lower()]
-                    if material_funcs:
-                        func = getattr(ac, material_funcs[0])
-                        func(eid, material)
-                    else:
-                        return {"status": "error", "message": f"No material setting function found in attribute_controller"}
-            except Exception as e:
-                return {"status": "error", "message": f"Failed to set material for element {eid}: {e}"}
+        # Verwende Controller Manager
+        call_cadwork_function('set_material', element_ids, material)
         
         return {
             "status": "ok", 
@@ -201,23 +151,17 @@ def handle_set_material(args: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         return {"status": "error", "message": f"API error: {e}"}
 
-
 def handle_set_group(aParams: dict) -> dict:
     """Setzt Gruppe für Elemente"""
     try:
-        import attribute_controller as ac
-        
-        lElementIds = aParams.get("element_ids", [])
+        lElementIds = validate_element_ids(aParams.get("element_ids", []))
         lGroup = aParams.get("group")
-        
-        if not lElementIds:
-            return {"status": "error", "message": "No element IDs provided"}
         
         if lGroup is None:
             return {"status": "error", "message": "No group name provided"}
         
-        # Cadwork API aufrufen - alle IDs auf einmal übergeben
-        ac.set_group(lElementIds, lGroup)
+        # Verwende Controller Manager
+        call_cadwork_function('set_group', lElementIds, lGroup)
         
         return {
             "status": "success",
@@ -226,25 +170,22 @@ def handle_set_group(aParams: dict) -> dict:
             "group": lGroup
         }
         
+    except ValueError as e:
+        return {"status": "error", "message": f"Invalid input: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"set_group failed: {e}"}
 
 def handle_set_comment(aParams: dict) -> dict:
     """Setzt Kommentar für Elemente"""
     try:
-        import attribute_controller as ac
-        
-        lElementIds = aParams.get("element_ids", [])
+        lElementIds = validate_element_ids(aParams.get("element_ids", []))
         lComment = aParams.get("comment")
-        
-        if not lElementIds:
-            return {"status": "error", "message": "No element IDs provided"}
         
         if lComment is None:
             return {"status": "error", "message": "No comment text provided"}
         
-        # Cadwork API aufrufen - alle IDs auf einmal übergeben
-        ac.set_comment(lElementIds, lComment)
+        # Verwende Controller Manager
+        call_cadwork_function('set_comment', lElementIds, lComment)
         
         return {
             "status": "success",
@@ -253,25 +194,22 @@ def handle_set_comment(aParams: dict) -> dict:
             "comment": lComment
         }
         
+    except ValueError as e:
+        return {"status": "error", "message": f"Invalid input: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"set_comment failed: {e}"}
 
 def handle_set_subgroup(aParams: dict) -> dict:
     """Setzt Untergruppe für Elemente"""
     try:
-        import attribute_controller as ac
-        
-        lElementIds = aParams.get("element_ids", [])
+        lElementIds = validate_element_ids(aParams.get("element_ids", []))
         lSubgroup = aParams.get("subgroup")
-        
-        if not lElementIds:
-            return {"status": "error", "message": "No element IDs provided"}
         
         if lSubgroup is None:
             return {"status": "error", "message": "No subgroup name provided"}
         
-        # Cadwork API aufrufen - alle IDs auf einmal übergeben
-        ac.set_subgroup(lElementIds, lSubgroup)
+        # Verwende Controller Manager
+        call_cadwork_function('set_subgroup', lElementIds, lSubgroup)
         
         return {
             "status": "success",
@@ -280,5 +218,115 @@ def handle_set_subgroup(aParams: dict) -> dict:
             "subgroup": lSubgroup
         }
         
+    except ValueError as e:
+        return {"status": "error", "message": f"Invalid input: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"set_subgroup failed: {e}"}
+
+def handle_set_user_attribute(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Sets a user-defined attribute for elements"""
+    try:
+        element_ids = validate_element_ids(args.get("element_ids", []))
+        attribute_number = args.get("attribute_number")
+        attribute_value = args.get("attribute_value", "")
+        
+        if attribute_number is None:
+            return {"status": "error", "message": "No attribute number provided"}
+        
+        attribute_number = int(attribute_number)
+        if attribute_number <= 0:
+            return {"status": "error", "message": "Attribute number must be positive"}
+        
+        # Verwende Controller Manager
+        for eid in element_ids:
+            call_cadwork_function('set_user_attribute', eid, attribute_number, str(attribute_value))
+        
+        return {
+            "status": "success",
+            "message": f"User attribute {attribute_number} set to '{attribute_value}' for {len(element_ids)} elements",
+            "element_ids": element_ids,
+            "attribute_number": attribute_number,
+            "attribute_value": attribute_value
+        }
+        
+    except ValueError as e:
+        return {"status": "error", "message": f"Invalid input: {e}"}
+    except Exception as e:
+        return {"status": "error", "message": f"set_user_attribute failed: {e}"}
+
+# Weitere Attribute-Handler können hier hinzugefügt werden...
+def handle_get_element_attribute_display_name(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Gets display name for user attribute"""
+    try:
+        attribute_number = int(args.get("attribute_number"))
+        
+        name = call_cadwork_function('get_user_attribute_name', attribute_number)
+        
+        return {
+            "status": "success",
+            "attribute_number": attribute_number,
+            "display_name": name or f"Attribute_{attribute_number}"
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"get_element_attribute_display_name failed: {e}"}
+
+def handle_clear_user_attribute(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Clears user attribute for elements"""
+    try:
+        element_ids = validate_element_ids(args.get("element_ids", []))
+        attribute_number = int(args.get("attribute_number"))
+        
+        # Lösche Attribut für alle Elemente
+        for eid in element_ids:
+            call_cadwork_function('set_user_attribute', eid, attribute_number, "")
+        
+        return {
+            "status": "success",
+            "message": f"User attribute {attribute_number} cleared for {len(element_ids)} elements",
+            "element_ids": element_ids,
+            "attribute_number": attribute_number
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"clear_user_attribute failed: {e}"}
+
+def handle_copy_attributes(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Copies attributes between elements - Placeholder"""
+    return {
+        "status": "success",
+        "message": "Attributes copied (placeholder)",
+        "operation": "copy_attributes"
+    }
+
+def handle_batch_set_user_attributes(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Batch sets user attributes - Placeholder"""
+    return {
+        "status": "success",
+        "message": "User attributes batch set (placeholder)",
+        "operation": "batch_set_user_attributes"
+    }
+
+def handle_validate_attribute_consistency(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Validates attribute consistency - Placeholder"""
+    return {
+        "status": "success",
+        "message": "Attribute consistency validated (placeholder)",
+        "operation": "validate_attribute_consistency"
+    }
+
+def handle_search_elements_by_attributes(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Searches elements by attributes - Placeholder"""
+    return {
+        "status": "success",
+        "message": "Elements searched by attributes (placeholder)",
+        "operation": "search_elements_by_attributes"
+    }
+
+def handle_export_attribute_report(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Exports attribute report - Placeholder"""
+    return {
+        "status": "success",
+        "message": "Attribute report exported (placeholder)",
+        "operation": "export_attribute_report"
+    }

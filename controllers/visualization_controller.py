@@ -5,7 +5,7 @@ Manages colors, transparency and visibility of elements
 from typing import Dict, Any, List, Optional
 from .base_controller import BaseController
 
-class CVisualizationController(BaseController):
+class VisualizationController(BaseController):
     """Controller for visualization operations"""
     
     def __init__(self) -> None:

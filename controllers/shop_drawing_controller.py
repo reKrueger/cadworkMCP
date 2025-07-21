@@ -5,7 +5,7 @@ Manages shop drawing-specific functions for production planning
 from typing import Dict, Any, Optional
 from .base_controller import BaseController
 
-class CShopDrawingController(BaseController):
+class ShopDrawingController(BaseController):
     """Controller for shop drawing operations"""
     
     def __init__(self) -> None:

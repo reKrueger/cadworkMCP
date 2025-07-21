@@ -216,9 +216,8 @@ def handle_set_group(aParams: dict) -> dict:
         if lGroup is None:
             return {"status": "error", "message": "No group name provided"}
         
-        # Cadwork API aufrufen
-        for lElementId in lElementIds:
-            ac.set_element_group(lElementId, lGroup)
+        # Cadwork API aufrufen - alle IDs auf einmal übergeben
+        ac.set_group(lElementIds, lGroup)
         
         return {
             "status": "success",
@@ -244,9 +243,8 @@ def handle_set_comment(aParams: dict) -> dict:
         if lComment is None:
             return {"status": "error", "message": "No comment text provided"}
         
-        # Cadwork API aufrufen
-        for lElementId in lElementIds:
-            ac.set_element_comment(lElementId, lComment)
+        # Cadwork API aufrufen - alle IDs auf einmal übergeben
+        ac.set_comment(lElementIds, lComment)
         
         return {
             "status": "success",
@@ -272,9 +270,8 @@ def handle_set_subgroup(aParams: dict) -> dict:
         if lSubgroup is None:
             return {"status": "error", "message": "No subgroup name provided"}
         
-        # Cadwork API aufrufen
-        for lElementId in lElementIds:
-            ac.set_element_subgroup(lElementId, lSubgroup)
+        # Cadwork API aufrufen - alle IDs auf einmal übergeben
+        ac.set_subgroup(lElementIds, lSubgroup)
         
         return {
             "status": "success",

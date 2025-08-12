@@ -778,7 +778,7 @@ async def create_visual_filter(filter_name: str, filter_criteria: Dict[str, Any]
     name="apply_color_scheme",
     description="Applies predefined color schemes to elements based on various criteria. Takes scheme name, optional element IDs, and scheme basis (material, group, element_type, etc.) for intelligent automatic coloring."
 )
-async def apply_color_scheme(scheme_name: str, element_ids: List[int] = None, scheme_basis: str = "material") -> Dict[str, Any]:
+async def apply_color_scheme(scheme_name: str, element_ids: List[int] = [], scheme_basis: str = "material") -> Dict[str, Any]:
     return await visualization_ctrl.apply_color_scheme(scheme_name, element_ids, scheme_basis)
 
 @mcp.tool(
@@ -904,13 +904,12 @@ async def search_elements_by_attributes(search_criteria: Dict[str, Any], search_
 )
 async def export_attribute_report(element_ids: List[int], report_format: str = "JSON",
                                 include_standard_attributes: bool = True, include_user_attributes: bool = True,
-                                user_attribute_numbers: List[int] = None, include_dimensions: bool = False,
-                                group_by: str = None) -> Dict[str, Any]:
+                                user_attribute_numbers: List[int] = [], include_dimensions: bool = False,
+                                group_by: str = "") -> Dict[str, Any]:
     return await attribute_ctrl.export_attribute_report(element_ids, report_format, include_standard_attributes, 
                                                        include_user_attributes, user_attribute_numbers, include_dimensions, group_by)
 
 # --- UTILITY TOOLS ---
-
 @mcp.tool(
     name="disable_auto_display_refresh",
     description="Disables automatic display refresh for performance during batch operations. Important: Remember to enable it again afterwards."
@@ -1394,21 +1393,6 @@ async def import_from_btl(file_path: str, import_mode: str = "standard",
                          import_processing: bool = True) -> Dict[str, Any]:
     return await import_ctrl.import_from_btl(file_path, import_mode, merge_duplicates, validate_geometry, import_processing)
 
-# --- CONTAINER TOOLS ---
-
-@mcp.tool(
-    name="create_auto_container_from_standard",
-    description="Creates an automatic container from standard elements. Containers are groups that organize multiple elements together. Useful for complex structures and assemblies. Takes element IDs and container name."
-)
-async def create_auto_container_from_standard(element_ids: List[int], container_name: str) -> Dict[str, Any]:
-    return await container_ctrl.create_auto_container_from_standard(element_ids, container_name)
-
-@mcp.tool(
-    name="get_container_content_elements",
-    description="Retrieves all elements contained within a specific container. Returns list of element IDs and detailed information about each contained element. Takes container ID."
-)
-async def get_container_content_elements(container_id: int) -> Dict[str, Any]:
-    return await container_ctrl.get_container_content_elements(container_id)
 
 # --- LIST & REPORT TOOLS ---
 
@@ -1456,21 +1440,6 @@ async def optimize_cutting_list(element_ids: Optional[List[int]] = None,
                                                        kerf_width, min_offcut_length, max_waste_percentage,
                                                        material_groups, priority_mode)
 
-# --- TRANSFORMATION TOOLS ---
-
-@mcp.tool(
-    name="rotate_elements",
-    description="Rotates elements around a specified axis. Takes element IDs, origin point [x,y,z], rotation axis vector [x,y,z], and angle in degrees."
-)
-async def rotate_elements(element_ids: List[int], origin: List[float], rotation_axis: List[float], rotation_angle: float) -> Dict[str, Any]:
-    return await transformation_ctrl.rotate_elements(element_ids, origin, rotation_axis, rotation_angle)
-
-@mcp.tool(
-    name="apply_global_scale",
-    description="Applies global scaling to elements. Takes element IDs, scale factor (e.g., 2.0 = double size), and origin point [x,y,z] for scaling."
-)
-async def apply_global_scale(element_ids: List[int], scale: float, origin: List[float]) -> Dict[str, Any]:
-    return await transformation_ctrl.apply_global_scale(element_ids, scale, origin)
 
 if __name__ == "__main__":
     import argparse

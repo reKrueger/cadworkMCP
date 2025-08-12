@@ -232,29 +232,11 @@ C:\cadworkMCP/              # MUSS auf C:\ liegen!
 1. **Controller erweitern** oder neuen erstellen
 2. **Typen spezifizieren** (`List[int]`, `Dict[str, Any]`)
 3. **MCP-Tool in main.py** registrieren
-4. **Tests hinzufügen** (falls vorhanden)
 
 ### Debugging
 - Logs in `core/logging.py` konfiguriert
 - Debug-Modus über Umgebungsvariablen
 - Cadwork-Verbindung über `core/connection.py` überwachen
-- **Test-Suite:** `cd tests/clean && python run_test.py`
-
-## 🧪 Testing
-
-### Test ausführen
-```bash
-cd C:\cadworkMCP\tests\clean
-python run_test.py
-```
-
-**Das Test-System wurde komplett aufgeräumt:**
-- **Eine einzige Datei:** `run_test.py` (282 Zeilen)
-- **8 fokussierte Tests** statt 38 komplexer Tests
-- **Läuft in <1 Sekunde** mit klarer Ausgabe
-- **Einfach zu verstehen** und zu erweitern
-
-**Wichtig:** Cadwork 3D und die Bridge müssen vor den Tests gestartet sein!
 
 ---
 

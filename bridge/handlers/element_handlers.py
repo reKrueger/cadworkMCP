@@ -3,9 +3,8 @@ Element operation handlers
 """
 from typing import Dict, Any
 from .base_handler import BaseHandler, validate_element_ids
-from ..controller_manager import call_cadwork_function
 
-# Legacy helper functions for compatibility
+# Helper functions for data conversion
 def to_point_3d(point_data):
     """Convert point data to cadwork point_3d"""
     try:
@@ -38,8 +37,8 @@ def validate_positive_number(value, name):
 def handle_create_beam(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle create beam command"""
     try:
-        # Import here to avoid import-time errors
         import cadwork
+        import element_controller as ec
         
         # Validate required arguments
         required = ["p1", "p2", "width", "height"]
@@ -60,8 +59,8 @@ def handle_create_beam(args: Dict[str, Any]) -> Dict[str, Any]:
         else:
             p3 = to_point_3d(p3_raw)
         
-        # Create beam using Controller Manager
-        beam_id = call_cadwork_function('create_rectangular_beam_points', width, height, p1, p2, p3)
+        # Create beam using element_controller
+        beam_id = ec.create_rectangular_beam_points(width, height, p1, p2, p3)
         
         if isinstance(beam_id, int) and beam_id >= 0:
             return {"status": "ok", "id": beam_id}
@@ -81,11 +80,8 @@ def handle_create_beam(args: Dict[str, Any]) -> Dict[str, Any]:
 def handle_create_panel(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle create panel command"""
     try:
-        # Import here to avoid import-time errors
         import cadwork
         import element_controller as ec
-        import geometry_controller as gc
-        import attribute_controller as ac
 
         # Validate required arguments
         required = ["p1", "p2", "width", "thickness"]
@@ -106,7 +102,7 @@ def handle_create_panel(args: Dict[str, Any]) -> Dict[str, Any]:
         else:
             p3 = to_point_3d(p3_raw)
         
-        # Create panel
+        # Create panel using element_controller
         panel_id = ec.create_rectangular_panel_points(width, thickness, p1, p2, p3)
         
         if isinstance(panel_id, int) and panel_id >= 0:
@@ -117,6 +113,8 @@ def handle_create_panel(args: Dict[str, Any]) -> Dict[str, Any]:
                 "message": f"Panel creation failed, returned: {panel_id}"
             }
             
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except ValueError as e:
         return {"status": "error", "message": f"Invalid input: {e}"}
     except Exception as e:
@@ -125,12 +123,8 @@ def handle_create_panel(args: Dict[str, Any]) -> Dict[str, Any]:
 def handle_get_active_element_ids(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle get active element IDs command"""
     try:
-        # Import here to avoid import-time errors
-        import cadwork
-
-        # Import here to avoid import-time errors
         import element_controller as ec
-
+        
         active_ids = ec.get_active_identifiable_element_ids()
         return {"status": "ok", "element_ids": active_ids}
     except Exception as e:
@@ -139,12 +133,8 @@ def handle_get_active_element_ids(args: Dict[str, Any]) -> Dict[str, Any]:
 def handle_get_all_element_ids(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle get all element IDs command"""
     try:
-        # Import here to avoid import-time errors
-        import cadwork
-
-        # Import here to avoid import-time errors
         import element_controller as ec
-
+        
         all_ids = ec.get_all_identifiable_element_ids()
         return {"status": "ok", "element_ids": all_ids}
     except Exception as e:
@@ -153,10 +143,6 @@ def handle_get_all_element_ids(args: Dict[str, Any]) -> Dict[str, Any]:
 def handle_delete_elements(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle delete elements command"""
     try:
-        # Import here to avoid import-time errors
-        import cadwork
-
-        # Import here to avoid import-time errors
         import element_controller as ec
 
         element_ids = validate_element_ids(args.get("element_ids", []))
@@ -181,10 +167,6 @@ def handle_delete_elements(args: Dict[str, Any]) -> Dict[str, Any]:
 def handle_move_element(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle move element command"""
     try:
-        # Import here to avoid import-time errors
-        import cadwork
-
-        # Import here to avoid import-time errors
         import element_controller as ec
 
         element_ids = validate_element_ids(args.get("element_ids", []))
@@ -216,10 +198,6 @@ def handle_move_element(args: Dict[str, Any]) -> Dict[str, Any]:
 def handle_get_user_element_ids(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle get user element IDs command"""
     try:
-        # Import here to avoid import-time errors
-        import cadwork
-
-        # Import here to avoid import-time errors
         import element_controller as ec
 
         count = args.get("count")
@@ -251,10 +229,6 @@ def handle_get_user_element_ids(args: Dict[str, Any]) -> Dict[str, Any]:
 def handle_copy_elements(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle copy elements command"""
     try:
-        # Import here to avoid import-time errors
-        import cadwork
-
-        # Import here to avoid import-time errors
         import element_controller as ec
 
         element_ids = validate_element_ids(args.get("element_ids", []))
@@ -293,10 +267,6 @@ def handle_copy_elements(args: Dict[str, Any]) -> Dict[str, Any]:
 def handle_get_visible_element_ids(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle get visible element IDs command"""
     try:
-        # Import here to avoid import-time errors
-        import cadwork
-
-        # Import here to avoid import-time errors
         import element_controller as ec
 
         visible_ids = ec.get_visible_identifiable_element_ids()
@@ -307,8 +277,6 @@ def handle_get_visible_element_ids(args: Dict[str, Any]) -> Dict[str, Any]:
 def handle_get_element_info(args: Dict[str, Any]) -> Dict[str, Any]:
     """Handle get element info command"""
     try:
-        # Import here to avoid import-time errors
-        import cadwork
         import element_controller as ec
         import geometry_controller as gc
         import attribute_controller as ac
@@ -331,29 +299,29 @@ def handle_get_element_info(args: Dict[str, Any]) -> Dict[str, Any]:
         attributes = {}
         try:
             attributes["name"] = ac.get_name(element_id)
-        except:
+        except Exception:
             attributes["name"] = None
             
         try:
             attributes["group"] = ac.get_group(element_id)
-        except:
+        except Exception:
             attributes["group"] = None
             
         try:
             attributes["subgroup"] = ac.get_subgroup(element_id)
-        except:
+        except Exception:
             attributes["subgroup"] = None
             
         try:
             attributes["comment"] = ac.get_comment(element_id)
-        except:
+        except Exception:
             attributes["comment"] = None
         
         # Get material
         try:
             material_name = ac.get_element_material_name(element_id)
             attributes["material"] = material_name if material_name else None
-        except:
+        except Exception:
             attributes["material"] = None
         
         element_info = {
@@ -371,6 +339,8 @@ def handle_get_element_info(args: Dict[str, Any]) -> Dict[str, Any]:
         
         return {"status": "ok", "info": element_info}
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except ValueError as e:
         return {"status": "error", "message": f"Invalid input: {e}"}
     except Exception as e:
@@ -382,9 +352,8 @@ def handle_create_circular_beam_points(params: Dict[str, Any]) -> Dict[str, Any]
     """Handle circular beam creation with points"""
     try:
         import element_controller as ec
-        import cadwork
         
-        diameter = params["diameter"]
+        diameter = validate_positive_number(params["diameter"], "diameter")
         p1 = to_point_3d(params["p1"])
         p2 = to_point_3d(params["p2"])
         p3 = to_point_3d(params["p3"]) if params.get("p3") else None
@@ -393,9 +362,16 @@ def handle_create_circular_beam_points(params: Dict[str, Any]) -> Dict[str, Any]
             element_id = ec.create_circular_beam_points(diameter, p1, p2, p3)
         else:
             element_id = ec.create_circular_beam_points(diameter, p1, p2)
-            
-        return {"status": "ok", "element_id": element_id}
         
+        if isinstance(element_id, int) and element_id >= 0:
+            return {"status": "ok", "element_id": element_id}
+        else:
+            return {"status": "error", "message": f"Circular beam creation failed, returned: {element_id}"}
+            
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
+    except (ValueError, KeyError) as e:
+        return {"status": "error", "message": f"Invalid input: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"Failed to create circular beam: {e}"}
 
@@ -403,9 +379,8 @@ def handle_create_square_beam_points(params: Dict[str, Any]) -> Dict[str, Any]:
     """Handle square beam creation with points"""
     try:
         import element_controller as ec
-        import cadwork
         
-        width = params["width"]
+        width = validate_positive_number(params["width"], "width")
         p1 = to_point_3d(params["p1"])
         p2 = to_point_3d(params["p2"])
         p3 = to_point_3d(params["p3"]) if params.get("p3") else None
@@ -414,9 +389,16 @@ def handle_create_square_beam_points(params: Dict[str, Any]) -> Dict[str, Any]:
             element_id = ec.create_square_beam_points(width, p1, p2, p3)
         else:
             element_id = ec.create_square_beam_points(width, p1, p2)
-            
-        return {"status": "ok", "element_id": element_id}
         
+        if isinstance(element_id, int) and element_id >= 0:
+            return {"status": "ok", "element_id": element_id}
+        else:
+            return {"status": "error", "message": f"Square beam creation failed, returned: {element_id}"}
+            
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
+    except (ValueError, KeyError) as e:
+        return {"status": "error", "message": f"Invalid input: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"Failed to create square beam: {e}"}
 
@@ -424,9 +406,10 @@ def handle_create_standard_beam_points(params: Dict[str, Any]) -> Dict[str, Any]
     """Handle standard beam creation with points"""
     try:
         import element_controller as ec
-        import cadwork
         
         standard_element_name = params["standard_element_name"]
+        if not standard_element_name or not isinstance(standard_element_name, str):
+            raise ValueError("standard_element_name must be a non-empty string")
         p1 = to_point_3d(params["p1"])
         p2 = to_point_3d(params["p2"])
         p3 = to_point_3d(params["p3"]) if params.get("p3") else None
@@ -435,9 +418,16 @@ def handle_create_standard_beam_points(params: Dict[str, Any]) -> Dict[str, Any]
             element_id = ec.create_standard_beam_points(standard_element_name, p1, p2, p3)
         else:
             element_id = ec.create_standard_beam_points(standard_element_name, p1, p2)
-            
-        return {"status": "ok", "element_id": element_id}
         
+        if isinstance(element_id, int) and element_id >= 0:
+            return {"status": "ok", "element_id": element_id}
+        else:
+            return {"status": "error", "message": f"Standard beam creation failed, returned: {element_id}"}
+            
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
+    except (ValueError, KeyError) as e:
+        return {"status": "error", "message": f"Invalid input: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"Failed to create standard beam: {e}"}
 
@@ -445,9 +435,10 @@ def handle_create_standard_panel_points(params: Dict[str, Any]) -> Dict[str, Any
     """Handle standard panel creation with points"""
     try:
         import element_controller as ec
-        import cadwork
         
         standard_element_name = params["standard_element_name"]
+        if not standard_element_name or not isinstance(standard_element_name, str):
+            raise ValueError("standard_element_name must be a non-empty string")
         p1 = to_point_3d(params["p1"])
         p2 = to_point_3d(params["p2"])
         p3 = to_point_3d(params["p3"]) if params.get("p3") else None
@@ -456,9 +447,16 @@ def handle_create_standard_panel_points(params: Dict[str, Any]) -> Dict[str, Any
             element_id = ec.create_standard_panel_points(standard_element_name, p1, p2, p3)
         else:
             element_id = ec.create_standard_panel_points(standard_element_name, p1, p2)
-            
-        return {"status": "ok", "element_id": element_id}
         
+        if isinstance(element_id, int) and element_id >= 0:
+            return {"status": "ok", "element_id": element_id}
+        else:
+            return {"status": "error", "message": f"Standard panel creation failed, returned: {element_id}"}
+            
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
+    except (ValueError, KeyError) as e:
+        return {"status": "error", "message": f"Invalid input: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"Failed to create standard panel: {e}"}
 
@@ -466,16 +464,22 @@ def handle_create_drilling_points(params: Dict[str, Any]) -> Dict[str, Any]:
     """Handle drilling creation with points"""
     try:
         import element_controller as ec
-        import cadwork
         
-        diameter = params["diameter"]
+        diameter = validate_positive_number(params["diameter"], "diameter")
         p1 = to_point_3d(params["p1"])
         p2 = to_point_3d(params["p2"])
         
         element_id = ec.create_drilling_points(diameter, p1, p2)
-            
-        return {"status": "ok", "element_id": element_id}
         
+        if isinstance(element_id, int) and element_id >= 0:
+            return {"status": "ok", "element_id": element_id}
+        else:
+            return {"status": "error", "message": f"Drilling creation failed, returned: {element_id}"}
+            
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
+    except (ValueError, KeyError) as e:
+        return {"status": "error", "message": f"Invalid input: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"Failed to create drilling: {e}"}
 
@@ -483,17 +487,27 @@ def handle_create_polygon_beam(params: Dict[str, Any]) -> Dict[str, Any]:
     """Handle polygon beam creation"""
     try:
         import element_controller as ec
-        import cadwork
         
-        polygon_vertices = [to_point_3d(vertex) for vertex in params["polygon_vertices"]]
-        thickness = params["thickness"]
+        vertices = params["polygon_vertices"]
+        if not isinstance(vertices, list) or len(vertices) < 3:
+            raise ValueError("polygon_vertices must be a list with at least 3 points")
+        
+        polygon_vertices = [to_point_3d(vertex) for vertex in vertices]
+        thickness = validate_positive_number(params["thickness"], "thickness")
         xl = to_point_3d(params["xl"])
         zl = to_point_3d(params["zl"])
         
         element_id = ec.create_polygon_beam(polygon_vertices, thickness, xl, zl)
-            
-        return {"status": "ok", "element_id": element_id}
         
+        if isinstance(element_id, int) and element_id >= 0:
+            return {"status": "ok", "element_id": element_id}
+        else:
+            return {"status": "error", "message": f"Polygon beam creation failed, returned: {element_id}"}
+            
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
+    except (ValueError, KeyError) as e:
+        return {"status": "error", "message": f"Invalid input: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"Failed to create polygon beam: {e}"}
 
@@ -504,8 +518,8 @@ def handle_get_elements_by_type(aParams: dict) -> dict:
         
         lElementType = aParams.get("element_type")
         
-        if not lElementType:
-            return {"status": "error", "message": "No element type provided"}
+        if not lElementType or not isinstance(lElementType, str):
+            return {"status": "error", "message": "element_type must be a non-empty string"}
         
         # Typ-Mapping (String -> Cadwork API Nummer)
         lTypeMapping = {
@@ -529,7 +543,7 @@ def handle_get_elements_by_type(aParams: dict) -> dict:
         lTypeId = lTypeMapping[lElementType]
         
         # Alle Elemente des Typs finden
-        lAllElements = ec.get_all_element_ids()
+        lAllElements = ec.get_all_identifiable_element_ids()
         lFilteredElements = []
         
         for lElementId in lAllElements:
@@ -537,8 +551,8 @@ def handle_get_elements_by_type(aParams: dict) -> dict:
                 lCurrentType = ec.get_element_type(lElementId)
                 if lCurrentType == lTypeId:
                     lFilteredElements.append(lElementId)
-            except:
-                continue  # Element überspringen bei Fehlern
+            except Exception:
+                pass
         
         return {
             "status": "success",
@@ -548,6 +562,8 @@ def handle_get_elements_by_type(aParams: dict) -> dict:
             "count": len(lFilteredElements)
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"get_elements_by_type failed: {e}"}
 
@@ -559,11 +575,11 @@ def handle_filter_elements_by_material(aParams: dict) -> dict:
         
         lMaterialName = aParams.get("material_name")
         
-        if not lMaterialName:
-            return {"status": "error", "message": "No material name provided"}
+        if not lMaterialName or not isinstance(lMaterialName, str):
+            return {"status": "error", "message": "material_name must be a non-empty string"}
         
         # Alle Elemente im Modell durchsuchen
-        lAllElements = ec.get_all_element_ids()
+        lAllElements = ec.get_all_identifiable_element_ids()
         lFilteredElements = []
         
         for lElementId in lAllElements:
@@ -571,8 +587,8 @@ def handle_filter_elements_by_material(aParams: dict) -> dict:
                 lCurrentMaterial = ac.get_element_material_name(lElementId)
                 if lCurrentMaterial and lCurrentMaterial.strip().lower() == lMaterialName.strip().lower():
                     lFilteredElements.append(lElementId)
-            except:
-                continue  # Element überspringen bei Fehlern
+            except Exception:
+                pass
         
         return {
             "status": "success",
@@ -581,6 +597,8 @@ def handle_filter_elements_by_material(aParams: dict) -> dict:
             "count": len(lFilteredElements)
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"filter_elements_by_material failed: {e}"}
 
@@ -592,20 +610,20 @@ def handle_get_elements_in_group(aParams: dict) -> dict:
         
         lGroupName = aParams.get("group_name")
         
-        if not lGroupName:
-            return {"status": "error", "message": "No group name provided"}
+        if not lGroupName or not isinstance(lGroupName, str):
+            return {"status": "error", "message": "group_name must be a non-empty string"}
         
         # Alle Elemente im Modell durchsuchen
-        lAllElements = ec.get_all_element_ids()
+        lAllElements = ec.get_all_identifiable_element_ids()
         lFilteredElements = []
         
         for lElementId in lAllElements:
             try:
-                lCurrentGroup = ac.get_element_group(lElementId)
+                lCurrentGroup = ac.get_group(lElementId)
                 if lCurrentGroup and lCurrentGroup.strip().lower() == lGroupName.strip().lower():
                     lFilteredElements.append(lElementId)
-            except:
-                continue  # Element überspringen bei Fehlern
+            except Exception:
+                pass
         
         return {
             "status": "success",
@@ -614,6 +632,8 @@ def handle_get_elements_in_group(aParams: dict) -> dict:
             "count": len(lFilteredElements)
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"get_elements_in_group failed: {e}"}
 
@@ -639,7 +659,7 @@ def handle_get_element_count_by_type(aParams: dict) -> dict:
         }
         
         # Alle Elemente im Modell
-        lAllElements = ec.get_all_element_ids()
+        lAllElements = ec.get_all_identifiable_element_ids()
         lTypeCounts = {}
         lTotalCount = 0
         
@@ -653,8 +673,8 @@ def handle_get_element_count_by_type(aParams: dict) -> dict:
                     lTypeCounts[lTypeName] = 0
                 lTypeCounts[lTypeName] += 1
                 lTotalCount += 1
-            except:
-                continue  # Element überspringen bei Fehlern
+            except Exception:
+                pass
         
         # Prozentuale Verteilung berechnen
         lTypePercentages = {}
@@ -663,13 +683,15 @@ def handle_get_element_count_by_type(aParams: dict) -> dict:
                 lTypePercentages[lTypeName] = (lCount / lTotalCount) * 100.0
         
         return {
-            "status": "success",
+            "status": "ok",
             "total_elements": lTotalCount,
             "type_counts": lTypeCounts,
             "type_percentages": lTypePercentages,
             "available_types": list(lTypeCounts.keys())
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"get_element_count_by_type failed: {e}"}
 
@@ -680,7 +702,7 @@ def handle_get_material_statistics(aParams: dict) -> dict:
         import attribute_controller as ac
         
         # Alle Elemente im Modell
-        lAllElements = ec.get_all_element_ids()
+        lAllElements = ec.get_all_identifiable_element_ids()
         lMaterialCounts = {}
         lTotalCount = 0
         lElementsWithoutMaterial = 0
@@ -697,7 +719,7 @@ def handle_get_material_statistics(aParams: dict) -> dict:
                 else:
                     lElementsWithoutMaterial += 1
                 lTotalCount += 1
-            except:
+            except Exception:
                 lElementsWithoutMaterial += 1
                 lTotalCount += 1
         
@@ -711,17 +733,19 @@ def handle_get_material_statistics(aParams: dict) -> dict:
         lSortedMaterials = sorted(lMaterialCounts.items(), key=lambda x: x[1], reverse=True)
         
         return {
-            "status": "success",
+            "status": "ok",
             "total_elements": lTotalCount,
             "elements_with_material": lTotalCount - lElementsWithoutMaterial,
             "elements_without_material": lElementsWithoutMaterial,
             "material_counts": lMaterialCounts,
             "material_percentages": lMaterialPercentages,
             "available_materials": list(lMaterialCounts.keys()),
-            "top_materials": lSortedMaterials[:10],  # Top 10
+            "top_materials": lSortedMaterials[:10],
             "unique_materials_count": len(lMaterialCounts)
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"get_material_statistics failed: {e}"}
 
@@ -732,7 +756,7 @@ def handle_get_group_statistics(aParams: dict) -> dict:
         import attribute_controller as ac
         
         # Alle Elemente im Modell
-        lAllElements = ec.get_all_element_ids()
+        lAllElements = ec.get_all_identifiable_element_ids()
         lGroupCounts = {}
         lTotalCount = 0
         lElementsWithoutGroup = 0
@@ -740,7 +764,7 @@ def handle_get_group_statistics(aParams: dict) -> dict:
         # Gruppen aller Elemente zählen
         for lElementId in lAllElements:
             try:
-                lGroup = ac.get_element_group(lElementId)
+                lGroup = ac.get_group(lElementId)
                 if lGroup and lGroup.strip():
                     lGroupName = lGroup.strip()
                     if lGroupName not in lGroupCounts:
@@ -749,7 +773,7 @@ def handle_get_group_statistics(aParams: dict) -> dict:
                 else:
                     lElementsWithoutGroup += 1
                 lTotalCount += 1
-            except:
+            except Exception:
                 lElementsWithoutGroup += 1
                 lTotalCount += 1
         
@@ -763,7 +787,7 @@ def handle_get_group_statistics(aParams: dict) -> dict:
         lSortedGroups = sorted(lGroupCounts.items(), key=lambda x: x[1], reverse=True)
         
         return {
-            "status": "success",
+            "status": "ok",
             "total_elements": lTotalCount,
             "elements_with_group": lTotalCount - lElementsWithoutGroup,
             "elements_without_group": lElementsWithoutGroup,
@@ -774,6 +798,8 @@ def handle_get_group_statistics(aParams: dict) -> dict:
             "unique_groups_count": len(lGroupCounts)
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"get_group_statistics failed: {e}"}
 
@@ -784,35 +810,46 @@ def handle_duplicate_elements(aParams: dict) -> dict:
         
         lElementIds = aParams.get("element_ids", [])
         
-        if not lElementIds:
-            return {"status": "error", "message": "No element IDs provided"}
+        if not isinstance(lElementIds, list) or not lElementIds:
+            return {"status": "error", "message": "element_ids must be a non-empty list"}
+        
+        # Validate element IDs
+        try:
+            lValidatedIds = validate_element_ids(lElementIds)
+        except ValueError as e:
+            return {"status": "error", "message": str(e)}
         
         lNewElementIds = []
         lFailedElements = []
         
+        # Convert zero vector to point_3d
+        lZeroVector = to_point_3d([0.0, 0.0, 0.0])
+        
         # Elemente einzeln duplizieren
-        for lElementId in lElementIds:
+        for lElementId in lValidatedIds:
             try:
                 # Kopieren mit Null-Vektor (kein Versatz)
-                lCopyResult = ec.copy_elements([lElementId], [0.0, 0.0, 0.0])
+                lCopyResult = ec.copy_elements([lElementId], lZeroVector)
                 if lCopyResult and len(lCopyResult) > 0:
                     lNewElementIds.extend(lCopyResult)
                 else:
                     lFailedElements.append(lElementId)
-            except Exception as e:
+            except Exception:
                 lFailedElements.append(lElementId)
         
         return {
-            "status": "success",
+            "status": "ok",
             "message": f"Duplicated {len(lNewElementIds)} elements",
-            "original_element_ids": lElementIds,
+            "original_element_ids": lValidatedIds,
             "new_element_ids": lNewElementIds,
             "failed_elements": lFailedElements,
             "duplicated_count": len(lNewElementIds),
             "failed_count": len(lFailedElements),
-            "total_count": len(lElementIds)
+            "total_count": len(lValidatedIds)
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"duplicate_elements failed: {e}"}
 
@@ -824,39 +861,31 @@ def handle_join_elements(aParams: dict) -> dict:
         
         lElementIds = aParams.get("element_ids", [])
         
-        if len(lElementIds) < 2:
-            return {"status": "error", "message": "At least 2 element IDs required for joining"}
+        if not isinstance(lElementIds, list) or len(lElementIds) < 2:
+            return {"status": "error", "message": "element_ids must be a list with at least 2 element IDs"}
         
-        # Cadwork API aufrufen
-        lJoinedCount = 0
-        lFailedJoins = []
-        
-        # Join-Operation durchführen
+        # Validate element IDs
         try:
-            # Mit dem ersten Element als Basis joinen
-            lBaseElement = lElementIds[0]
-            lElementsToJoin = lElementIds[1:]
+            lValidatedIds = validate_element_ids(lElementIds)
+        except ValueError as e:
+            return {"status": "error", "message": str(e)}
+        
+        # Cadwork API aufrufen - alle Elemente auf einmal joinen
+        try:
+            ec.join_elements(lValidatedIds)
             
-            for lElementId in lElementsToJoin:
-                try:
-                    ec.join_elements([lBaseElement, lElementId])
-                    lJoinedCount += 1
-                except Exception as e:
-                    lFailedJoins.append({"element_id": lElementId, "error": str(e)})
+            return {
+                "status": "ok",
+                "message": f"Successfully joined {len(lValidatedIds)} elements",
+                "joined_elements": lValidatedIds,
+                "joined_count": len(lValidatedIds)
+            }
             
         except Exception as e:
             return {"status": "error", "message": f"Join operation failed: {e}"}
         
-        return {
-            "status": "success",
-            "message": f"Successfully joined {lJoinedCount} elements",
-            "base_element": lElementIds[0],
-            "joined_elements": lElementIds[1:],
-            "joined_count": lJoinedCount,
-            "failed_joins": lFailedJoins,
-            "total_requested": len(lElementIds) - 1
-        }
-        
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"join_elements failed: {e}"}
 
@@ -867,30 +896,27 @@ def handle_unjoin_elements(aParams: dict) -> dict:
         
         lElementIds = aParams.get("element_ids", [])
         
-        if not lElementIds:
-            return {"status": "error", "message": "No element IDs provided"}
+        if not isinstance(lElementIds, list) or not lElementIds:
+            return {"status": "error", "message": "element_ids must be a non-empty list"}
+        
+        # Validate element IDs
+        try:
+            lValidatedIds = validate_element_ids(lElementIds)
+        except ValueError as e:
+            return {"status": "error", "message": str(e)}
         
         # Cadwork API aufrufen
-        lUnjoinedCount = 0
-        lFailedUnjoins = []
-        
-        # Unjoin-Operation durchführen
-        for lElementId in lElementIds:
-            try:
-                ec.unjoin_elements([lElementId])
-                lUnjoinedCount += 1
-            except Exception as e:
-                lFailedUnjoins.append({"element_id": lElementId, "error": str(e)})
+        ec.unjoin_elements(lValidatedIds)
         
         return {
-            "status": "success",
-            "message": f"Successfully unjoined {lUnjoinedCount} elements",
-            "processed_elements": lElementIds,
-            "unjoined_count": lUnjoinedCount,
-            "failed_unjoins": lFailedUnjoins,
-            "total_requested": len(lElementIds)
+            "status": "ok",
+            "message": f"Successfully unjoined {len(lValidatedIds)} elements",
+            "processed_elements": lValidatedIds,
+            "unjoined_count": len(lValidatedIds)
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"unjoin_elements failed: {e}"}
 
@@ -933,7 +959,7 @@ def handle_cut_corner_lap(aParams: dict) -> dict:
             return {"status": "error", "message": f"Corner lap cut operation failed: {e}"}
         
         return {
-            "status": "success",
+            "status": "ok",
             "message": f"Successfully created corner lap cuts for {len(lProcessedElements)} elements",
             "cut_type": "corner_lap",
             "master_element": lMasterElement,
@@ -943,6 +969,8 @@ def handle_cut_corner_lap(aParams: dict) -> dict:
             "cut_params": lCutParams
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"cut_corner_lap failed: {e}"}
 
@@ -987,7 +1015,7 @@ def handle_cut_cross_lap(aParams: dict) -> dict:
             return {"status": "error", "message": f"Cross lap cut operation failed: {e}"}
         
         return {
-            "status": "success",
+            "status": "ok",
             "message": f"Successfully created cross lap cuts for {len(lProcessedElements)} elements",
             "cut_type": "cross_lap", 
             "processed_elements": lProcessedElements,
@@ -996,6 +1024,8 @@ def handle_cut_cross_lap(aParams: dict) -> dict:
             "pairs_processed": len(lProcessedElements) // 2
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"cut_cross_lap failed: {e}"}
 
@@ -1047,7 +1077,7 @@ def handle_cut_half_lap(aParams: dict) -> dict:
             return {"status": "error", "message": f"Half lap cut operation failed: {e}"}
         
         return {
-            "status": "success",
+            "status": "ok",
             "message": f"Successfully created half lap cuts for {len(lProcessedElements)} elements",
             "cut_type": "half_lap",
             "master_element": lMasterElement,
@@ -1058,6 +1088,8 @@ def handle_cut_half_lap(aParams: dict) -> dict:
             "cut_params": lCutParams
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"cut_half_lap failed: {e}"}
 
@@ -1103,7 +1135,7 @@ def handle_cut_double_tenon(aParams: dict) -> dict:
             return {"status": "error", "message": f"Double tenon cut operation failed: {e}"}
         
         return {
-            "status": "success",
+            "status": "ok",
             "message": f"Successfully created double tenon connection",
             "cut_type": "double_tenon",
             "tenon_element": lTenonElement,
@@ -1118,6 +1150,8 @@ def handle_cut_double_tenon(aParams: dict) -> dict:
             "cut_params": lCutParams
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"cut_double_tenon failed: {e}"}
 
@@ -1168,7 +1202,7 @@ def handle_cut_scarf_joint(aParams: dict) -> dict:
             return {"status": "error", "message": f"Scarf joint cut operation failed: {e}"}
         
         return {
-            "status": "success",
+            "status": "ok",
             "message": f"Successfully created scarf joint connection",
             "cut_type": "scarf_joint",
             "scarf_specifications": {
@@ -1183,6 +1217,8 @@ def handle_cut_scarf_joint(aParams: dict) -> dict:
             "cut_params": lCutParams
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"cut_scarf_joint failed: {e}"}
 
@@ -1250,7 +1286,7 @@ def handle_cut_shoulder(aParams: dict) -> dict:
             return {"status": "error", "message": f"Shoulder cut operation failed: {e}"}
         
         return {
-            "status": "success",
+            "status": "ok",
             "message": f"Successfully created shoulder cuts for {len(lProcessedPairs)} element pairs",
             "cut_type": "shoulder",
             "supporting_element": lSupportingElement,
@@ -1266,6 +1302,8 @@ def handle_cut_shoulder(aParams: dict) -> dict:
             "cut_params": lCutParams
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"cut_shoulder failed: {e}"}
 
@@ -1274,7 +1312,6 @@ def handle_create_auxiliary_beam_points(aParams: dict) -> dict:
     """Erstellt Hilfs-Balkenelement mit Punkten"""
     try:
         import element_controller as ec
-        from bridge.helpers import to_point_3d
         
         # Parameter extrahieren
         lP1 = aParams.get("p1")
@@ -1296,7 +1333,7 @@ def handle_create_auxiliary_beam_points(aParams: dict) -> dict:
             lElementId = ec.create_auxiliary_beam_points(lCwP1, lCwP2)
         
         return {
-            "status": "success",
+            "status": "ok",
             "element_id": lElementId,
             "element_type": "auxiliary_beam",
             "p1": lP1,
@@ -1305,6 +1342,8 @@ def handle_create_auxiliary_beam_points(aParams: dict) -> dict:
             "operation": "create_auxiliary_beam_points"
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"create_auxiliary_beam_points failed: {e}"}
 
@@ -1331,7 +1370,7 @@ def handle_convert_beam_to_panel(aParams: dict) -> dict:
         lNewElementIds = ec.convert_beam_to_panel(lElementIds)
         
         return {
-            "status": "success", 
+            "status": "ok", 
             "converted_elements": len(lElementIds),
             "original_element_ids": lElementIds,
             "new_element_ids": lNewElementIds if isinstance(lNewElementIds, list) else [lNewElementIds],
@@ -1339,6 +1378,8 @@ def handle_convert_beam_to_panel(aParams: dict) -> dict:
             "operation": "convert_beam_to_panel"
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"convert_beam_to_panel failed: {e}"}
 
@@ -1366,7 +1407,7 @@ def handle_convert_panel_to_beam(aParams: dict) -> dict:
         lNewElementIds = ec.convert_panel_to_beam(lElementIds)
         
         return {
-            "status": "success", 
+            "status": "ok", 
             "converted_elements": len(lElementIds),
             "original_element_ids": lElementIds,
             "new_element_ids": lNewElementIds if isinstance(lNewElementIds, list) else [lNewElementIds],
@@ -1375,6 +1416,8 @@ def handle_convert_panel_to_beam(aParams: dict) -> dict:
             "operation": "convert_panel_to_beam"
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"convert_panel_to_beam failed: {e}"}
 
@@ -1401,7 +1444,7 @@ def handle_convert_auxiliary_to_beam(aParams: dict) -> dict:
         lNewElementIds = ec.convert_auxiliary_to_beam(lElementIds)
         
         return {
-            "status": "success", 
+            "status": "ok", 
             "converted_elements": len(lElementIds),
             "original_element_ids": lElementIds,
             "new_element_ids": lNewElementIds if isinstance(lNewElementIds, list) else [lNewElementIds],
@@ -1410,6 +1453,8 @@ def handle_convert_auxiliary_to_beam(aParams: dict) -> dict:
             "operation": "convert_auxiliary_to_beam"
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"convert_auxiliary_to_beam failed: {e}"}
 
@@ -1445,7 +1490,7 @@ def handle_create_auto_container_from_standard(aParams: dict) -> dict:
         lContainerId = ec.create_auto_container_from_standard(lElementIds, lContainerName)
         
         return {
-            "status": "success",
+            "status": "ok",
             "container_id": lContainerId,
             "container_name": lContainerName,
             "element_count": len(lElementIds),
@@ -1454,6 +1499,8 @@ def handle_create_auto_container_from_standard(aParams: dict) -> dict:
             "operation": "create_auto_container_from_standard"
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"create_auto_container_from_standard failed: {e}"}
 
@@ -1497,7 +1544,7 @@ def handle_get_container_content_elements(aParams: dict) -> dict:
                 })
         
         return {
-            "status": "success",
+            "status": "ok",
             "container_id": lContainerId,
             "element_count": len(lContentElements),
             "content_element_ids": lContentElements,
@@ -1505,6 +1552,8 @@ def handle_get_container_content_elements(aParams: dict) -> dict:
             "operation": "get_container_content_elements"
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"get_container_content_elements failed: {e}"}
 
@@ -1513,7 +1562,6 @@ def handle_create_surface(aParams: dict) -> dict:
     """Create surface element from vertices"""
     try:
         import element_controller as ec
-        from ..helpers import to_point_3d
         
         # Validate required arguments
         lVertices = aParams.get("vertices", [])
@@ -1554,7 +1602,6 @@ def handle_create_beam_from_points(aParams: dict) -> dict:
     """Create beam element from series of points defining centerline"""
     try:
         import element_controller as ec
-        from ..helpers import to_point_3d, validate_positive_number
         
         # Validate required arguments
         lPoints = aParams.get("points", [])
@@ -1614,7 +1661,6 @@ def handle_create_auxiliary_line(aParams: dict) -> dict:
     """Create auxiliary line element for construction purposes"""
     try:
         import element_controller as ec
-        from ..helpers import to_point_3d
         
         # Validate required arguments
         lStartPoint = aParams.get("start_point", [])
@@ -1663,7 +1709,7 @@ def handle_create_solid_wood_panel(aParams: dict) -> dict:
     """Create solid wood panel with specified wood type and grain direction"""
     try:
         import element_controller as ec
-        from ..helpers import to_point_3d, validate_positive_number
+        import attribute_controller as ac
         
         # Validate required arguments
         lP1 = aParams.get("p1", [])
@@ -1734,44 +1780,75 @@ def handle_get_elements_in_region(aParams: dict) -> dict:
     """Get elements in a specific region/bounding box"""
     try:
         import element_controller as ec
-        from ..helpers import validate_element_ids
+        import geometry_controller as gc
         
         # Get region parameters
         lMinPoint = aParams.get("min_point", [])
         lMaxPoint = aParams.get("max_point", [])
-        lRadius = aParams.get("radius")
-        lCenterPoint = aParams.get("center_point", [])
+        lIncludePartially = aParams.get("include_partially", True)
         
         # Validate region parameters
-        if lRadius and lCenterPoint:
-            # Spherical region
-            if len(lCenterPoint) != 3:
-                return {"status": "error", "message": "center_point must be [x,y,z] coordinates"}
-            if not isinstance(lRadius, (int, float)) or lRadius <= 0:
-                return {"status": "error", "message": "radius must be a positive number"}
-        elif lMinPoint and lMaxPoint:
-            # Bounding box region
-            if len(lMinPoint) != 3 or len(lMaxPoint) != 3:
-                return {"status": "error", "message": "min_point and max_point must be [x,y,z] coordinates"}
-        else:
-            return {"status": "error", "message": "Either radius+center_point or min_point+max_point required"}
+        if not lMinPoint or len(lMinPoint) != 3:
+            return {"status": "error", "message": "min_point must be [x,y,z] coordinates"}
         
-        # Get all elements first
+        if not lMaxPoint or len(lMaxPoint) != 3:
+            return {"status": "error", "message": "max_point must be [x,y,z] coordinates"}
+        
+        # Validate that min < max for all dimensions
+        for i in range(3):
+            if lMinPoint[i] >= lMaxPoint[i]:
+                return {"status": "error", "message": f"min_point[{i}] must be less than max_point[{i}]"}
+        
+        # Get all elements
         lAllElements = ec.get_all_identifiable_element_ids()
         lElementsInRegion = []
         
-        # For now, return first 10 elements as a placeholder
-        # In a real implementation, we would check element positions against the region
-        lElementsInRegion = lAllElements[:10] if len(lAllElements) > 10 else lAllElements
+        # Check each element's position
+        for lElementId in lAllElements:
+            try:
+                # Get element's P1 and P2 for bounding box calculation
+                lP1 = gc.get_p1(lElementId)
+                lP2 = gc.get_p2(lElementId)
+                
+                # Calculate element's bounding box
+                lElemMinX = min(lP1.x, lP2.x)
+                lElemMaxX = max(lP1.x, lP2.x)
+                lElemMinY = min(lP1.y, lP2.y)
+                lElemMaxY = max(lP1.y, lP2.y)
+                lElemMinZ = min(lP1.z, lP2.z)
+                lElemMaxZ = max(lP1.z, lP2.z)
+                
+                # Check if element is completely inside region
+                lCompletelyInside = (lElemMinX >= lMinPoint[0] and lElemMaxX <= lMaxPoint[0] and
+                                    lElemMinY >= lMinPoint[1] and lElemMaxY <= lMaxPoint[1] and
+                                    lElemMinZ >= lMinPoint[2] and lElemMaxZ <= lMaxPoint[2])
+                
+                # Check if element overlaps region (bounding boxes intersect)
+                lOverlaps = not (lElemMaxX < lMinPoint[0] or lElemMinX > lMaxPoint[0] or
+                               lElemMaxY < lMinPoint[1] or lElemMinY > lMaxPoint[1] or
+                               lElemMaxZ < lMinPoint[2] or lElemMinZ > lMaxPoint[2])
+                
+                # Add element based on filter mode
+                if lCompletelyInside or (lIncludePartially and lOverlaps):
+                    lElementsInRegion.append(lElementId)
+                    
+            except Exception:
+                # Skip elements that can't be queried
+                pass
         
         return {
             "status": "ok",
             "elements_in_region": lElementsInRegion,
             "element_count": len(lElementsInRegion),
             "total_elements_checked": len(lAllElements),
-            "region_type": "spherical" if lRadius else "bounding_box",
-            "note": "This is a placeholder implementation - actual spatial filtering not yet implemented"
+            "region_bounds": {
+                "min": lMinPoint,
+                "max": lMaxPoint
+            },
+            "include_partially": lIncludePartially
         }
         
+    except ImportError as e:
+        return {"status": "error", "message": f"Failed to import Cadwork modules: {e}"}
     except Exception as e:
         return {"status": "error", "message": f"get_elements_in_region failed: {e}"}
